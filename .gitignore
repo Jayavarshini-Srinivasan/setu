@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# environment variables
+.env
+
+# build folders
+dist/
+build/
+
+# expo
+.expo/
+.expo-shared/
+
+# logs
+npm-debug.log*
+
+# mac files
+.DS_Store
