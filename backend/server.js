@@ -1,10 +1,14 @@
+
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const db = require("./config/firebase");
 const jobsRoutes = require("./routes/jobsRoutes");
 const app = express();
 const matchRoutes = require("./routes/matchRoutes");
+const applicationRoutes = require("./routes/applicationRoutes");
 
+const explanationRoutes = require("./routes/explanationRoutes");
 
 const PORT = 5000;
 
@@ -34,6 +38,8 @@ app.get("/", (req, res) => {
 });
 app.use("/jobs", jobsRoutes);
 app.use("/match", matchRoutes);
+app.use("/apply", applicationRoutes);
+app.use("/explain-match",explanationRoutes);
 
 /*
   SERVER

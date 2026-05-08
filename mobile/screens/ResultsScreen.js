@@ -10,6 +10,7 @@ import {
 
 import API from "../services/api";
 
+
 export default function ResultsScreen({
   route,
 }) {
@@ -33,7 +34,19 @@ export default function ResultsScreen({
       console.log(error);
     }
   };
+  const handleApply = async (jobId) =>{
+    try{
+        await API.post("/apply",{
+            workerProfile,
+            jobId,
+    });
 
+    alert("Application submitted successfully");
+    } catch(error){
+        console.log(error);
+        alert("Failed to submit the application. Please try again");
+    }
+  };
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.title}>
@@ -55,7 +68,7 @@ export default function ResultsScreen({
       <Button
         title="Apply"
         onPress={() =>
-          alert("Apply feature later")
+          handleApply(item.id)
         }
       />
     </View>
