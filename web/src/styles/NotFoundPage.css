@@ -1,0 +1,41 @@
+.not-found-page {
+  height: 80vh;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 20px;
+}
+
+.not-found-title {
+  font-size: 5rem;
+
+  color: #e74c3c;
+
+  margin: 0;
+}
+
+.not-found-text {
+  font-size: 1.2rem;
+
+  color: #7f8c8d;
+}
+
+.back-dashboard-button {
+  padding: 12px 20px;
+
+  background-color: #3498db;
+
+  color: white;
+
+  text-decoration: none;
+
+  border-radius: 4px;
+
+  font-weight: bold;
+}

@@ -2,13 +2,16 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const db = require("./config/firebase");
+const {db} = require("./config/firebase");
 const jobsRoutes = require("./routes/jobsRoutes");
 const app = express();
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
-
+const authRoutes = require("./routes/authRoutes");
 const explanationRoutes = require("./routes/explanationRoutes");
+const voiceRoutes = require("./routes/voiceRoutes");
+const extractionRoutes = require("./routes/extractionRoutes");
 
 const PORT = 5000;
 
@@ -18,17 +21,7 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-db.collection("test")
-  .add({
-    message: "Firebase connected",
-    createdAt: new Date(),
-  })
-  .then(() => {
-    console.log("Firebase test document added");
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+
   
 /*
   ROUTES
@@ -40,10 +33,27 @@ app.use("/jobs", jobsRoutes);
 app.use("/match", matchRoutes);
 app.use("/apply", applicationRoutes);
 app.use("/explain-match",explanationRoutes);
+app.use("/auth", authRoutes);
+app.use("/dashboard",dashboardRoutes);
+app.use("/voice",voiceRoutes);
+app.use("/ai",extractionRoutes);
 
 /*
   SERVER
 */
-app.listen(PORT, () => {
+app.get(
+  "/ping",
+  (req, res) => {
+
+    console.log(
+      "PING HIT"
+    );
+
+    res.json({
+      success: true,
+    });
+  }
+);
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });

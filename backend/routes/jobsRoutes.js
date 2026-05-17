@@ -1,9 +1,68 @@
-const express = require("express");
+const express =
+  require("express");
 
-const router = express.Router();
+const router =
+  express.Router();
 
-const { getAllJobs } = require("../controllers/jobsController");
+/*
+  CONTROLLER
+*/
+const {
+  createJob,
+  getRecruiterJobs,
+  toggleJobStatus,
+  getSingleJob,
+  updateJob,
+} = require(
+  "../controllers/jobController"
+);
+const authMiddleware =
+  require(
+    "../middleware/authMiddleware"
+  );
 
-router.get("/", getAllJobs);
+  const recruiterMiddleware =
+  require(
+    "../middleware/recruiterMiddleware"
+  );
 
-module.exports = router;
+/*
+  ROUTE
+*/
+router.post(
+  "/",
+  authMiddleware,
+  recruiterMiddleware,
+  createJob
+);
+
+router.get(
+  "/recruiter",
+  authMiddleware,
+  recruiterMiddleware,
+  getRecruiterJobs
+);
+
+router.patch(
+  "/:jobId/status",
+  authMiddleware,
+  recruiterMiddleware,
+  toggleJobStatus
+);
+
+router.get(
+  "/:jobId",
+  authMiddleware,
+  recruiterMiddleware,
+  getSingleJob
+);
+
+router.put(
+  "/:jobId",
+  authMiddleware,
+  recruiterMiddleware,
+  updateJob
+);
+
+module.exports =
+  router;

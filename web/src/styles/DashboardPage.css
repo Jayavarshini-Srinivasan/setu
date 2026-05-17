@@ -1,0 +1,69 @@
+.dashboard-page {
+  width: 100%;
+}
+
+.dashboard-heading {
+  color: #2c3e50;
+
+  margin-bottom: 10px;
+}
+
+.dashboard-subtitle {
+  font-size: 1.1rem;
+
+  color: #7f8c8d;
+
+  margin-bottom: 30px;
+}
+
+.dashboard-stats-grid {
+  display: flex;
+
+  gap: 20px;
+
+  flex-wrap: wrap;
+}
+
+.dashboard-card {
+  flex: 1;
+
+  min-width: 250px;
+
+  padding: 20px;
+
+  background-color: #ecf0f1;
+
+  border-radius: 8px;
+
+  text-align: center;
+}
+
+.dashboard-card-title {
+  margin-bottom: 10px;
+
+  color: #2c3e50;
+}
+
+.dashboard-card-value {
+  font-size: 2rem;
+
+  font-weight: bold;
+
+  margin: 10px 0;
+}
+
+.dashboard-card-value.jobs {
+  color: #2980b9;
+}
+
+.dashboard-card-value.applicants {
+  color: #27ae60;
+}
+
+.dashboard-link {
+  text-decoration: none;
+
+  color: #3498db;
+
+  font-weight: bold;
+}

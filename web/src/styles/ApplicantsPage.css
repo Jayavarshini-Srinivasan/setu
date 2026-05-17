@@ -1,0 +1,162 @@
+.applicants-page {
+  width: 100%;
+}
+
+.back-link {
+  text-decoration: none;
+
+  color: #3498db;
+
+  font-weight: bold;
+}
+
+.applicants-heading {
+  margin-top: 20px;
+
+  color: #2c3e50;
+}
+
+.empty-applicants-text {
+  color: #7f8c8d;
+}
+
+.applicants-list {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+/*
+  APPLICANT CARD
+*/
+.applicant-card {
+  padding: 20px;
+
+  border: 1px solid #e1e8ed;
+
+  border-radius: 8px;
+
+  background-color: #fff;
+
+  box-shadow:
+    0 2px 4px
+    rgba(0, 0, 0, 0.05);
+}
+
+.applicant-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 15px;
+
+  border-bottom:
+    1px solid #eee;
+
+  padding-bottom: 10px;
+}
+
+.applicant-name {
+  margin: 0 0 5px 0;
+
+  color: #34495e;
+}
+
+.applicant-meta {
+  margin: 0;
+
+  color: #7f8c8d;
+
+  font-size: 0.95em;
+}
+
+.match-score {
+  color: #27ae60;
+
+  font-weight: bold;
+}
+
+.status-badge {
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  font-size: 0.85em;
+
+  font-weight: bold;
+
+  text-transform: uppercase;
+}
+
+.profile-section {
+  padding: 15px;
+
+  background-color: #f8f9fa;
+
+  border-radius: 6px;
+
+  margin-bottom: 20px;
+}
+
+.labour-heading {
+  margin: 0 0 10px 0;
+
+  color: #8e44ad;
+}
+
+.professional-heading {
+  margin: 0 0 10px 0;
+
+  color: #2980b9;
+}
+
+.profile-grid {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 10px;
+
+  font-size: 0.95em;
+}
+
+.resume-link-container {
+  margin-top: 15px;
+}
+
+.resume-link {
+  color: #3498db;
+
+  font-weight: bold;
+
+  text-decoration: none;
+}
+
+.applicant-actions {
+  display: flex;
+
+  gap: 12px;
+}
+
+.applicant-actions button {
+  padding: 8px 16px;
+
+  border-radius: 4px;
+
+  border: none;
+
+  cursor: pointer;
+
+  font-weight: bold;
+}
+
+.applicant-actions button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}

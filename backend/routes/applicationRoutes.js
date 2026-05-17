@@ -1,11 +1,56 @@
-const express = require("express");
+const express =
+  require("express");
 
-const router = express.Router();
+const router =
+  express.Router();
 
 const {
   applyToJob,
-} = require("../controllers/applicationController");
+  getApplicantsForJob,
+  updateApplicationStatus,
+} = require(
+  "../controllers/applicationController"
+);
 
-router.post("/", applyToJob);
+const  verifyToken = require(
+  "../middleware/authMiddleware"
+);
+
+const recruiterMiddleware =
+  require(
+    "../middleware/recruiterMiddleware"
+  );
+
+/*
+  WORKER APPLY
+*/
+router.post(
+  "/",
+  verifyToken,
+  applyToJob
+);
+
+/*
+  RECRUITER VIEW APPLICANTS
+*/
+router.get(
+  "/job/:jobId",
+
+  verifyToken,
+
+  recruiterMiddleware,
+
+  getApplicantsForJob
+);
+
+/*
+  RECRUITER UPDATE APPLICATION
+*/
+router.patch(
+  "/:applicationId/status",
+  verifyToken,
+  recruiterMiddleware,
+  updateApplicationStatus
+);
 
 module.exports = router;

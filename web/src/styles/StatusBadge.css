@@ -1,0 +1,56 @@
+.status-badge {
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  font-size: 0.85em;
+
+  font-weight: bold;
+
+  text-transform: uppercase;
+}
+
+/*
+  APPLICATION STATUSES
+*/
+.status-shortlisted {
+  background-color: #d4edda;
+
+  color: #155724;
+}
+
+.status-reviewed {
+  background-color: #d1ecf1;
+
+  color: #0c5460;
+}
+
+.status-rejected {
+  background-color: #f8d7da;
+
+  color: #721c24;
+}
+
+/*
+  JOB STATUSES
+*/
+.status-active {
+  background-color: #d4edda;
+
+  color: #155724;
+}
+
+.status-inactive {
+  background-color: #f8d7da;
+
+  color: #721c24;
+}
+
+/*
+  FALLBACK
+*/
+.status-default {
+  background-color: #e2e3e5;
+
+  color: #383d41;
+}
