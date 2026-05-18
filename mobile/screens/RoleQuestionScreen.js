@@ -1,375 +1,96 @@
-import {
-  useState,
-} from "react";
-
-import {
-  Alert,
-} from "react-native";
-
-import {
-  Audio,
-} from "expo-av";
+import { useState } from "react";
+import { Alert } from "react-native";
 
 import VoiceQuestionCard from "../components/VoiceQuestionCard";
+import useVoiceRecorder from "../hooks/useVoiceRecorder";
+import { useOnboarding } from "../context/OnboardingContext";
 
-import {
-  useOnboarding,
-} from "../context/OnboardingContext";
-import {
-  API_BASE_URL,
-} from "@env";
+const ROLE_OPTIONS = [
+  "auto_driver",
+  "cab_driver",
+  "truck_driver",
+  "delivery_rider",
+  "bus_driver",
+  "delivery",
+  "warehouse",
+  "electrician",
+  "construction",
+];
 
-export default function RoleQuestionScreen({
-  navigation,
-}) {
+export default function RoleQuestionScreen({ navigation }) {
 
-  /*
-    ONBOARDING CONTEXT
-  */
-  const {
-    onboardingData,
+  const { onboardingData, updateField, addTranscript } = useOnboarding();
 
-    updateField,
-
-    addTranscript,
-  } = useOnboarding();
-
-  /*
-    RECORDING STATE
-  */
-  const [
-    isProcessing,
-    setIsProcessing,
-  ] = useState(false);
-
-  const [
-    recording,
-    setRecording,
-  ] = useState(null);
-
-  const [
-    transcript,
-    setTranscript,
-  ] = useState("");
-
-  const [
-    selectedRole,
-    setSelectedRole,
-  ] = useState(
-    onboardingData
-      .canonicalRole || ""
+  const [selectedRole, setSelectedRole] = useState(
+    onboardingData.canonicalRole || ""
   );
 
   /*
-    ROLE OPTIONS
+    VOICE RECORDER
+    onResult fires only after user taps "Looks Right" in CONFIRMED state
   */
-  const roleOptions = [
-    "auto_driver",
-    "cab_driver",
-    "truck_driver",
-    "delivery_rider",
-    "bus_driver",
-    "delivery",
-    "warehouse",
-    "electrician",
-    "construction",
-  ];
+  const {
+    voiceState,
+    transcript,
+    extractedProfile,
+    startRecording,
+    stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
+    confirmExtraction,
+    rejectExtraction,
+  } = useVoiceRecorder({
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
 
-  /*
-    START RECORDING
-  */
-  const startRecording =
-    async () => {
+      if (tx) addTranscript(tx);
 
-      // GUARD: prevent double recording
-      if (recording) return;
-
-      try {
-
-        const permission =
-          await Audio.requestPermissionsAsync();
-
-        if (
-          permission.status !==
-          "granted"
-        ) {
-
-          Alert.alert(
-            "Permission Required",
-            "Microphone permission is required"
-          );
-
-          return;
-        }
-
-        /*
-          AUDIO MODE
-        */
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS:
-            true,
-
-          playsInSilentModeIOS:
-            true,
-        });
-
-        /*
-          CREATE RECORDING
-        */
-        const {
-          recording,
-        } =
-          await Audio.Recording.createAsync(
-            Audio.RecordingOptionsPresets.HIGH_QUALITY
-          );
-
-        setRecording(
-          recording
-        );
-
-      } catch (error) {
-
-        console.log(error);
-
-        Alert.alert(
-          "Error",
-          "Failed to start recording"
-        );
+      const role = ep?.canonicalRole || ep?.role || "";
+      if (role) {
+        setSelectedRole(role);
+        updateField("canonicalRole", role);
+        updateField("role", role);
       }
-    };
+    },
+  });
 
-  /*
-    STOP RECORDING
-  */
-  const stopRecording =
-    async () => {
+  /* TAP SELECT */
+  const handleSelectRole = (role) => {
+    setSelectedRole(role);
+    updateField("canonicalRole", role);
+    updateField("role", role);
+  };
 
-      try {
-
-        if (!recording) {
-          return;
-        }
-
-        /*
-          STOP
-        */
-        await recording.stopAndUnloadAsync();
-
-        const uri =
-          recording.getURI();
-
-        setRecording(
-          null
-        );
-
-        setIsProcessing(true);
-
-        /*
-          UPLOAD AUDIO
-        */
-        await uploadAudio(
-          uri
-        );
-
-        setIsProcessing(false);
-
-      } catch (error) {
-
-        console.log(error);
-
-        setIsProcessing(false);
-        Alert.alert(
-          "Error",
-          "Failed to stop recording"
-        );
-      }
-    };
-
-  /*
-    UPLOAD AUDIO
-  */
-  const uploadAudio =
-    async (
-      audioUri
-    ) => {
-
-      try {
-
-        const formData =
-          new FormData();
-
-        formData.append(
-          "audio",
-          {
-            uri:
-              audioUri,
-
-            name:
-              "voice-recording.m4a",
-
-            type:
-              "audio/m4a",
-          }
-        );
-
-        const response =
-          await fetch(`${API_BASE_URL}/voice/upload-audio`,
-            {
-              method:
-                "POST",
-
-              body:
-                formData,
-
-              headers: {
-                "Content-Type":
-                  "multipart/form-data",
-              },
-            }
-          );
-
-        const data =
-          await response.json();
-
-        console.log(
-          data
-        );
-
-        /*
-          TRANSCRIPT
-        */
-        setTranscript(
-          data.transcript
-        );
-
-        addTranscript(
-          data.transcript
-        );
-
-        /*
-          EXTRACTED ROLE
-        */
-        const extractedRole =
-          data
-            .extractedProfile
-            .canonicalRole;
-
-        /*
-          AUTO SELECT ROLE
-        */
-        setSelectedRole(
-          extractedRole
-        );
-
-        /*
-          SAVE TO CONTEXT
-        */
-        updateField(
-          "canonicalRole",
-          extractedRole
-        );
-
-        updateField(
-          "role",
-          extractedRole
-        );
-
-      } catch (error) {
-
-        console.log(error);
-
-        setIsProcessing(false);
-        Alert.alert(
-          "Error",
-          "Failed to process audio"
-        );
-      }
-    };
-
-  /*
-    SELECT ROLE
-  */
-  const handleSelectRole =
-    (role) => {
-
-      setSelectedRole(
-        role
-      );
-
-      updateField(
-        "canonicalRole",
-        role
-      );
-
-      updateField(
-        "role",
-        role
-      );
-    };
-
-  /*
-    CONTINUE
-  */
-  const handleContinue =
-    () => {
-
-      if (
-        !selectedRole
-      ) {
-
-        Alert.alert(
-          "Required",
-          "Please select or speak your role"
-        );
-
-        return;
-      }
-
-      /*
-        NEXT SCREEN
-      */
-      navigation.navigate(
-        "SkillsQuestion"
-      );
-    };
+  /* CONTINUE */
+  const handleContinue = () => {
+    if (!selectedRole) {
+      Alert.alert("Required", "Please select or speak your role.");
+      return;
+    }
+    navigation.navigate("SkillsQuestion");
+  };
 
   return (
-
     <VoiceQuestionCard
       step={1}
       totalSteps={5}
-
       title="What work do you do?"
-
-      subtitle="You can tap a role or speak in your own language."
-
-      transcript={
-        transcript
-      }
-
-      options={
-        roleOptions
-      }
-
-      selectedOption={
-        selectedRole
-      }
-
-      onSelectOption={
-        handleSelectRole
-      }
-
-      isRecording={!!recording}
-
-      isProcessing={isProcessing}
-
+      subtitle="Tap a role below, or hold the mic and speak in your own language."
+      transcript={transcript}
+      extractionLabel="Detected Role"
+      extractionDisplay={extractedProfile?.canonicalRole || extractedProfile?.role || ""}
+      options={ROLE_OPTIONS}
+      selectedOption={selectedRole}
+      onSelectOption={handleSelectRole}
+      voiceState={voiceState}
       onStartRecording={startRecording}
-
       onStopRecording={stopRecording}
-
-      onContinue={
-        handleContinue
-      }
+      onPlayRecording={playRecording}
+      onRetakeRecording={retakeRecording}
+      onSubmitRecording={submitRecording}
+      onConfirm={confirmExtraction}
+      onReject={rejectExtraction}
+      onContinue={handleContinue}
     />
   );
 }

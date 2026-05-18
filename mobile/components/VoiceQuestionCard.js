@@ -5,362 +5,444 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Animated,
+  Easing,
 } from "react-native";
+
+import { useEffect, useRef } from "react";
 
 import VoiceButton from "./VoiceButton";
 import { useI18n } from "../context/I18nContext";
+import { VOICE_STATE } from "../hooks/useVoiceRecorder";
+
+
 
 export default function VoiceQuestionCard({
   step,
   totalSteps,
   title,
-
   subtitle,
-
   transcript,
-
+  extractionLabel  = "Detected",
+  extractionDisplay,
   options = [],
-
-  /*
-    SINGLE SELECT
-  */
   selectedOption,
-
-  /*
-    MULTI SELECT
-  */
   selectedOptions = [],
-
   onSelectOption,
-
+  voiceState = VOICE_STATE.IDLE,
   onStartRecording,
-
   onStopRecording,
-
-  isRecording,
-
-  isProcessing,
-
+  onPlayRecording,
+  onRetakeRecording,
+  onSubmitRecording,
+  onConfirm,
+  onReject,
   onContinue,
 }) {
 
   const { t } = useI18n();
 
+  /* ── Pulse animation for RECORDING state ── */
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+
+    if (voiceState === VOICE_STATE.RECORDING) {
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.25,
+            duration: 550,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 550,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+    } else {
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(1);
+    }
+
+  }, [voiceState]);
+
+  const renderProcessing = () => (
+    <View style={styles.voiceCenter}>
+      <ActivityIndicator
+        size="large"
+        color="#E85D04"
+        style={{ marginBottom: 14 }}
+      />
+      <Text style={styles.processingLabel}>
+        {t("analyzingResponse") || "Analysing your response…"}
+      </Text>
+    </View>
+  );
+
+  const renderConfirmed = () => (
+    <View style={styles.confirmedBox}>
+
+      <View style={styles.confirmedHeader}>
+        <Text style={styles.confirmedIcon}>🤖</Text>
+        <Text style={styles.confirmedTitle}>
+          {extractionLabel}
+        </Text>
+      </View>
+
+      <Text style={styles.confirmedValue}>
+        {extractionDisplay || transcript || "—"}
+      </Text>
+
+      {transcript ? (
+        <Text style={styles.confirmedTranscript}>
+          "{transcript}"
+        </Text>
+      ) : null}
+
+      <Text style={styles.confirmedPrompt}>
+        Is this correct?
+      </Text>
+
+      <View style={styles.confirmedActions}>
+
+        <TouchableOpacity
+          style={[styles.confirmedBtn, styles.rejectBtn]}
+          onPress={onReject}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.confirmedBtnText}>🔄  Try Again</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.confirmedBtn, styles.acceptBtn]}
+          onPress={onConfirm}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.confirmedBtnText}>✓  Looks Right</Text>
+        </TouchableOpacity>
+
+      </View>
+
+    </View>
+  );
+
+  const renderReview = () => (
+    <View style={styles.voiceCenter}>
+
+      <View style={styles.recordedBadge}>
+        <Text style={styles.recordedBadgeText}>🎙️  Recording ready</Text>
+      </View>
+
+      <View style={styles.actionRow}>
+
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.playBtn]}
+          onPress={onPlayRecording}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.actionIcon}>▶</Text>
+          <Text style={styles.actionBtnText}>Play</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.retakeBtn]}
+          onPress={onRetakeRecording}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.actionIcon}>🔄</Text>
+          <Text style={styles.actionBtnText}>Retake</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.submitBtn]}
+          onPress={onSubmitRecording}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.actionIcon}>✅</Text>
+          <Text style={styles.actionBtnText}>Submit</Text>
+        </TouchableOpacity>
+
+      </View>
+
+    </View>
+  );
+
+  const renderMic = () => (
+    <View style={styles.voiceCenter}>
+
+      <Text style={styles.holdLabel}>
+        {voiceState === VOICE_STATE.RECORDING
+          ? "🔴  Recording…  release to stop"
+          : "Hold to speak"}
+      </Text>
+
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <VoiceButton
+          isRecording={voiceState === VOICE_STATE.RECORDING}
+          onPressIn={onStartRecording}
+          onPressOut={onStopRecording}
+        />
+      </Animated.View>
+
+      {voiceState === VOICE_STATE.IDLE && (
+        <Text style={styles.hintText}>
+          Press and hold the button while talking
+        </Text>
+      )}
+
+    </View>
+  );
+
+  const renderVoiceSection = () => {
+    switch (voiceState) {
+      case VOICE_STATE.PROCESSING: return renderProcessing();
+      case VOICE_STATE.CONFIRMED:  return renderConfirmed();
+      case VOICE_STATE.RECORDED:   return renderReview();
+      default:                     return renderMic();
+    }
+  };
+
   return (
+    <View style={styles.container}>
 
-    <View
-      style={
-        styles.container
-      }
-    >
-
-      {/* PROGRESS BAR */}
       {step && totalSteps && (
         <View style={styles.progressContainer}>
-          {Array.from({ length: totalSteps }).map((_, index) => (
+          {Array.from({ length: totalSteps }).map((_, i) => (
             <View
-              key={index}
+              key={i}
               style={[
                 styles.progressSegment,
-                index + 1 <= step ? styles.progressActive : styles.progressInactive,
+                i + 1 <= step
+                  ? styles.progressActive
+                  : styles.progressInactive,
               ]}
             />
           ))}
         </View>
       )}
 
-      <Text
-        style={
-          styles.title
-        }
-      >
-        {title}
-      </Text>
+      <Text style={styles.title}>{title}</Text>
 
-      {
-        subtitle ? (
+      {subtitle ? (
+        <Text style={styles.subtitle}>{subtitle}</Text>
+      ) : null}
 
-          <Text
-            style={
-              styles.subtitle
-            }
-          >
-            {subtitle}
-          </Text>
+      {renderVoiceSection()}
 
-        ) : null
-      }
+      {voiceState !== VOICE_STATE.CONFIRMED && (
+        <ScrollView contentContainerStyle={styles.optionsContainer}>
+          {options.map((option) => {
 
-      {/* MIC BUTTON */}
+            const isSelected =
+              selectedOptions.length > 0
+                ? selectedOptions.includes(option)
+                : selectedOption === option;
 
-      <View style={{ alignItems: 'center', marginBottom: 30 }}>
-        {isProcessing ? (
-          <>
-            <ActivityIndicator size="large" color="#E85D04" style={{ marginBottom: 10, padding: 18 }} />
-            <Text style={{ color: '#E85D04', fontWeight: 'bold' }}>{t("analyzingResponse")}</Text>
-          </>
-        ) : (
-          <>
-            <Text style={{ marginBottom: 10, fontWeight: 'bold', fontSize: 18 }}>
-              {isRecording ? "Recording... Release to stop" : "Hold to Speak"}
-            </Text>
-            <VoiceButton
-              isRecording={isRecording}
-              onPressIn={onStartRecording}
-              onPressOut={onStopRecording}
-            />
-            {!isRecording && <Text style={{ color: '#666', marginTop: 10 }}>Press and hold the button while talking</Text>}
-          </>
-        )}
-      </View>
+            return (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.optionChip,
+                  isSelected && styles.selectedChip,
+                ]}
+                onPress={() => onSelectOption(option)}
+              >
+                <Text style={[
+                  styles.optionText,
+                  isSelected && styles.selectedText,
+                ]}>
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
 
-      {/* TRANSCRIPT */}
-
-      {
-        transcript ? (
-
-          <View
-            style={
-              styles.transcriptBox
-            }
-          >
-
-            <Text
-              style={
-                styles.transcriptLabel
-              }
-            >
-              Transcript
-            </Text>
-
-            <Text
-              style={
-                styles.transcriptText
-              }
-            >
-              {transcript}
-            </Text>
-
-          </View>
-
-        ) : null
-      }
-
-      {/* OPTIONS */}
-
-      <ScrollView
-        contentContainerStyle={
-          styles.optionsContainer
-        }
-      >
-
-        {
-          options.map(
-            (option) => {
-
-              /*
-                SUPPORT:
-                - SINGLE SELECT
-                - MULTI SELECT
-              */
-              const isSelected =
-
-                selectedOptions
-                  .length > 0
-
-                  ? selectedOptions.includes(
-                      option
-                    )
-
-                  : selectedOption ===
-                    option;
-
-              return (
-
-                <TouchableOpacity
-                  key={option}
-
-                  style={[
-                    styles.optionChip,
-
-                    isSelected &&
-                      styles.selectedChip,
-                  ]}
-
-                  onPress={() =>
-                    onSelectOption(
-                      option
-                    )
-                  }
-                >
-
-                  <Text
-                    style={[
-                      styles.optionText,
-
-                      isSelected &&
-                        styles.selectedText,
-                    ]}
-                  >
-                    {option}
-                  </Text>
-
-                </TouchableOpacity>
-              );
-            }
-          )
-        }
-
-      </ScrollView>
-
-      {/* CONTINUE */}
-
-      <TouchableOpacity
-        style={
-          styles.continueButton
-        }
-
-        onPress={
-          onContinue
-        }
-      >
-
-        <Text
-          style={
-            styles.continueText
-          }
+      {voiceState !== VOICE_STATE.CONFIRMED && (
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={onContinue}
         >
-          Continue
-        </Text>
-
-      </TouchableOpacity>
+          <Text style={styles.continueText}>Continue</Text>
+        </TouchableOpacity>
+      )}
 
     </View>
   );
 }
 
-const styles =
-  StyleSheet.create({
+const styles = StyleSheet.create({
 
-    container: {
-      flex: 1,
-      padding: 24,
-      paddingTop: 40,
-      justifyContent: "flex-start", // changed from center to allow progress bar at top
-      backgroundColor: "#FAF9F6", // Premium off-white
-    },
+  container: {
+    flex: 1,
+    padding: 24,
+    paddingTop: 40,
+    justifyContent: "flex-start",
+    backgroundColor: "#FAF9F6",
+  },
 
-    progressContainer: {
-      flexDirection: "row",
-      gap: 8,
-      marginBottom: 30,
-    },
+  progressContainer: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 30,
+  },
+  progressSegment: { flex: 1, height: 4, borderRadius: 2 },
+  progressActive:  { backgroundColor: "#E85D04" },
+  progressInactive:{ backgroundColor: "#E5E7EB" },
 
-    progressSegment: {
-      flex: 1,
-      height: 4,
-      borderRadius: 2,
-    },
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    marginBottom: 26,
+    lineHeight: 22,
+  },
 
-    progressActive: {
-      backgroundColor: "#E85D04",
-    },
+  voiceCenter: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  holdLabel: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 14,
+  },
+  hintText: { color: "#9CA3AF", fontSize: 13, marginTop: 10 },
+  processingLabel: { color: "#E85D04", fontWeight: "700", fontSize: 15 },
 
-    progressInactive: {
-      backgroundColor: "#E5E7EB",
-    },
+  recordedBadge: {
+    backgroundColor: "#F0FDF4",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+  recordedBadgeText: { color: "#15803D", fontWeight: "700", fontSize: 14 },
+  actionRow: { flexDirection: "row", gap: 10 },
+  actionBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    minWidth: 80,
+  },
+  playBtn:    { backgroundColor: "#2563EB" },
+  retakeBtn:  { backgroundColor: "#6B7280" },
+  submitBtn:  { backgroundColor: "#16A34A" },
+  actionIcon: { fontSize: 18, marginBottom: 3 },
+  actionBtnText: { color: "#fff", fontWeight: "700", fontSize: 12 },
 
-    title: {
-      fontSize: 32,
-      fontWeight: "bold",
-      color: "#111827",
-      marginBottom: 10,
-    },
+  confirmedBox: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: "#E85D04",
+    shadowColor: "#E85D04",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  confirmedHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  confirmedIcon: { fontSize: 20 },
+  confirmedTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#9CA3AF",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  confirmedValue: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: 8,
+  },
+  confirmedTranscript: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontStyle: "italic",
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  confirmedPrompt: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#374151",
+    marginBottom: 14,
+  },
+  confirmedActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  confirmedBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  rejectBtn:  { backgroundColor: "#6B7280" },
+  acceptBtn:  { backgroundColor: "#E85D04" },
+  confirmedBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
-    subtitle: {
-      fontSize: 16,
-      color: "#6B7280",
-      marginBottom: 32,
-      lineHeight: 24,
-    },
+  /* ── Options ── */
+  optionsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 28,
+  },
+  optionChip: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    elevation: 1,
+  },
+  selectedChip: {
+    backgroundColor: "#FFF4ED",
+    borderColor: "#E85D04",
+  },
+  optionText: { fontSize: 15, color: "#4B5563", fontWeight: "600" },
+  selectedText: { color: "#E85D04", fontWeight: "bold" },
 
-    transcriptBox: {
-      backgroundColor: "#FFFFFF",
-      padding: 16,
-      borderRadius: 12,
-      marginBottom: 30,
-      borderWidth: 1,
-      borderColor: "#E5E7EB",
-    },
-
-    transcriptLabel: {
-      fontWeight: "bold",
-      color: "#9CA3AF",
-      fontSize: 12,
-      textTransform: "uppercase",
-      marginBottom: 8,
-    },
-
-    transcriptText: {
-      fontSize: 16,
-      color: "#1F2937",
-      fontStyle: "italic",
-    },
-
-    optionsContainer: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 12,
-      marginBottom: 40,
-    },
-
-    optionChip: {
-      backgroundColor: "#FFFFFF",
-      borderWidth: 1.5,
-      borderColor: "#E5E7EB",
-      borderRadius: 12,
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 1,
-    },
-
-    selectedChip: {
-      backgroundColor: "#FFF4ED",
-      borderColor: "#E85D04", // Premium Orange
-    },
-
-    optionText: {
-      fontSize: 16,
-      color: "#4B5563",
-      fontWeight: "600",
-    },
-
-    selectedText: {
-      color: "#E85D04",
-      fontWeight: "bold",
-    },
-
-    continueButton: {
-      backgroundColor: "#E85D04", // Premium Orange
-      paddingVertical: 16,
-      paddingHorizontal: 24,
-      borderRadius: 12,
-      alignItems: "center",
-      marginTop: 10,
-      shadowColor: "#E85D04",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-
-    continueText: {
-      color: "#FFFFFF",
-      fontSize: 18,
-      fontWeight: "bold",
-    },
-  });
+  continueButton: {
+    backgroundColor: "#E85D04",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 4,
+    shadowColor: "#E85D04",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  continueText: { color: "#FFFFFF", fontSize: 17, fontWeight: "bold" },
+});

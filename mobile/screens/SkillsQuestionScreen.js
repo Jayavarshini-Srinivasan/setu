@@ -1,480 +1,95 @@
-import {
-  useState,
-} from "react";
-
-import {
-  Alert,
-} from "react-native";
-
-import {
-  Audio,
-} from "expo-av";
+import { useState } from "react";
+import { Alert } from "react-native";
 
 import VoiceQuestionCard from "../components/VoiceQuestionCard";
+import useVoiceRecorder from "../hooks/useVoiceRecorder";
+import { useOnboarding } from "../context/OnboardingContext";
+import { SKILLS_BY_ROLE } from "../constants/skills";
+import { useI18n } from "../context/I18nContext";
 
-import {
-  useOnboarding,
-} from "../context/OnboardingContext";
+export default function SkillsQuestionScreen({ navigation }) {
 
-import {
-  SKILLS_BY_ROLE,
-} from "../constants/skills";
-
-import {
-  API_BASE_URL,
-} from "@env";
-
-import {
-  useI18n,
-} from "../context/I18nContext";
-
-export default function SkillsQuestionScreen({
-  navigation,
-}) {
-
-  /*
-  =====================================
-  CONTEXT
-  =====================================
-  */
-
-  const {
-    onboardingData,
-    updateField,
-    addTranscript,
-  } = useOnboarding();
-
+  const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
-  /*
-  =====================================
-  STATES
-  =====================================
-  */
-
-  const [
-    isProcessing,
-    setIsProcessing,
-  ] = useState(false);
-
-  const [
-    recording,
-    setRecording,
-  ] = useState(null);
-
-  const [
-    transcript,
-    setTranscript,
-  ] = useState("");
-
-  const [
-    selectedSkills,
-    setSelectedSkills,
-  ] = useState(
+  const [selectedSkills, setSelectedSkills] = useState(
     onboardingData.skills || []
   );
 
-  /*
-  =====================================
-  ROLE
-  =====================================
-  */
-
-  const role =
-    onboardingData
-      .canonicalRole ||
-    onboardingData.role ||
-    "";
+  const role = onboardingData.canonicalRole || onboardingData.role || "";
+  const skillOptions = SKILLS_BY_ROLE[role] || [];
 
   /*
-  =====================================
-  SKILL OPTIONS
-  =====================================
+    VOICE RECORDER
   */
-
-  const skillOptions =
-    SKILLS_BY_ROLE[
-      role
-    ] || [];
-
-  /*
-  =====================================
-  START RECORDING
-  =====================================
-  */
-
-  const startRecording =
-    async () => {
-
-      /*
-      PREVENT DOUBLE RECORDING
-      */
-
-      if (recording) {
-        return;
-      }
-
-      try {
-
-        const permission =
-          await Audio.requestPermissionsAsync();
-
-        if (
-          permission.status !==
-          "granted"
-        ) {
-
-          Alert.alert(
-            "Permission Required",
-            "Microphone permission is required"
-          );
-
-          return;
-        }
-
-        /*
-        AUDIO MODE
-        */
-
-        await Audio.setAudioModeAsync({
-
-          allowsRecordingIOS:
-            true,
-
-          playsInSilentModeIOS:
-            true,
-        });
-
-        /*
-        CREATE RECORDING
-        */
-
-        const {
-          recording,
-        } =
-          await Audio.Recording.createAsync(
-            Audio.RecordingOptionsPresets.HIGH_QUALITY
-          );
-
-        setRecording(
-          recording
-        );
-
-      } catch (error) {
-
-        console.log(error);
-
-        Alert.alert(
-          "Error",
-          "Failed to start recording"
-        );
-      }
-    };
-
-  /*
-  =====================================
-  STOP RECORDING
-  =====================================
-  */
-
-  const stopRecording =
-    async () => {
-
-      try {
-
-        if (!recording) {
-          return;
-        }
-
-        await recording.stopAndUnloadAsync();
-
-        const uri =
-          recording.getURI();
-
-        setRecording(null);
-
-        setIsProcessing(true);
-
-        /*
-        UPLOAD AUDIO
-        */
-
-        await uploadAudio(
-          uri
-        );
-
-      } catch (error) {
-
-        console.log(error);
-
-        Alert.alert(
-          "Error",
-          "Failed to stop recording"
-        );
-
-      } finally {
-
-        setIsProcessing(false);
-      }
-    };
-
-  /*
-  =====================================
-  UPLOAD AUDIO
-  =====================================
-  */
-
-  const uploadAudio =
-    async (
-      audioUri
-    ) => {
-
-      try {
-
-        const formData =
-          new FormData();
-
-        formData.append(
-          "audio",
-          {
-            uri:
-              audioUri,
-
-            name:
-              "voice-recording.m4a",
-
-            type:
-              "audio/m4a",
-          }
-        );
-
-        const response =
-          await fetch(
-
-            `${API_BASE_URL}/voice/upload-audio`,
-
-            {
-              method:
-                "POST",
-
-              body:
-                formData,
-
-              headers: {
-                "Content-Type":
-                  "multipart/form-data",
-              },
-            }
-          );
-
-        const data =
-          await response.json();
-
-        console.log(data);
-
-        /*
-        SAFETY
-        */
-
-        if (!data.success) {
-
-          Alert.alert(
-            "Error",
-            data.error ||
-            "Failed to process audio"
-          );
-
-          return;
-        }
-
-        /*
-        TRANSCRIPT
-        */
-
-        setTranscript(
-          data.transcript || ""
-        );
-
-        addTranscript(
-          data.transcript || ""
-        );
-
-        /*
-        EXTRACTED SKILLS
-        */
-
-        const extractedSkills =
-          data
-            ?.extractedProfile
-            ?.skills || [];
-
-        /*
-        MERGE
-        */
-
-        const mergedSkills =
-          [
-            ...new Set([
-              ...selectedSkills,
-              ...extractedSkills,
-            ]),
-          ];
-
-        setSelectedSkills(
-          mergedSkills
-        );
-
-        updateField(
-          "skills",
-          mergedSkills
-        );
-
-      } catch (error) {
-
-        console.log(error);
-
-        Alert.alert(
-          "Error",
-          "Failed to upload audio"
-        );
-      }
-    };
-
-  /*
-  =====================================
-  TOGGLE SKILL
-  =====================================
-  */
-
-  const toggleSkill =
-    (skill) => {
-
-      let updatedSkills =
-        [];
-
-      /*
-      REMOVE
-      */
-
-      if (
-        selectedSkills.includes(
-          skill
-        )
-      ) {
-
-        updatedSkills =
-          selectedSkills.filter(
-            (item) =>
-              item !== skill
-          );
-
-      }
-
-      /*
-      ADD
-      */
-
-      else {
-
-        updatedSkills = [
-          ...selectedSkills,
-          skill,
-        ];
-      }
-
-      setSelectedSkills(
-        updatedSkills
-      );
-
-      updateField(
-        "skills",
-        updatedSkills
-      );
-    };
-
-  /*
-  =====================================
-  CONTINUE
-  =====================================
-  */
-
-  const handleContinue =
-    () => {
-
-      if (
-        selectedSkills.length === 0
-      ) {
-
-        Alert.alert(
-          "Required",
-          "Please select at least one skill"
-        );
-
-        return;
-      }
-
-      navigation.navigate(
-        "ExperienceQuestion"
-      );
-    };
-
-  /*
-  =====================================
-  UI
-  =====================================
-  */
+  const {
+    voiceState,
+    transcript,
+    extractedProfile,
+    startRecording,
+    stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
+    confirmExtraction,
+    rejectExtraction,
+  } = useVoiceRecorder({
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
+
+      if (tx) addTranscript(tx);
+
+      const extracted = ep?.skills || [];
+      const merged    = [...new Set([...selectedSkills, ...extracted])];
+      setSelectedSkills(merged);
+      updateField("skills", merged);
+    },
+  });
+
+  /* TOGGLE SKILL */
+  const toggleSkill = (skill) => {
+    let updated;
+    if (selectedSkills.includes(skill)) {
+      updated = selectedSkills.filter((s) => s !== skill);
+    } else {
+      updated = [...selectedSkills, skill];
+    }
+    setSelectedSkills(updated);
+    updateField("skills", updated);
+  };
+
+  /* CONTINUE */
+  const handleContinue = () => {
+    if (selectedSkills.length === 0) {
+      Alert.alert("Required", "Please select at least one skill.");
+      return;
+    }
+    navigation.navigate("ExperienceQuestion");
+  };
+
+  const extractedSkillsDisplay =
+    (extractedProfile?.skills || []).join(", ") || "";
 
   return (
-
     <VoiceQuestionCard
-
       step={2}
-
       totalSteps={5}
-
-      title={t("whatSkills")}
-
-      subtitle={t("skillsSubtitle")}
-
-      transcript={
-        transcript
-      }
-
-      options={
-        skillOptions
-      }
-
-      selectedOptions={
-        selectedSkills
-      }
-
-      onSelectOption={
-        toggleSkill
-      }
-
-      isRecording={
-        !!recording
-      }
-
-      isProcessing={
-        isProcessing
-      }
-
-      onStartRecording={
-        startRecording
-      }
-
-      onStopRecording={
-        stopRecording
-      }
-
-      onContinue={
-        handleContinue
-      }
-
-      selectedSkills={
-        selectedSkills
-      }
+      title={t("whatSkills") || "What are your skills?"}
+      subtitle={t("skillsSubtitle") || "Tap skills below or speak to auto-detect them."}
+      transcript={transcript}
+      extractionLabel="Detected Skills"
+      extractionDisplay={extractedSkillsDisplay}
+      options={skillOptions}
+      selectedOptions={selectedSkills}
+      onSelectOption={toggleSkill}
+      voiceState={voiceState}
+      onStartRecording={startRecording}
+      onStopRecording={stopRecording}
+      onPlayRecording={playRecording}
+      onRetakeRecording={retakeRecording}
+      onSubmitRecording={submitRecording}
+      onConfirm={confirmExtraction}
+      onReject={rejectExtraction}
+      onContinue={handleContinue}
     />
   );
 }

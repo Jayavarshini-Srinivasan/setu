@@ -93,8 +93,15 @@ export default function ProfessionalReviewScreen({
               portfolio:
                 onboardingData.portfolio,
 
+              /*
+                preferredRoles — keep for backward compat
+                careerGoal     — string, used by learningPathService
+              */
               preferredRoles:
                 onboardingData.preferredRoles,
+
+              careerGoal:
+                (onboardingData.preferredRoles || [])[0] || "",
 
               transcriptHistory:
                 onboardingData.transcriptHistory,
@@ -103,22 +110,10 @@ export default function ProfessionalReviewScreen({
         );
 
         /*
-          REFRESH APP STATE
+          REFRESH APP STATE — triggers App.js to navigate to ProfessionalApp
         */
         refreshOnboarding();
-
-        /*
-          RESET
-        */
         resetOnboarding();
-
-        /*
-          SUCCESS
-        */
-        Alert.alert(
-          "Success",
-          "Professional onboarding completed"
-        );
 
       } catch (error) {
 
@@ -126,7 +121,7 @@ export default function ProfessionalReviewScreen({
 
         Alert.alert(
           "Error",
-          "Failed to save profile"
+          "Failed to save profile. Please try again."
         );
       }
     };

@@ -1,4 +1,4 @@
-// screens/ReviewOnboardingScreen.js
+
 
 import {
   View,
@@ -102,19 +102,10 @@ export default function ReviewOnboardingScreen({
         );
 
         /*
-          REFRESH APP STATE
+          REFRESH APP STATE — triggers App.js to navigate to LabourTabs
         */
         refreshOnboarding();
-
-        /*
-          RESET
-        */
         resetOnboarding();
-
-        Alert.alert(
-          "Success",
-          "Onboarding completed successfully"
-        );
 
       } catch (error) {
 
@@ -122,7 +113,7 @@ export default function ReviewOnboardingScreen({
 
         Alert.alert(
           "Error",
-          "Failed to complete onboarding"
+          "Failed to complete onboarding. Please try again."
         );
       }
     };

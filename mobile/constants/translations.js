@@ -1,12 +1,8 @@
-/*
-  SETU — TRANSLATION STRINGS
-  Supported languages: English (en), Hindi (hi), Tamil (ta), Marathi (mr)
-*/
+
 
 export const translations = {
 
   en: {
-    // AUTH
     login: "Sign In",
     signup: "Create Account",
     email: "Email address",
@@ -93,10 +89,59 @@ export const translations = {
 
     // RESULTS
     viewMatchedJobs: "View Matched Jobs",
+    matchesFound: "matches found",
     noMatches: "No Matches Found",
-    noMatchesDesc: "No matching jobs are available right now.",
-    loadingJobs: "Loading jobs...",
-    apply: "Apply",
+    noMatchesDesc: "No matching jobs are available right now. Try updating your profile.",
+    loadingJobs: "Finding your matches…",
+    apply: "Apply Now",
+    generateCareerPath: "Generate My Career Path",
+    careerPathSubtitle: "AI-powered roadmap based on your match gaps",
+
+    // PROFILE
+    aiSummary: "AI Summary",
+    matchReadiness: "Match Readiness",
+    skillGaps: "Skill Gaps",
+    skillGapsSubtitle: "Skills to add to improve your match score",
+    professionalLinks: "Professional Links",
+    editProfile: "Edit Profile",
+    logout: "Logout",
+    loadingProfile: "Loading profile…",
+    noProfileFound: "No profile found",
+    noSkillsAdded: "No skills added yet",
+    noExperience: "No experience added yet",
+    strongProfile: "Strong profile — ready to apply",
+    growingProfile: "Growing profile — close a few skill gaps",
+    earlyProfile: "Early stage — complete your profile to improve",
+    worker: "Worker",
+    locationNotSet: "Location not set",
+
+    // HOME
+    quickActions: "Quick Actions",
+    viewResume: "View Resume",
+    poweredBy: "Powered by Setu AI",
+
+    // LEARNING PATH
+    buildingRoadmap: "Building your career roadmap…",
+    careerIntelligenceTitle: "Career Intelligence",
+    currentAssessment: "Current Assessment",
+    projections: "After completing this path",
+    skillGapAnalysis: "Skill Gap Analysis",
+    skillGapNote: "Derived from your real job match failures — not generic advice.",
+    careerRoadmap: "Career Roadmap",
+    salaryProjection: "Salary Projection",
+    currentEst: "Current Est.",
+    afterPath: "After Path",
+
+    // VOICE CONFIRMATION
+    isThisCorrect: "Is this correct?",
+    looksRight: "✓  Looks Right",
+    tryAgain: "🔄  Try Again",
+
+    // COMMON
+    loading: "Loading…",
+    analyzing: "Analysing your response…",
+    noData: "No data available",
+    back: "← Back",
 
     // ERRORS
     permissionRequired: "Permission Required",
@@ -106,6 +151,7 @@ export const translations = {
     failedToProcess: "Failed to process audio",
     error: "Error",
     required: "Required",
+    networkError: "Network error — please check your connection",
   },
 
   hi: {
@@ -196,10 +242,59 @@ export const translations = {
 
     // RESULTS
     viewMatchedJobs: "मेल खाने वाली नौकरियां देखें",
+    matchesFound: "मेल मिले",
     noMatches: "कोई मेल नहीं मिला",
     noMatchesDesc: "अभी कोई मेल खाने वाली नौकरी उपलब्ध नहीं है।",
-    loadingJobs: "नौकरियां लोड हो रही हैं...",
+    loadingJobs: "आपके मेल ढूंढे जा रहे हैं…",
     apply: "आवेदन करें",
+    generateCareerPath: "मेरा करियर पथ बनाएं",
+    careerPathSubtitle: "आपकी मेल कमियों के आधार पर AI रोडमैप",
+
+    // PROFILE
+    aiSummary: "AI सारांश",
+    matchReadiness: "मेल तत्परता",
+    skillGaps: "कौशल की कमी",
+    skillGapsSubtitle: "मेल स्कोर सुधारने के लिए ये कौशल जोड़ें",
+    professionalLinks: "पेशेवर लिंक",
+    editProfile: "प्रोफ़ाइल संपादित करें",
+    logout: "लॉग आउट",
+    loadingProfile: "प्रोफ़ाइल लोड हो रही है…",
+    noProfileFound: "प्रोफ़ाइल नहीं मिली",
+    noSkillsAdded: "अभी कोई कौशल नहीं जोड़ा गया",
+    noExperience: "अभी कोई अनुभव नहीं जोड़ा गया",
+    strongProfile: "मजबूत प्रोफ़ाइल — आवेदन के लिए तैयार",
+    growingProfile: "बढ़ती प्रोफ़ाइल — कुछ कौशल अंतर बंद करें",
+    earlyProfile: "प्रारंभिक चरण — सुधार के लिए प्रोफ़ाइल पूरी करें",
+    worker: "कार्यकर्ता",
+    locationNotSet: "स्थान सेट नहीं है",
+
+    // HOME
+    quickActions: "त्वरित क्रियाएं",
+    viewResume: "रिज्यूमे देखें",
+    poweredBy: "Setu AI द्वारा संचालित",
+
+    // LEARNING PATH
+    buildingRoadmap: "आपका करियर रोडमैप बन रहा है…",
+    careerIntelligenceTitle: "करियर बुद्धिमत्ता",
+    currentAssessment: "वर्तमान मूल्यांकन",
+    projections: "इस पथ को पूरा करने के बाद",
+    skillGapAnalysis: "कौशल अंतर विश्लेषण",
+    skillGapNote: "आपकी वास्तविक मेल विफलताओं से प्राप्त — सामान्य सलाह नहीं।",
+    careerRoadmap: "करियर रोडमैप",
+    salaryProjection: "वेतन अनुमान",
+    currentEst: "वर्तमान अनुमान",
+    afterPath: "पथ के बाद",
+
+    // VOICE CONFIRMATION
+    isThisCorrect: "क्या यह सही है?",
+    looksRight: "✓  सही लग रहा है",
+    tryAgain: "🔄  फिर से कोशिश करें",
+
+    // COMMON
+    loading: "लोड हो रहा है…",
+    analyzing: "आपके उत्तर का विश्लेषण हो रहा है…",
+    noData: "कोई डेटा उपलब्ध नहीं",
+    back: "← वापस",
 
     // ERRORS
     permissionRequired: "अनुमति आवश्यक",
@@ -209,6 +304,7 @@ export const translations = {
     failedToProcess: "ऑडियो प्रोसेस नहीं हो सका",
     error: "गड़बड़ी",
     required: "आवश्यक",
+    networkError: "नेटवर्क त्रुटि — कृपया अपना कनेक्शन जांचें",
   },
 
   ta: {
@@ -299,10 +395,59 @@ export const translations = {
 
     // RESULTS
     viewMatchedJobs: "பொருந்தும் வேலைகளை பார்க்கவும்",
+    matchesFound: "பொருத்தங்கள் கிடைத்தன",
     noMatches: "எந்த பொருத்தமும் இல்லை",
     noMatchesDesc: "இப்போது பொருந்தும் வேலைகள் எதுவும் இல்லை.",
-    loadingJobs: "வேலைகள் ஏற்றப்படுகின்றன...",
+    loadingJobs: "உங்கள் பொருத்தங்கள் தேடப்படுகின்றன…",
     apply: "விண்ணப்பிக்கவும்",
+    generateCareerPath: "என் தொழில் பாதையை உருவாக்கு",
+    careerPathSubtitle: "உங்கள் பொருத்த இடைவெளிகளின் AI வழிகாட்டி",
+
+    // PROFILE
+    aiSummary: "AI சுருக்கம்",
+    matchReadiness: "பொருத்த தயார்நிலை",
+    skillGaps: "திறன் இடைவெளிகள்",
+    skillGapsSubtitle: "பொருத்த மதிப்பெண்ணை மேம்படுத்த இந்த திறன்களை சேர்க்கவும்",
+    professionalLinks: "தொழில்முறை இணைப்புகள்",
+    editProfile: "சுயவிவரத்தை திருத்தவும்",
+    logout: "வெளியேறு",
+    loadingProfile: "சுயவிவரம் ஏற்றப்படுகிறது…",
+    noProfileFound: "சுயவிவரம் கிடைக்கவில்லை",
+    noSkillsAdded: "இன்னும் திறன்கள் சேர்க்கப்படவில்லை",
+    noExperience: "இன்னும் அனுபவம் சேர்க்கப்படவில்லை",
+    strongProfile: "வலுவான சுயவிவரம் — விண்ணப்பிக்க தயார்",
+    growingProfile: "வளரும் சுயவிவரம் — சில திறன் இடைவெளிகளை மூடுங்கள்",
+    earlyProfile: "ஆரம்ப கட்டம் — மேம்படுத்த சுயவிவரத்தை நிறைவு செய்யுங்கள்",
+    worker: "தொழிலாளர்",
+    locationNotSet: "இடம் அமைக்கப்படவில்லை",
+
+    // HOME
+    quickActions: "விரைவு செயல்கள்",
+    viewResume: "விண்ணப்பதாரர் தொகுப்பை பார்க்கவும்",
+    poweredBy: "Setu AI ஆல் இயக்கப்படுகிறது",
+
+    // LEARNING PATH
+    buildingRoadmap: "உங்கள் தொழில் வழிகாட்டி உருவாக்கப்படுகிறது…",
+    careerIntelligenceTitle: "தொழில் நுண்ணறிவு",
+    currentAssessment: "தற்போதைய மதிப்பீடு",
+    projections: "இந்த பாதையை முடித்த பிறகு",
+    skillGapAnalysis: "திறன் இடைவெளி பகுப்பாய்வு",
+    skillGapNote: "உங்கள் உண்மையான பொருத்த தோல்விகளிலிருந்து — பொதுவான ஆலோசனை அல்ல.",
+    careerRoadmap: "தொழில் வழிகாட்டி",
+    salaryProjection: "சம்பள முன்னறிவிப்பு",
+    currentEst: "தற்போதைய மதிப்பீடு",
+    afterPath: "பாதைக்கு பிறகு",
+
+    // VOICE CONFIRMATION
+    isThisCorrect: "இது சரியா?",
+    looksRight: "✓  சரியாக தெரிகிறது",
+    tryAgain: "🔄  மீண்டும் முயற்சிக்கவும்",
+
+    // COMMON
+    loading: "ஏற்றுகிறது…",
+    analyzing: "உங்கள் பதில் பகுப்பாய்வு செய்யப்படுகிறது…",
+    noData: "தரவு எதுவும் இல்லை",
+    back: "← திரும்பு",
 
     // ERRORS
     permissionRequired: "அனுமதி தேவை",
@@ -312,6 +457,7 @@ export const translations = {
     failedToProcess: "ஆடியோ செயலாக்கப்படவில்லை",
     error: "பிழை",
     required: "தேவை",
+    networkError: "நெட்வொர்க் பிழை — உங்கள் இணைப்பை சரிபார்க்கவும்",
   },
 
   mr: {
@@ -402,10 +548,59 @@ export const translations = {
 
     // RESULTS
     viewMatchedJobs: "जुळणाऱ्या नोकऱ्या पहा",
+    matchesFound: "जुळणारे सापडले",
     noMatches: "कोणताही जुळणारा नाही",
     noMatchesDesc: "आत्ता कोणत्याही जुळणाऱ्या नोकऱ्या उपलब्ध नाहीत.",
-    loadingJobs: "नोकऱ्या लोड होत आहेत...",
+    loadingJobs: "तुमचे जुळणारे शोधत आहे…",
     apply: "अर्ज करा",
+    generateCareerPath: "माझा करिअर मार्ग तयार करा",
+    careerPathSubtitle: "तुमच्या जुळणाऱ्या कमतरतांवर आधारित AI रोडमॅप",
+
+    // PROFILE
+    aiSummary: "AI सारांश",
+    matchReadiness: "जुळणारी तयारी",
+    skillGaps: "कौशल्य कमतरता",
+    skillGapsSubtitle: "जुळणारा स्कोर सुधारण्यासाठी ही कौशल्ये जोडा",
+    professionalLinks: "व्यावसायिक दुवे",
+    editProfile: "प्रोफाइल संपादित करा",
+    logout: "बाहेर पडा",
+    loadingProfile: "प्रोफाइल लोड होत आहे…",
+    noProfileFound: "प्रोफाइल सापडली नाही",
+    noSkillsAdded: "अद्याप कोणतेही कौशल्य जोडले नाही",
+    noExperience: "अद्याप कोणताही अनुभव जोडला नाही",
+    strongProfile: "मजबूत प्रोफाइल — अर्ज करण्यास तयार",
+    growingProfile: "वाढती प्रोफाइल — काही कौशल्य कमतरता भरा",
+    earlyProfile: "प्रारंभिक टप्पा — सुधारण्यासाठी प्रोफाइल पूर्ण करा",
+    worker: "कामगार",
+    locationNotSet: "स्थान सेट केलेले नाही",
+
+    // HOME
+    quickActions: "द्रुत क्रिया",
+    viewResume: "रेझ्युमे पहा",
+    poweredBy: "Setu AI द्वारे संचालित",
+
+    // LEARNING PATH
+    buildingRoadmap: "तुमचा करिअर रोडमॅप तयार होत आहे…",
+    careerIntelligenceTitle: "करिअर बुद्धिमत्ता",
+    currentAssessment: "सध्याचे मूल्यांकन",
+    projections: "हा मार्ग पूर्ण केल्यानंतर",
+    skillGapAnalysis: "कौशल्य कमतरता विश्लेषण",
+    skillGapNote: "तुमच्या वास्तविक जुळणाऱ्या अपयशातून — सामान्य सल्ला नाही.",
+    careerRoadmap: "करिअर रोडमॅप",
+    salaryProjection: "पगाराचा अंदाज",
+    currentEst: "सध्याचा अंदाज",
+    afterPath: "मार्गानंतर",
+
+    // VOICE CONFIRMATION
+    isThisCorrect: "हे बरोबर आहे का?",
+    looksRight: "✓  बरोबर दिसते",
+    tryAgain: "🔄  पुन्हा प्रयत्न करा",
+
+    // COMMON
+    loading: "लोड होत आहे…",
+    analyzing: "तुमचे उत्तर विश्लेषण होत आहे…",
+    noData: "कोणताही डेटा उपलब्ध नाही",
+    back: "← मागे",
 
     // ERRORS
     permissionRequired: "परवानगी आवश्यक",
@@ -415,6 +610,7 @@ export const translations = {
     failedToProcess: "ऑडियो प्रक्रिया झाली नाही",
     error: "त्रुटी",
     required: "आवश्यक",
+    networkError: "नेटवर्क त्रुटी — कृपया तुमचे कनेक्शन तपासा",
   },
 };
 

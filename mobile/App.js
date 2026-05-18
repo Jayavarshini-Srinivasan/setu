@@ -70,6 +70,7 @@ import CareerGoalsScreen from "./screens/professional/CareerGoalsScreen";
 import ProfessionalReviewScreen from "./screens/professional/ProfessionalReviewScreen";
 
 import LearningPathScreen from "./screens/professional/LearningPathScreen";
+import SplashScreen from "./screens/SplashScreen";
 /*
   MAIN APP
 */
@@ -127,38 +128,50 @@ function ProfessionalTabs() {
 
       <Tab.Screen
         name="Home"
-        component={
-          HomeScreen
-        }
+        component={HomeScreen}
       />
 
       <Tab.Screen
         name="Results"
-        component={
-          ResultsScreen
-        }
+        component={ResultsScreen}
       />
 
       <Tab.Screen
         name="Resume"
-        component={
-          ResumePreviewScreen
-        }
+        component={ResumePreviewScreen}
       />
-      <Tab.Screen
-        name="Learning"
-        component={
-          LearningPathScreen
-        }
-      />
+
       <Tab.Screen
         name="Profile"
-        component={
-          ProfileScreen
-        }
+        component={ProfileScreen}
       />
 
     </Tab.Navigator>
+  );
+}
+
+/*
+  PROFESSIONAL APP STACK
+  Wraps the tabs so LearningPath can be pushed
+  as a full-screen Stack route with route.params.
+*/
+function ProfessionalApp() {
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+
+      <Stack.Screen
+        name="ProfessionalTabs"
+        component={ProfessionalTabs}
+      />
+
+      <Stack.Screen
+        name="LearningPath"
+        component={LearningPathScreen}
+        options={{ headerShown: true, title: "Career Intelligence" }}
+      />
+
+    </Stack.Navigator>
   );
 }
 
@@ -255,27 +268,7 @@ function AppNavigator() {
     LOADING — wait for BOTH auth AND profile check
   */
   if (authLoading || loading) {
-
-    return (
-
-      <View
-        style={{
-          flex: 1,
-
-          justifyContent:
-            "center",
-
-          alignItems:
-            "center",
-        }}
-      >
-
-        <ActivityIndicator
-          size="large"
-        />
-
-      </View>
-    );
+    return <SplashScreen />;
   }
 
   /*
@@ -435,7 +428,7 @@ function AppNavigator() {
   ) {
 
     return (
-      <ProfessionalTabs />
+      <ProfessionalApp />
     );
   }
 

@@ -4,278 +4,335 @@ import {
   StyleSheet,
 } from "react-native";
 
-import {
-  formatSalary,
-} from "../utils/formatters";
-
+import { formatSalary } from "../utils/formatters";
 import PrimaryButton from "./PrimaryButton";
 
-export default function JobCard({
-  job,
-  onApply,
-}) {
+
+
+const RECOMMENDATION_LABELS = {
+  best_pick:   { label: "Best Pick",    color: "#16A34A", bg: "#F0FDF4" },
+  good_fit:    { label: "Good Fit",     color: "#2563EB", bg: "#EFF6FF" },
+  average_fit: { label: "Average Fit",  color: "#9CA3AF", bg: "#F9FAFB" },
+};
+
+function scoreColor(score) {
+  if (score >= 75) return "#16A34A";
+  if (score >= 50) return "#D97706";
+  return "#DC2626";
+}
+
+export default function JobCard({ job, onApply }) {
+
+  const rec     = RECOMMENDATION_LABELS[job.recommendationType] || RECOMMENDATION_LABELS.average_fit;
+  const isBest  = job.recommendationType === "best_pick";
+  const pros    = Array.isArray(job.pros) ? job.pros : [];
+  const cons    = Array.isArray(job.cons) ? job.cons : [];
+  const missing = Array.isArray(job.missingSkills) ? job.missingSkills : [];
 
   return (
+    <View style={[styles.card, isBest && styles.cardBestPick]}>
 
-    <View style={styles.card}>
+      {isBest && (
+        <View style={styles.bestBanner}>
+          <Text style={styles.bestBannerText}>🏆  Best Pick for You</Text>
+        </View>
+      )}
 
-      <Text style={styles.title}>
-        {job.title}
-      </Text>
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>{job.title}</Text>
+          <Text style={styles.meta}>📍 {job.location}</Text>
+          <Text style={styles.meta}>💰 {formatSalary(job.salary)}</Text>
+        </View>
+        <View style={[styles.scoreBadge, { backgroundColor: scoreColor(job.matchScore) }]}>
+          <Text style={styles.scoreValue}>{job.matchScore}%</Text>
+          <Text style={styles.scoreLabel}>Match</Text>
+        </View>
+      </View>
 
-      <Text style={styles.meta}>
-        📍 {job.location}
-      </Text>
+      <View style={[styles.recChip, { backgroundColor: rec.bg }]}>
+        <Text style={[styles.recChipText, { color: rec.color }]}>{rec.label}</Text>
+      </View>
 
-      <Text style={styles.meta}>
-        💰{" "}
-        {formatSalary(
-          job.salary
-        )}
-      </Text>
+      {job.aiSummary ? (
+        <Text style={styles.summary}>{job.aiSummary}</Text>
+      ) : null}
 
-      <Text style={styles.match}>
-        Overall Score:{" "}
-        {job.matchScore}%
-      </Text>
+      {(pros.length > 0 || cons.length > 0) && (
+        <View style={styles.prosConsRow}>
 
-      {/* AI SUMMARY */}
-
-      <Text style={styles.summary}>
-        {job.aiSummary}
-      </Text>
-
-      {/* METRICS */}
-
-      <Text style={styles.metric}>
-        Skill Match:
-        {" "}
-        {
-          job.metrics
-            ?.skillMatch
-        }%
-      </Text>
-
-      <Text style={styles.metric}>
-        Recommendation:
-        {" "}
-        {
-          job.recommendationType
-        }
-      </Text>
-
-      {/* IMPROVE MATCH */}
-
-      {
-        (
-          job.missingSkills || []
-        ).length > 0 && (
-
-          <View
-            style={
-              styles.improvementSection
-            }
-          >
-
-            <Text
-              style={
-                styles.improvementTitle
-              }
-            >
-              Improve Match
-            </Text>
-
-            <Text
-              style={
-                styles.improvementText
-              }
-            >
-              Potential Match:
-              {" "}
-              {job.matchScore}%
-              →
-              {
-                job.potentialMatchScore
-              }%
-            </Text>
-
-            <View
-              style={
-                styles.skillsContainer
-              }
-            >
-
-              {
-                job.missingSkills.map(
-                  (
-                    skill,
-                    index
-                  ) => (
-
-                    <View
-                      key={index}
-                      style={
-                        styles.skillChip
-                      }
-                    >
-
-                      <Text
-                        style={
-                          styles.skillText
-                        }
-                      >
-                        {skill}
-                      </Text>
-
-                    </View>
-                  )
-                )
-              }
-
+          {pros.length > 0 && (
+            <View style={styles.prosBox}>
+              <Text style={styles.prosTitle}>✓  Strengths</Text>
+              {pros.map((p, i) => (
+                <Text key={i} style={styles.proItem}>• {p}</Text>
+              ))}
             </View>
+          )}
 
+          {cons.length > 0 && (
+            <View style={styles.consBox}>
+              <Text style={styles.consTitle}>✗  Gaps</Text>
+              {cons.map((c, i) => (
+                <Text key={i} style={styles.conItem}>• {c}</Text>
+              ))}
+            </View>
+          )}
+
+        </View>
+      )}
+
+      {job.metrics?.skillMatch !== undefined && (
+        <View style={styles.metricRow}>
+          <Text style={styles.metricLabel}>Skill match</Text>
+          <View style={styles.metricBarTrack}>
+            <View
+              style={[
+                styles.metricBarFill,
+                {
+                  width: `${job.metrics.skillMatch}%`,
+                  backgroundColor: scoreColor(job.metrics.skillMatch),
+                },
+              ]}
+            />
           </View>
-        )
-      }
+          <Text style={[styles.metricPct, { color: scoreColor(job.metrics.skillMatch) }]}>
+            {job.metrics.skillMatch}%
+          </Text>
+        </View>
+      )}
 
-      {/* APPLY */}
+      {missing.length > 0 && (
+        <View style={styles.improvementSection}>
+          <View style={styles.improvementHeader}>
+            <Text style={styles.improvementTitle}>Skills to bridge this gap</Text>
+            {job.potentialMatchScore && (
+              <Text style={styles.improvementScore}>
+                {job.matchScore}% → {job.potentialMatchScore}%
+              </Text>
+            )}
+          </View>
 
-      <PrimaryButton
-        title="Apply"
-        onPress={() =>
-          onApply(job)
-        }
-      />
+          <View style={styles.skillsContainer}>
+            {missing.map((skill, i) => (
+              <View key={i} style={styles.skillChip}>
+                <Text style={styles.skillText}>{skill}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      <PrimaryButton title="Apply Now" onPress={() => onApply(job)} />
 
     </View>
   );
 }
 
-const styles =
-  StyleSheet.create({
+const styles = StyleSheet.create({
 
-    card: {
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+  },
 
-      backgroundColor:
-        "#fff",
+  cardBestPick: {
+    borderColor: "#16A34A",
+    borderWidth: 2,
+  },
 
-      borderRadius: 16,
+  bestBanner: {
+    backgroundColor: "#F0FDF4",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+  bestBannerText: {
+    color: "#15803D",
+    fontWeight: "700",
+    fontSize: 13,
+  },
 
-      padding: 18,
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: 6,
+  },
+  meta: {
+    color: "#6B7280",
+    fontSize: 13,
+    marginBottom: 3,
+  },
 
-      marginBottom: 18,
+  scoreBadge: {
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    minWidth: 56,
+  },
+  scoreValue: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  scoreLabel: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    opacity: 0.85,
+    marginTop: 1,
+  },
 
-      elevation: 3,
-    },
+  recChip: {
+    alignSelf: "flex-start",
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+  },
+  recChipText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
 
-    title: {
+  summary: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#4B5563",
+    marginBottom: 14,
+    fontStyle: "italic",
+  },
 
-      fontSize: 20,
+  prosConsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  prosBox: {
+    flex: 1,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+  consBox: {
+    flex: 1,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  prosTitle: {
+    color: "#15803D",
+    fontWeight: "700",
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  consTitle: {
+    color: "#DC2626",
+    fontWeight: "700",
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  proItem: {
+    color: "#166534",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  conItem: {
+    color: "#991B1B",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  metricRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 14,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    width: 70,
+  },
+  metricBarTrack: {
+    flex: 1,
+    height: 6,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  metricBarFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+  metricPct: {
+    fontSize: 12,
+    fontWeight: "700",
+    width: 34,
+    textAlign: "right",
+  },
 
-      fontWeight: "bold",
-
-      marginBottom: 12,
-
-      color: "#111827",
-    },
-
-    meta: {
-
-      marginBottom: 8,
-
-      color: "#555",
-    },
-
-    match: {
-
-      marginTop: 10,
-
-      marginBottom: 16,
-
-      fontWeight: "bold",
-
-      fontSize: 17,
-
-      color: "#16A34A",
-    },
-
-    summary: {
-
-      fontSize: 15,
-
-      lineHeight: 22,
-
-      color: "#444",
-
-      marginBottom: 16,
-    },
-
-    metric: {
-
-      fontSize: 14,
-
-      color: "#555",
-
-      marginBottom: 8,
-    },
-
-    improvementSection: {
-
-      marginTop: 18,
-
-      paddingTop: 16,
-
-      borderTopWidth: 1,
-
-      borderTopColor:
-        "#E5E7EB",
-
-      marginBottom: 20,
-    },
-
-    improvementTitle: {
-
-      fontSize: 18,
-
-      fontWeight: "bold",
-
-      marginBottom: 10,
-    },
-
-    improvementText: {
-
-      fontSize: 15,
-
-      color: "#555",
-
-      marginBottom: 14,
-    },
-
-    skillsContainer: {
-
-      flexDirection: "row",
-
-      flexWrap: "wrap",
-
-      gap: 10,
-    },
-
-    skillChip: {
-
-      backgroundColor:
-        "#EEF2FF",
-
-      paddingVertical: 8,
-
-      paddingHorizontal: 14,
-
-      borderRadius: 30,
-    },
-
-    skillText: {
-
-      color: "#3730A3",
-
-      fontWeight: "600",
-    },
-  });
+  improvementSection: {
+    marginBottom: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  improvementHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  improvementTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#374151",
+  },
+  improvementScore: {
+    fontSize: 12,
+    color: "#16A34A",
+    fontWeight: "700",
+  },
+  skillsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  skillChip: {
+    backgroundColor: "#EEF2FF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#C7D2FE",
+  },
+  skillText: {
+    color: "#3730A3",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+});
