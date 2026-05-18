@@ -1,3 +1,5 @@
+// screens/ReviewOnboardingScreen.js
+
 import {
   View,
   Text,
@@ -21,19 +23,20 @@ import {
   useOnboarding,
 } from "../context/OnboardingContext";
 
-export default function ReviewOnboardingScreen() {
+export default function ReviewOnboardingScreen({
+  navigation,
+}) {
 
-  /*
-    CONTEXT
-  */
   const {
     onboardingData,
 
     resetOnboarding,
+
+    refreshOnboarding,
   } = useOnboarding();
 
   /*
-    SAVE PROFILE
+    COMPLETE
   */
   const handleComplete =
     async () => {
@@ -43,9 +46,6 @@ export default function ReviewOnboardingScreen() {
         const uid =
           auth.currentUser.uid;
 
-        /*
-          USER REF
-        */
         const userRef =
           doc(
             db,
@@ -53,11 +53,7 @@ export default function ReviewOnboardingScreen() {
             uid
           );
 
-        /*
-          SAVE PROFILE
-        */
         await updateDoc(
-            
           userRef,
           {
 
@@ -103,26 +99,22 @@ export default function ReviewOnboardingScreen() {
                   .transcriptHistory,
             },
           }
-          
         );
-        console.log(
-            "PROFILE SAVED"
-            );
 
         /*
-          RESET CONTEXT
+          REFRESH APP STATE
         */
+        refreshOnboarding();
+
+        /*
+          RESET
+        */
+        resetOnboarding();
+
         Alert.alert(
-        "Success",
-        "Onboarding completed successfully"
+          "Success",
+          "Onboarding completed successfully"
         );
-
-        /*
-        DO NOT RESET YET
-        It wipes state too early
-        */
-
-        // resetOnboarding();
 
       } catch (error) {
 
@@ -130,15 +122,10 @@ export default function ReviewOnboardingScreen() {
 
         Alert.alert(
           "Error",
-          "Failed to save onboarding"
+          "Failed to complete onboarding"
         );
       }
     };
-
-    console.log(
-    "ONBOARDING DATA:",
-    onboardingData
-    );
 
   return (
 
@@ -148,43 +135,21 @@ export default function ReviewOnboardingScreen() {
       }
     >
 
-      <Text
-        style={
-          styles.title
-        }
-      >
+      <Text style={styles.title}>
         Review Your Profile
       </Text>
 
-      <Text
-        style={
-          styles.subtitle
-        }
-      >
+      <Text style={styles.subtitle}>
         Confirm your details before continuing.
       </Text>
 
-      {/* ROLE */}
+      <View style={styles.card}>
 
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.label
-          }
-        >
+        <Text style={styles.label}>
           Role
         </Text>
 
-        <Text
-          style={
-            styles.value
-          }
-        >
+        <Text style={styles.value}>
           {
             onboardingData
               .canonicalRole
@@ -193,87 +158,44 @@ export default function ReviewOnboardingScreen() {
 
       </View>
 
-      {/* SKILLS */}
+      <View style={styles.card}>
 
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.label
-          }
-        >
+        <Text style={styles.label}>
           Skills
         </Text>
 
-        <Text
-          style={
-            styles.value
-          }
-        >
+        <Text style={styles.value}>
           {
             (
-                onboardingData.skills || []
+              onboardingData.skills || []
             ).join(", ")
-            }
+          }
         </Text>
 
       </View>
 
-      {/* EXPERIENCE */}
+      <View style={styles.card}>
 
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.label
-          }
-        >
+        <Text style={styles.label}>
           Experience
         </Text>
 
-        <Text
-          style={
-            styles.value
-          }
-        >
+        <Text style={styles.value}>
           {
             onboardingData
               .experience
-          }{" "}
-          years
+          } years
         </Text>
 
       </View>
 
-      {/* LOCATION */}
+      <View style={styles.card}>
 
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.label
-          }
-        >
+        <Text style={styles.label}>
           Location
         </Text>
 
-        <Text
-          style={
-            styles.value
-          }
-        >
+        <Text style={styles.value}>
           {
             onboardingData
               .location
@@ -282,27 +204,13 @@ export default function ReviewOnboardingScreen() {
 
       </View>
 
-      {/* AVAILABILITY */}
+      <View style={styles.card}>
 
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.label
-          }
-        >
+        <Text style={styles.label}>
           Availability
         </Text>
 
-        <Text
-          style={
-            styles.value
-          }
-        >
+        <Text style={styles.value}>
           {
             onboardingData
               .availability
@@ -311,27 +219,13 @@ export default function ReviewOnboardingScreen() {
 
       </View>
 
-      {/* SHIFT */}
+      <View style={styles.card}>
 
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.label
-          }
-        >
+        <Text style={styles.label}>
           Preferred Shift
         </Text>
 
-        <Text
-          style={
-            styles.value
-          }
-        >
+        <Text style={styles.value}>
           {
             onboardingData
               .preferredShift
@@ -339,8 +233,6 @@ export default function ReviewOnboardingScreen() {
         </Text>
 
       </View>
-
-      {/* COMPLETE */}
 
       <TouchableOpacity
         style={

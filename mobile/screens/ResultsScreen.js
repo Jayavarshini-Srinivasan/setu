@@ -75,26 +75,75 @@ export default function ResultsScreen() {
       /*
         MATCH PAYLOAD
       */
-      const payload = {
-        role:
-            profile.canonicalRole ||
-            profile.jobRole ||
-            profile.role ||
-            "",
+/*
+  DETECT USER TYPE
+*/
+const isProfessional =
+  userData.workerType ===
+  "professional";
 
-        skills:
-          Array.isArray(
+/*
+  ROLE
+*/
+const role =
+  isProfessional
+    ? (
+        profile.professionalRole ||
+        ""
+      )
+    : (
+        profile.canonicalRole ||
+        profile.role ||
+        ""
+      );
+
+/*
+  SKILLS
+*/
+const skills =
+  isProfessional
+    ? (
+        Array.isArray(
+          profile.professionalSkills
+        )
+          ? profile.professionalSkills
+          : []
+      )
+    : (
+        Array.isArray(
           profile.skills
         )
           ? profile.skills
-          : [],
+          : []
+      );
 
-        location:
-          profile.location || "",
+/*
+  EXPERIENCE
+*/
+const experience =
+  isProfessional
+    ? (
+        profile.experienceDetails
+          ?.length || 0
+      )
+    : (
+        profile.experience || 0
+      );
 
-        experience:
-          profile.experience || 0,
-      };
+/*
+  MATCH PAYLOAD
+*/
+const payload = {
+
+  role,
+
+  skills,
+
+  location:
+    profile.location || "",
+
+  experience,
+};
 
       /*
         CALL MATCH API
@@ -139,15 +188,7 @@ export default function ResultsScreen() {
 
         throw error;
       }
-        console.log(
-          JSON.stringify(
-            response.data,
-            null,
-            2
-          )
-        );
-
-      return response.data;
+        
     };
 
   /*

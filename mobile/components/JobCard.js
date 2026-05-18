@@ -14,8 +14,11 @@ export default function JobCard({
   job,
   onApply,
 }) {
+
   return (
+
     <View style={styles.card}>
+
       <Text style={styles.title}>
         {job.title}
       </Text>
@@ -36,98 +39,243 @@ export default function JobCard({
         {job.matchScore}%
       </Text>
 
-      <PrimaryButton
-            title="Apply"
-            onPress={() =>
-                onApply(job)
+      {/* AI SUMMARY */}
+
+      <Text style={styles.summary}>
+        {job.aiSummary}
+      </Text>
+
+      {/* METRICS */}
+
+      <Text style={styles.metric}>
+        Skill Match:
+        {" "}
+        {
+          job.metrics
+            ?.skillMatch
+        }%
+      </Text>
+
+      <Text style={styles.metric}>
+        Recommendation:
+        {" "}
+        {
+          job.recommendationType
+        }
+      </Text>
+
+      {/* IMPROVE MATCH */}
+
+      {
+        (
+          job.missingSkills || []
+        ).length > 0 && (
+
+          <View
+            style={
+              styles.improvementSection
             }
-        />
-        <Text>
-  {job.aiSummary}
-</Text>
+          >
 
-<Text>
-  Skill Match:
-  {job.metrics?.skillMatch}%
-</Text>
+            <Text
+              style={
+                styles.improvementTitle
+              }
+            >
+              Improve Match
+            </Text>
 
-<Text>
-  Missing:
-  {
-    job.analysis
-      ?.missingSkills
-      ?.join(", ")
-  }
-</Text>
+            <Text
+              style={
+                styles.improvementText
+              }
+            >
+              Potential Match:
+              {" "}
+              {job.matchScore}%
+              →
+              {
+                job.potentialMatchScore
+              }%
+            </Text>
 
-<Text>
-  Type:
-  {
-    job.recommendationType
-  }
-</Text>
+            <View
+              style={
+                styles.skillsContainer
+              }
+            >
+
+              {
+                job.missingSkills.map(
+                  (
+                    skill,
+                    index
+                  ) => (
+
+                    <View
+                      key={index}
+                      style={
+                        styles.skillChip
+                      }
+                    >
+
+                      <Text
+                        style={
+                          styles.skillText
+                        }
+                      >
+                        {skill}
+                      </Text>
+
+                    </View>
+                  )
+                )
+              }
+
+            </View>
+
+          </View>
+        )
+      }
+
+      {/* APPLY */}
+
+      <PrimaryButton
+        title="Apply"
+        onPress={() =>
+          onApply(job)
+        }
+      />
+
     </View>
   );
 }
 
 const styles =
   StyleSheet.create({
+
     card: {
+
       backgroundColor:
         "#fff",
 
-      borderRadius: 12,
+      borderRadius: 16,
 
-      padding: 16,
+      padding: 18,
 
-      marginBottom: 16,
+      marginBottom: 18,
 
-      elevation: 2,
+      elevation: 3,
     },
 
     title: {
-      fontSize: 18,
+
+      fontSize: 20,
 
       fontWeight: "bold",
 
-      marginBottom: 10,
+      marginBottom: 12,
 
-      color: "#2c3e50",
+      color: "#111827",
     },
 
     meta: {
-      marginBottom: 6,
+
+      marginBottom: 8,
 
       color: "#555",
     },
 
     match: {
+
       marginTop: 10,
 
-      marginBottom: 15,
+      marginBottom: 16,
 
       fontWeight: "bold",
 
-      color: "#27ae60",
+      fontSize: 17,
+
+      color: "#16A34A",
     },
 
-    button: {
+    summary: {
+
+      fontSize: 15,
+
+      lineHeight: 22,
+
+      color: "#444",
+
+      marginBottom: 16,
+    },
+
+    metric: {
+
+      fontSize: 14,
+
+      color: "#555",
+
+      marginBottom: 8,
+    },
+
+    improvementSection: {
+
+      marginTop: 18,
+
+      paddingTop: 16,
+
+      borderTopWidth: 1,
+
+      borderTopColor:
+        "#E5E7EB",
+
+      marginBottom: 20,
+    },
+
+    improvementTitle: {
+
+      fontSize: 18,
+
+      fontWeight: "bold",
+
+      marginBottom: 10,
+    },
+
+    improvementText: {
+
+      fontSize: 15,
+
+      color: "#555",
+
+      marginBottom: 14,
+    },
+
+    skillsContainer: {
+
+      flexDirection: "row",
+
+      flexWrap: "wrap",
+
+      gap: 10,
+    },
+
+    skillChip: {
+
       backgroundColor:
-        "#3498db",
+        "#EEF2FF",
 
-      paddingVertical: 12,
+      paddingVertical: 8,
 
-      borderRadius: 8,
+      paddingHorizontal: 14,
 
-      alignItems:
-        "center",
+      borderRadius: 30,
     },
 
-    buttonText: {
-      color: "white",
+    skillText: {
 
-      fontWeight: "bold",
+      color: "#3730A3",
 
-      fontSize: 16,
+      fontWeight: "600",
     },
   });

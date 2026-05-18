@@ -15,6 +15,9 @@ import VoiceQuestionCard from "../components/VoiceQuestionCard";
 import {
   useOnboarding,
 } from "../context/OnboardingContext";
+import {
+  API_BASE_URL,
+} from "@env";
 
 export default function RoleQuestionScreen({
   navigation,
@@ -56,7 +59,11 @@ export default function RoleQuestionScreen({
     ROLE OPTIONS
   */
   const roleOptions = [
-    "driver",
+    "auto_driver",
+    "cab_driver",
+    "truck_driver",
+    "delivery_rider",
+    "bus_driver",
     "delivery",
     "warehouse",
     "electrician",
@@ -193,8 +200,7 @@ export default function RoleQuestionScreen({
         );
 
         const response =
-          await fetch(
-            "http://192.168.0.108:5000/voice/upload-audio",
+          await fetch(`${API_BASE_URL}/voice/upload-audio`,
             {
               method:
                 "POST",

@@ -1,54 +1,40 @@
+
 import "react-native-gesture-handler";
 
-import {
-  NavigationContainer,
-} from "@react-navigation/native";
+import {NavigationContainer,} from "@react-navigation/native";
 
-import {
-  createNativeStackNavigator,
-} from "@react-navigation/native-stack";
+import {createNativeStackNavigator,} from "@react-navigation/native-stack";
 
-import {
-  createBottomTabNavigator,
-} from "@react-navigation/bottom-tabs";
+import {createBottomTabNavigator,} from "@react-navigation/bottom-tabs";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import {useEffect,useState,} from "react";
 
-import {
-  ActivityIndicator,
-  View,
-} from "react-native";
+import {ActivityIndicator,View,} from "react-native";
 
-import {
-  doc,
-  getDoc,
-} from "firebase/firestore";
+import {doc,getDoc,} from "firebase/firestore";
 
-import {
-  db,
-} from "./services/firebase";
+import {db,} from "./services/firebase";
 
-import {
-  AuthProvider,
-  useAuth,
-} from "./context/AuthContext";
+import {AuthProvider,useAuth,} from "./context/AuthContext";
 
-import {
-  OnboardingProvider,
-} from "./context/OnboardingContext";
+import { OnboardingProvider,useOnboarding,} from "./context/OnboardingContext";
+
+import ResumePreviewScreen from "./screens/professional/ResumePreviewScreen";
 
 /*
-  AUTH SCREENS
+  AUTH
 */
 import SignupScreen from "./screens/SignupScreen";
 
 import LoginScreen from "./screens/LoginScreen";
 
 /*
-  ONBOARDING SCREENS
+  USER TYPE
+*/
+import UserTypeSelectionScreen from "./screens/UserTypeSelectionScreen";
+
+/*
+  LABOUR
 */
 import RoleQuestionScreen from "./screens/RoleQuestionScreen";
 
@@ -63,7 +49,25 @@ import PreferencesQuestionScreen from "./screens/PreferencesQuestionScreen";
 import ReviewOnboardingScreen from "./screens/ReviewOnboardingScreen";
 
 /*
-  MAIN APP SCREENS
+  PROFESSIONAL
+*/
+import ProfessionalRoleScreen from "./screens/professional/ProfessionalRoleScreen";
+
+import EducationScreen from "./screens/professional/EducationScreen";
+
+import ProfessionalSkillsScreen from "./screens/professional/ProfessionalSkillsScreen";
+
+import ProfessionalExperienceScreen from "./screens/professional/ProfessionalExperienceScreen";
+
+import ProfessionalLinksScreen from "./screens/professional/ProfessionalLinksScreen";
+
+import CareerGoalsScreen from "./screens/professional/CareerGoalsScreen";
+
+import ProfessionalReviewScreen from "./screens/professional/ProfessionalReviewScreen";
+
+import LearningPathScreen from "./screens/professional/LearningPathScreen";
+/*
+  MAIN APP
 */
 import HomeScreen from "./screens/HomeScreen";
 
@@ -71,9 +75,6 @@ import ResultsScreen from "./screens/ResultsScreen";
 
 import ProfileScreen from "./screens/ProfileScreen";
 
-/*
-  NAVIGATORS
-*/
 const Stack =
   createNativeStackNavigator();
 
@@ -81,20 +82,13 @@ const Tab =
   createBottomTabNavigator();
 
 /*
-  MAIN APP TABS
+  APP TABS
 */
-function WorkerTabs() {
+function LabourTabs() {
 
   return (
 
     <Tab.Navigator>
-
-      <Tab.Screen
-        name="Profile"
-        component={
-          ProfileScreen
-        }
-      />
 
       <Tab.Screen
         name="Home"
@@ -107,6 +101,56 @@ function WorkerTabs() {
         name="Results"
         component={
           ResultsScreen
+        }
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={
+          ProfileScreen
+        }
+      />
+
+    </Tab.Navigator>
+  );
+}
+
+function ProfessionalTabs() {
+
+  return (
+
+    <Tab.Navigator>
+
+      <Tab.Screen
+        name="Home"
+        component={
+          HomeScreen
+        }
+      />
+
+      <Tab.Screen
+        name="Results"
+        component={
+          ResultsScreen
+        }
+      />
+
+      <Tab.Screen
+        name="Resume"
+        component={
+          ResumePreviewScreen
+        }
+      />
+      <Tab.Screen
+        name="Learning"
+        component={
+          LearningPathScreen
+        }
+      />
+      <Tab.Screen
+        name="Profile"
+        component={
+          ProfileScreen
         }
       />
 
@@ -123,6 +167,10 @@ function AppNavigator() {
     user,
   } = useAuth();
 
+  const {
+    onboardingRefresh,
+  } = useOnboarding();
+
   const [
     loading,
     setLoading,
@@ -133,6 +181,11 @@ function AppNavigator() {
     setOnboardingCompleted,
   ] = useState(false);
 
+  const [
+  workerType,
+  setWorkerType,
+] = useState("");
+
   /*
     CHECK PROFILE
   */
@@ -140,16 +193,16 @@ function AppNavigator() {
 
     checkProfile();
 
-  }, [user]);
+  }, [
+    user,
+    onboardingRefresh,
+  ]);
 
   const checkProfile =
     async () => {
 
       try {
 
-        /*
-          NO USER
-        */
         if (!user) {
 
           setLoading(false);
@@ -157,9 +210,6 @@ function AppNavigator() {
           return;
         }
 
-        /*
-          USER DOC
-        */
         const userRef =
           doc(
             db,
@@ -172,20 +222,15 @@ function AppNavigator() {
             userRef
           );
 
-        /*
-          PROFILE EXISTS
-        */
         if (
           userSnap.exists()
         ) {
 
           const userData =
             userSnap.data();
-
-          /*
-            TEMPORARY:
-            FORCE ONBOARDING
-          */
+          setWorkerType(
+            userData.workerType || ""
+          );
           setOnboardingCompleted(
             userData.onboardingCompleted || false
           );
@@ -267,6 +312,16 @@ function AppNavigator() {
       <Stack.Navigator>
 
         <Stack.Screen
+          name="UserTypeSelection"
+          component={
+            UserTypeSelectionScreen
+          }
+        />
+
+
+        {/* LABOUR */}
+
+        <Stack.Screen
           name="RoleQuestion"
           component={
             RoleQuestionScreen
@@ -308,6 +363,58 @@ function AppNavigator() {
           }
         />
 
+        {/* PROFESSIONAL */}
+
+        <Stack.Screen
+          name="ProfessionalRole"
+          component={
+            ProfessionalRoleScreen
+          }
+        />
+
+        <Stack.Screen
+          name="Education"
+          component={
+            EducationScreen
+          }
+        />
+
+        <Stack.Screen
+          name="ProfessionalSkills"
+          component={
+            ProfessionalSkillsScreen
+          }
+        />
+
+        <Stack.Screen
+          name="ProfessionalExperience"
+          component={
+            ProfessionalExperienceScreen
+          }
+        />
+
+        <Stack.Screen
+          name="ProfessionalLinks"
+          component={
+            ProfessionalLinksScreen
+          }
+        />
+
+        <Stack.Screen
+          name="CareerGoals"
+          component={
+            CareerGoalsScreen
+          }
+        />
+
+        <Stack.Screen
+          name="ProfessionalReview"
+          component={
+            ProfessionalReviewScreen
+          }
+        />
+
+
       </Stack.Navigator>
     );
   }
@@ -315,7 +422,17 @@ function AppNavigator() {
   /*
     MAIN APP
   */
-  return <WorkerTabs />;
+  if (
+    workerType ===
+    "professional"
+  ) {
+
+    return (
+      <ProfessionalTabs />
+    );
+  }
+
+  return <LabourTabs />;
 }
 
 /*

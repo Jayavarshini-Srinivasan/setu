@@ -12,17 +12,33 @@ export function OnboardingProvider({
 }) {
 
   const [
+    onboardingRefresh,
+    setOnboardingRefresh,
+  ] = useState(0);
+
+  const [
     onboardingData,
     setOnboardingData,
   ] = useState({
 
+    /*
+      GLOBAL
+    */
     workerType: "",
 
-    language: "english",
+    language:
+      "english",
 
+    transcriptHistory:
+      [],
+
+    /*
+      LABOUR
+    */
     role: "",
 
-    canonicalRole: "",
+    canonicalRole:
+      "",
 
     skills: [],
 
@@ -30,17 +46,52 @@ export function OnboardingProvider({
 
     location: "",
 
-    availability: "",
+    availability:
+      "",
 
-    preferredShift: "",
+    preferredShift:
+      "",
 
-    education: "",
+    /*
+      PROFESSIONAL
+    */
+    professionalRole:
+      "",
 
-    certifications: [],
+    education: {
 
-    preferredRoles: [],
+      degree: "",
 
-    transcriptHistory: [],
+      institution:
+        "",
+
+      graduationYear:
+        "",
+    },
+
+    professionalSkills:
+      [],
+
+    experienceDetails:
+      [],
+
+    linkedin: "",
+
+    github: "",
+
+    portfolio: "",
+
+    careerGoals:
+      "",
+
+    resumeSummary:
+      "",
+
+    certifications:
+      [],
+
+    preferredRoles:
+      [],
   });
 
   /*
@@ -82,6 +133,18 @@ export function OnboardingProvider({
     };
 
   /*
+    FORCE REFRESH
+  */
+  const refreshOnboarding =
+    () => {
+
+      setOnboardingRefresh(
+        (prev) =>
+          prev + 1
+      );
+    };
+
+  /*
     RESET
   */
   const resetOnboarding =
@@ -89,14 +152,19 @@ export function OnboardingProvider({
 
       setOnboardingData({
 
-        workerType: "",
+        workerType:
+          "",
 
         language:
           "english",
 
+        transcriptHistory:
+          [],
+
         role: "",
 
-        canonicalRole: "",
+        canonicalRole:
+          "",
 
         skills: [],
 
@@ -104,17 +172,48 @@ export function OnboardingProvider({
 
         location: "",
 
-        availability: "",
+        availability:
+          "",
 
-        preferredShift: "",
+        preferredShift:
+          "",
 
-        education: "",
+        professionalRole:
+          "",
 
-        certifications: [],
+        education: {
 
-        preferredRoles: [],
+          degree: "",
 
-        transcriptHistory:
+          institution:
+            "",
+
+          graduationYear:
+            "",
+        },
+
+        professionalSkills:
+          [],
+
+        experienceDetails:
+          [],
+
+        linkedin: "",
+
+        github: "",
+
+        portfolio: "",
+
+        careerGoals:
+          "",
+
+        resumeSummary:
+          "",
+
+        certifications:
+          [],
+
+        preferredRoles:
           [],
       });
     };
@@ -126,11 +225,15 @@ export function OnboardingProvider({
 
         onboardingData,
 
+        onboardingRefresh,
+
         updateField,
 
         addTranscript,
 
         resetOnboarding,
+
+        refreshOnboarding,
       }}
     >
 
@@ -146,3 +249,5 @@ export function useOnboarding() {
     OnboardingContext
   );
 }
+
+

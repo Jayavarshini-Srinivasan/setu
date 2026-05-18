@@ -19,6 +19,9 @@ import {
 import {
   SKILLS_BY_ROLE,
 } from "../constants/skills";
+import {
+  API_BASE_URL,
+} from "@env";
 
 export default function SkillsQuestionScreen({
   navigation,
@@ -198,8 +201,7 @@ export default function SkillsQuestionScreen({
         );
 
         const response =
-          await fetch(
-            "http://192.168.0.108:5000/voice/upload-audio",
+          await fetch(`${API_BASE_URL}/voice/upload-audio`,
             {
               method:
                 "POST",

@@ -186,8 +186,7 @@ export default function ExperienceQuestionScreen({
         );
 
         const response =
-          await fetch(
-            "http://192.168.0.108:5000/voice/upload-audio",
+          await fetch(`${API_BASE_URL}/voice/upload-audio`,
             {
               method:
                 "POST",

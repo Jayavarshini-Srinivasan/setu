@@ -12,6 +12,8 @@ const authRoutes = require("./routes/authRoutes");
 const explanationRoutes = require("./routes/explanationRoutes");
 const voiceRoutes = require("./routes/voiceRoutes");
 const extractionRoutes = require("./routes/extractionRoutes");
+const resumeRoutes = require("./routes/resumeRoutes");
+const learningRoutes = require("./routes/learningRoutes");;
 
 const PORT = 5000;
 
@@ -37,6 +39,8 @@ app.use("/auth", authRoutes);
 app.use("/dashboard",dashboardRoutes);
 app.use("/voice",voiceRoutes);
 app.use("/ai",extractionRoutes);
+app.use("/resume",resumeRoutes);
+app.use("/learning",learningRoutes);
 
 /*
   SERVER

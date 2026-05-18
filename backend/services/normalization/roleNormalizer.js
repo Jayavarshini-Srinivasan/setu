@@ -1,68 +1,198 @@
-const {
-  roleTaxonomy,
-} = require(
-  "../../data/roleTaxonomy"
-);
+const roleNormalizationMap = {
 
-const normalizeRole =
-  (
-    rawRole = ""
-  ) => {
+  /*
+    TRANSPORT
+  */
+  transport: {
 
-    const normalizedInput =
-      rawRole
-        .toLowerCase()
-        .trim();
+    auto_driver: [
 
-    for (
-      const category in roleTaxonomy
-    ) {
+      "auto",
 
-      const roles =
-        roleTaxonomy[
-          category
-        ];
+      "auto driver",
 
-      for (
-        const canonicalRole in roles
-      ) {
+      "rickshaw",
 
-        const aliases =
-          roles[
-            canonicalRole
-          ];
+      "share auto",
+    ],
 
-        const found =
-          aliases.some(
-            (alias) =>
-              normalizedInput.includes(
-                alias
-              )
-          );
+    cab_driver: [
 
-        if (found) {
+      "cab",
 
-          return {
-            category,
+      "taxi",
 
-            canonicalRole,
-          };
-        }
-      }
-    }
+      "uber",
 
-    /*
-      FALLBACK
-    */
+      "ola",
+
+      "car driver",
+    ],
+
+    truck_driver: [
+
+      "truck",
+
+      "lorry",
+
+      "heavy vehicle",
+
+      "goods vehicle",
+    ],
+
+    delivery_rider: [
+
+      "delivery",
+
+      "delivery boy",
+
+      "swiggy",
+
+      "zomato",
+
+      "bike delivery",
+    ],
+
+    bus_driver: [
+
+      "bus",
+
+      "school bus",
+    ],
+  },
+
+  /*
+    ELECTRICAL
+  */
+  electrical: {
+
+    electrician: [
+
+      "electrician",
+
+      "wireman",
+
+      "electrical",
+    ],
+  },
+
+  /*
+    WAREHOUSE
+  */
+  logistics: {
+
+    warehouse_worker: [
+
+      "warehouse",
+
+      "picker",
+
+      "loader",
+
+      "packer",
+    ],
+  },
+
+  /*
+    CONSTRUCTION
+  */
+  construction: {
+
+    construction_worker: [
+
+      "construction",
+
+      "site worker",
+
+      "mason",
+    ],
+  },
+};
+
+/*
+  NORMALIZE ROLE
+*/
+function normalizeRole(
+  rawRole
+) {
+
+  if (!rawRole) {
+
     return {
+
       category:
-        "other",
+        "general",
 
       canonicalRole:
-        normalizedInput
-          .replace(/\s+/g, "_"),
+        "",
     };
+  }
+
+  const lowerRole =
+    rawRole.toLowerCase();
+
+  /*
+    LOOP CATEGORIES
+  */
+  for (
+    const category
+    in roleNormalizationMap
+  ) {
+
+    const roles =
+      roleNormalizationMap[
+        category
+      ];
+
+    /*
+      LOOP ROLES
+    */
+    for (
+      const canonicalRole
+      in roles
+    ) {
+
+      const aliases =
+        roles[
+          canonicalRole
+        ];
+
+      /*
+        MATCH
+      */
+      const matched =
+        aliases.some(
+          (alias) =>
+            lowerRole.includes(
+              alias
+            )
+        );
+
+      if (matched) {
+
+        return {
+
+          category,
+
+          canonicalRole,
+        };
+      }
+    }
+  }
+
+  /*
+    FALLBACK
+  */
+  return {
+
+    category:
+      "general",
+
+    canonicalRole:
+      lowerRole
+        .replace(/\s+/g, "_"),
   };
+}
 
 module.exports = {
   normalizeRole,

@@ -136,6 +136,69 @@ Write a realistic explanation.
     return response.text();
   };
 
+  /*
+  PROFESSIONAL SUMMARY
+*/
+const generateProfessionalSummary =
+  async ({
+    role,
+    skills,
+    experience,
+    totalYears,
+    goals,
+  }) => {
+
+    try {
+
+      const prompt = `
+Generate a professional ATS-friendly resume summary.
+
+Role:
+${role}
+
+Skills:
+${skills.join(", ")}
+
+Experience:
+${JSON.stringify(experience)}
+
+Total Experience:
+${totalYears} years
+
+Career Goals:
+${goals.join(", ")}
+
+Requirements:
+- 2 to 4 lines
+- professional tone
+- concise
+- ATS optimized
+- strong but realistic
+`;
+
+      const result =
+        await model.generateContent(
+          prompt
+        );
+
+      return result.response
+        .text()
+        .trim();
+
+    } catch (error) {
+
+      console.log(error);
+
+      return `
+Professional with experience in ${role}
+and skills in ${skills.join(", ")}.
+      `;
+    }
+  };
+
 module.exports = {
+
   generateMatchExplanation,
+
+  generateProfessionalSummary,
 };

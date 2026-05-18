@@ -52,6 +52,73 @@ function getRecommendationType(
 }
 
 /*
+  IMPROVEMENT ANALYSIS
+*/
+const generateImprovementInsights =
+  (
+    workerSkills,
+    requiredSkills,
+    currentMatchScore
+  ) => {
+
+    /*
+      NORMALIZE
+    */
+    const normalizedWorkerSkills =
+      workerSkills.map(
+        (skill) =>
+          skill.toLowerCase()
+      );
+
+    /*
+      MISSING
+    */
+    const missingSkills =
+      requiredSkills.filter(
+        (skill) =>
+          !normalizedWorkerSkills.includes(
+            skill.toLowerCase()
+          )
+      );
+
+    /*
+      PRIORITIZE
+    */
+    const prioritizedSkills =
+      missingSkills.slice(
+        0,
+        3
+      );
+
+    /*
+      PROJECTED IMPROVEMENT
+    */
+    const potentialMatchScore =
+      Math.min(
+        98,
+        currentMatchScore +
+        (
+          prioritizedSkills.length *
+          8
+        )
+      );
+
+    return {
+
+      missingSkills:
+        prioritizedSkills,
+
+      improvementSuggestions:
+        prioritizedSkills.map(
+          (skill) =>
+            `Learn ${skill}`
+        ),
+
+      potentialMatchScore,
+    };
+  };
+
+/*
   ANALYZE MATCHED JOB
 */
 const analyzeMatchedJob =
@@ -85,7 +152,7 @@ const analyzeMatchedJob =
       matchedJob.analysis
         ?.matchedSkills || [];
 
-    const missingSkills =
+    const analysisMissingSkills =
       matchedJob.analysis
         ?.missingSkills || [];
 
@@ -134,10 +201,10 @@ const analyzeMatchedJob =
     const cons = [];
 
     if (
-      missingSkills.length > 0
+      analysisMissingSkills.length > 0
     ) {
       cons.push(
-        `Missing skills: ${missingSkills.join(
+        `Missing skills: ${analysisMissingSkills.join(
           ", "
         )}`
       );
@@ -155,11 +222,13 @@ const analyzeMatchedJob =
       STRUCTURED AI CONTEXT
     */
     const explanationData = {
+
       skillMatch,
 
       matchedSkills,
 
-      missingSkills,
+      missingSkills:
+        analysisMissingSkills,
 
       locationMatch:
         locationScore >= 90,
@@ -178,7 +247,21 @@ const analyzeMatchedJob =
         explanationData
       );
 
+    /*
+      IMPROVEMENT INSIGHTS
+    */
+    const improvementData =
+      generateImprovementInsights(
+
+        workerProfile.skills || [],
+
+        matchedJob.requiredSkills || [],
+
+        matchedJob.matchScore
+      );
+
     return {
+
       ...matchedJob,
 
       recommendationType:
@@ -187,6 +270,7 @@ const analyzeMatchedJob =
         ),
 
       metrics: {
+
         salary:
           salaryScore,
 
@@ -210,9 +294,21 @@ const analyzeMatchedJob =
       cons,
 
       aiSummary,
+
+      missingSkills:
+        improvementData.missingSkills,
+
+      improvementSuggestions:
+        improvementData.improvementSuggestions,
+
+      potentialMatchScore:
+        improvementData.potentialMatchScore,
     };
   };
 
 module.exports = {
+
   analyzeMatchedJob,
+
+  generateImprovementInsights,
 };
