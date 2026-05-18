@@ -234,6 +234,8 @@ export function OnboardingProvider({
         resetOnboarding,
 
         refreshOnboarding,
+
+        setFullOnboardingData: setOnboardingData,
       }}
     >
 

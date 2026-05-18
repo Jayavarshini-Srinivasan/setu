@@ -102,13 +102,6 @@ export default function SignupScreen({
           }
         );
 
-        /*
-          GO TO ONBOARDING
-        */
-        navigation.navigate(
-          "Onboarding"
-        );
-
       } catch (error) {
 
         console.log(error);

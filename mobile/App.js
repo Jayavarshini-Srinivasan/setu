@@ -15,9 +15,13 @@ import {doc,getDoc,} from "firebase/firestore";
 
 import {db,} from "./services/firebase";
 
-import {AuthProvider,useAuth,} from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
-import { OnboardingProvider,useOnboarding,} from "./context/OnboardingContext";
+import { OnboardingProvider, useOnboarding } from "./context/OnboardingContext";
+
+import { I18nProvider } from "./context/I18nContext";
+
+import LanguageSelectionScreen from "./screens/LanguageSelectionScreen";
 
 import ResumePreviewScreen from "./screens/professional/ResumePreviewScreen";
 
@@ -165,6 +169,7 @@ function AppNavigator() {
 
   const {
     user,
+    loading: authLoading,
   } = useAuth();
 
   const {
@@ -182,9 +187,9 @@ function AppNavigator() {
   ] = useState(false);
 
   const [
-  workerType,
-  setWorkerType,
-] = useState("");
+    workerType,
+    setWorkerType,
+  ] = useState("");
 
   /*
     CHECK PROFILE
@@ -247,9 +252,9 @@ function AppNavigator() {
     };
 
   /*
-    LOADING
+    LOADING — wait for BOTH auth AND profile check
   */
-  if (loading) {
+  if (authLoading || loading) {
 
     return (
 
@@ -274,7 +279,7 @@ function AppNavigator() {
   }
 
   /*
-    AUTH FLOW
+    AUTH FLOW — Language first, then Login/Signup
   */
   if (!user) {
 
@@ -283,17 +288,19 @@ function AppNavigator() {
       <Stack.Navigator>
 
         <Stack.Screen
+          name="LanguageSelection"
+          component={LanguageSelectionScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
           name="Login"
-          component={
-            LoginScreen
-          }
+          component={LoginScreen}
         />
 
         <Stack.Screen
           name="Signup"
-          component={
-            SignupScreen
-          }
+          component={SignupScreen}
         />
 
       </Stack.Navigator>
@@ -442,18 +449,22 @@ export default function App() {
 
   return (
 
-    <AuthProvider>
+    <I18nProvider>
 
-      <OnboardingProvider>
+      <AuthProvider>
 
-        <NavigationContainer>
+        <OnboardingProvider>
 
-          <AppNavigator />
+          <NavigationContainer>
 
-        </NavigationContainer>
+            <AppNavigator />
 
-      </OnboardingProvider>
+          </NavigationContainer>
 
-    </AuthProvider>
+        </OnboardingProvider>
+
+      </AuthProvider>
+
+    </I18nProvider>
   );
 }

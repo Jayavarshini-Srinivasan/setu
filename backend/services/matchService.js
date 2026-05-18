@@ -145,6 +145,14 @@ const calculateMatchScore =
         ) {
 
           score += 10;
+
+        } else {
+            /*
+            HEAVY PENALTY FOR ROLE MISMATCH
+            Ensures professionals don't see labour jobs
+            and vice versa just because of overlapping generic skills.
+            */
+            score = Math.round(score * 0.1); 
         }
 
         /*

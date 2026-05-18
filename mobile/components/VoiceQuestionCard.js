@@ -8,6 +8,7 @@ import {
 } from "react-native";
 
 import VoiceButton from "./VoiceButton";
+import { useI18n } from "../context/I18nContext";
 
 export default function VoiceQuestionCard({
   step,
@@ -42,6 +43,8 @@ export default function VoiceQuestionCard({
 
   onContinue,
 }) {
+
+  const { t } = useI18n();
 
   return (
 
@@ -93,8 +96,8 @@ export default function VoiceQuestionCard({
       <View style={{ alignItems: 'center', marginBottom: 30 }}>
         {isProcessing ? (
           <>
-            <ActivityIndicator size="large" color="#000" style={{ marginBottom: 10, padding: 18 }} />
-            <Text style={{ color: '#666', fontWeight: 'bold' }}>Analyzing your response...</Text>
+            <ActivityIndicator size="large" color="#E85D04" style={{ marginBottom: 10, padding: 18 }} />
+            <Text style={{ color: '#E85D04', fontWeight: 'bold' }}>{t("analyzingResponse")}</Text>
           </>
         ) : (
           <>

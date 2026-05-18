@@ -23,6 +23,10 @@ import {
   useOnboarding,
 } from "../context/OnboardingContext";
 
+import {
+  API_BASE_URL,
+} from "@env";
+
 export default function LocationQuestionScreen({
   navigation,
 }) {
@@ -220,7 +224,7 @@ export default function LocationQuestionScreen({
 
         const response =
           await fetch(
-            "http://192.168.0.108:5000/voice/upload-audio",
+            `${API_BASE_URL}/voice/upload-audio`,
             {
               method:
                 "POST",

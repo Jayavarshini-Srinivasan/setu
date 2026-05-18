@@ -36,7 +36,6 @@ export default function LoginScreen({navigation}) {
         userCredential.user.email
       );
 
-      alert("Login successful");
     } catch (error) {
       console.log(error);
 

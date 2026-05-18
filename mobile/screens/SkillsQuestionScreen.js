@@ -24,6 +24,10 @@ import {
   API_BASE_URL,
 } from "@env";
 
+import {
+  useI18n,
+} from "../context/I18nContext";
+
 export default function SkillsQuestionScreen({
   navigation,
 }) {
@@ -39,6 +43,8 @@ export default function SkillsQuestionScreen({
     updateField,
     addTranscript,
   } = useOnboarding();
+
+  const { t } = useI18n();
 
   /*
   =====================================
@@ -426,9 +432,9 @@ export default function SkillsQuestionScreen({
 
       totalSteps={5}
 
-      title="What kind of work can you do?"
+      title={t("whatSkills")}
 
-      subtitle="Tap skills or speak naturally in your language."
+      subtitle={t("skillsSubtitle")}
 
       transcript={
         transcript

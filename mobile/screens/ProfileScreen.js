@@ -19,6 +19,7 @@ import {
 import {
   doc,
   getDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 import {
@@ -26,7 +27,14 @@ import {
   db,
 } from "../services/firebase";
 
+import { useOnboarding } from "../context/OnboardingContext";
+
 export default function ProfileScreen() {
+
+  const {
+    setFullOnboardingData,
+    refreshOnboarding,
+  } = useOnboarding();
 
   const [
     profile,
@@ -194,250 +202,120 @@ export default function ProfileScreen() {
       )
     );
 
+  /*
+    EDIT PROFILE
+  */
+  const handleEditProfile = async () => {
+    try {
+      setLoading(true);
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      const userRef = doc(db, "users", currentUser.uid);
+      
+      // 1. Update Firestore to set onboardingCompleted to false
+      await updateDoc(userRef, {
+        onboardingCompleted: false
+      });
+
+      // 2. Hydrate the OnboardingContext with the existing data
+      const fullProfile = profile.profile || {};
+      
+      setFullOnboardingData({
+        workerType: profile.workerType || "",
+        language: "english",
+        transcriptHistory: fullProfile.transcriptHistory || [],
+        
+        // Labour
+        role: fullProfile.role || "",
+        canonicalRole: fullProfile.canonicalRole || "",
+        skills: fullProfile.skills || [],
+        experience: fullProfile.experience || 0,
+        location: fullProfile.location || "",
+        availability: fullProfile.availability || "",
+        preferredShift: fullProfile.preferredShift || "",
+        
+        // Professional
+        professionalRole: fullProfile.professionalRole || "",
+        education: fullProfile.education || { degree: "", institution: "", graduationYear: "" },
+        professionalSkills: fullProfile.professionalSkills || [],
+        experienceDetails: fullProfile.experienceDetails || [],
+        linkedin: fullProfile.linkedin || "",
+        github: fullProfile.github || "",
+        portfolio: fullProfile.portfolio || "",
+        careerGoals: fullProfile.careerGoals || "",
+        preferredRoles: fullProfile.preferredRoles || [],
+      });
+      
+      refreshOnboarding();
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
+  };
+
   return (
-
-    <ScrollView
-      contentContainerStyle={
-        styles.container
-      }
-    >
-
+    <ScrollView contentContainerStyle={styles.container}>
       {/* HEADER */}
-
-      <View
-        style={
-          styles.headerCard
-        }
-      >
-
-        <Text
-          style={
-            styles.name
-          }
-        >
-          {
-            workerProfile.canonicalRole ||
-            "Worker"
-          }
+      <View style={styles.headerCard}>
+        <Text style={styles.name}>
+          {workerProfile.canonicalRole || workerProfile.professionalRole || "Worker"}
         </Text>
-
-        <Text
-          style={
-            styles.email
-          }
-        >
-          {
-            auth.currentUser?.email
-          }
+        <Text style={styles.email}>
+          {auth.currentUser?.email}
         </Text>
-
-        <Text
-          style={
-            styles.location
-          }
-        >
-          📍 {
-            workerProfile.location
-          }
+        <Text style={styles.location}>
+          📍 {workerProfile.location || "Not specified"}
         </Text>
-
       </View>
 
       {/* AI SUMMARY */}
-
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.cardTitle
-          }
-        >
-          AI Summary
-        </Text>
-
-        <Text
-          style={
-            styles.summary
-          }
-        >
-          {aiSummary}
-        </Text>
-
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>AI Summary</Text>
+        <Text style={styles.summary}>{aiSummary}</Text>
       </View>
 
       {/* PROFILE STRENGTH */}
-
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.cardTitle
-          }
-        >
-          Match Readiness
-        </Text>
-
-        <Text
-          style={
-            styles.strength
-          }
-        >
-          {profileStrength}%
-        </Text>
-
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Match Readiness</Text>
+        <Text style={styles.strength}>{profileStrength}%</Text>
       </View>
 
       {/* EXPERIENCE */}
-
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.cardTitle
-          }
-        >
-          Experience
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Experience</Text>
+        <Text style={styles.cardValue}>
+          {workerProfile.experience || (workerProfile.experienceDetails?.length > 0 ? workerProfile.experienceDetails[0].years : 0)} years
         </Text>
-
-        <Text
-          style={
-            styles.cardValue
-          }
-        >
-          {
-            workerProfile.experience
-          } years
-        </Text>
-
       </View>
 
       {/* SKILLS */}
-
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.cardTitle
-          }
-        >
-          Skills
-        </Text>
-
-        <View
-          style={
-            styles.skillsContainer
-          }
-        >
-
-          {
-            workerProfile.skills?.map(
-              (skill) => (
-
-                <View
-                  key={skill}
-
-                  style={
-                    styles.skillChip
-                  }
-                >
-
-                  <Text
-                    style={
-                      styles.skillText
-                    }
-                  >
-                    {skill}
-                  </Text>
-
-                </View>
-              )
-            )
-          }
-
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Skills</Text>
+        <View style={styles.skillsContainer}>
+          {(workerProfile.skills || workerProfile.professionalSkills || []).map((skill) => (
+            <View key={skill} style={styles.skillChip}>
+              <Text style={styles.skillText}>{skill}</Text>
+            </View>
+          ))}
         </View>
-
       </View>
 
-      {/* WORK PREFERENCES */}
-
-      <View
-        style={
-          styles.card
-        }
-      >
-
-        <Text
-          style={
-            styles.cardTitle
-          }
-        >
-          Work Preferences
-        </Text>
-
-        <Text
-          style={
-            styles.cardValue
-          }
-        >
-          {
-            workerProfile
-              ?.labourData
-              ?.availability
-          }
-        </Text>
-
-        <Text
-          style={
-            styles.cardValue
-          }
-        >
-          {
-            workerProfile
-              ?.labourData
-              ?.preferredShift
-          } shift
-        </Text>
-
-      </View>
-
-      {/* LOGOUT */}
-
+      {/* EDIT PROFILE */}
       <TouchableOpacity
-        style={
-          styles.logoutButton
-        }
-
-        onPress={
-          handleLogout
-        }
+        style={styles.editButton}
+        onPress={handleEditProfile}
       >
-
-        <Text
-          style={
-            styles.logoutText
-          }
-        >
-          Logout
-        </Text>
-
+        <Text style={styles.editButtonText}>Edit Profile</Text>
       </TouchableOpacity>
 
+      {/* LOGOUT */}
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -564,8 +442,21 @@ const styles =
 
     skillText: {
       color: "#fff",
-
       fontWeight: "600",
+    },
+
+    editButton: {
+      backgroundColor: "#2980b9",
+      padding: 18,
+      borderRadius: 16,
+      alignItems: "center",
+      marginTop: 20,
+    },
+
+    editButtonText: {
+      color: "#fff",
+      fontSize: 18,
+      fontWeight: "bold",
     },
 
     logoutButton: {
