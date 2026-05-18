@@ -116,9 +116,17 @@ const transcript =
 /*
   EXTRACT PROFILE
 */
+let contextData = {};
+if (req.body.context) {
+  try {
+    contextData = JSON.parse(req.body.context);
+  } catch(e) {}
+}
+
 const extractedProfile =
   await extractProfileData(
-    transcript
+    transcript,
+    contextData
   );
 
 res.status(200).json({

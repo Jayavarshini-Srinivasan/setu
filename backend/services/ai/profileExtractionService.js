@@ -7,7 +7,7 @@ const {
 const {
   normalizeRole,
 } = require(
-  "../normalization/roleNormalizer"
+  "../normalization/roleOntologyNormalizer"
 );
 
 const {
@@ -37,16 +37,24 @@ const model =
 
 const extractProfileData =
   async (
-    transcript
+    transcript,
+    context = {}
   ) => {
 
     const prompt = `
 Extract structured worker information from this transcript.
+The user might be continuing a flow. Here is what they have selected so far:
+${JSON.stringify(context, null, 2)}
 
 Transcript:
 "${transcript}"
 
-Return ONLY valid JSON.
+Instructions:
+1. Identify any new info mentioned in the transcript.
+2. MERGE this new info with the existing selections. Do NOT overwrite existing information unless the user explicitly changes it.
+3. If they say "I also do X", append X to their skills.
+4. If they say a role, update the role.
+5. Return ONLY valid JSON.
 
 Format:
 {
@@ -54,7 +62,8 @@ Format:
   "skills": [],
   "experience": 0,
   "location": "",
-  "availability": ""
+  "availability": "",
+  "preferredShift": ""
 }
 `;
 
@@ -70,22 +79,36 @@ Format:
     /*
       CLEAN JSON
     */
-    const cleaned =
-      response
-        .replace(
-          /```json/g,
-          ""
-        )
-        .replace(
-          /```/g,
-          ""
-        )
-        .trim();
+    let cleaned = response.replace(/```json/g, "").replace(/```/g, "").trim();
 
-    const parsed =
-      JSON.parse(
-        cleaned
-      );
+    // Sometimes LLM returns non-json text before or after
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    if (jsonStart >= 0 && jsonEnd >= 0) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+
+    let parsed = {
+      rawRole: "",
+      skills: [],
+      experience: 0,
+      location: "",
+      availability: ""
+    };
+
+    try {
+      if (cleaned) {
+        parsed = JSON.parse(cleaned);
+      }
+    } catch (e) {
+      console.log("JSON parsing failed, using fallback:", e.message);
+      // Fallback: try to extract some basic information
+      const lowerResp = response.toLowerCase();
+      if (lowerResp.includes("driver")) parsed.rawRole = "driver";
+      else if (lowerResp.includes("electrician")) parsed.rawRole = "electrician";
+      // fallback skills
+      parsed.skills = [];
+    }
 
     /*
       ROLE NORMALIZATION

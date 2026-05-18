@@ -19,6 +19,7 @@ import {
 import {
   SKILLS_BY_ROLE,
 } from "../constants/skills";
+
 import {
   API_BASE_URL,
 } from "@env";
@@ -28,19 +29,28 @@ export default function SkillsQuestionScreen({
 }) {
 
   /*
-    ONBOARDING CONTEXT
+  =====================================
+  CONTEXT
+  =====================================
   */
+
   const {
     onboardingData,
-
     updateField,
-
     addTranscript,
   } = useOnboarding();
 
   /*
-    RECORDING STATE
+  =====================================
+  STATES
+  =====================================
   */
+
+  const [
+    isProcessing,
+    setIsProcessing,
+  ] = useState(false);
+
   const [
     recording,
     setRecording,
@@ -51,9 +61,6 @@ export default function SkillsQuestionScreen({
     setTranscript,
   ] = useState("");
 
-  /*
-    SELECTED SKILLS
-  */
   const [
     selectedSkills,
     setSelectedSkills,
@@ -62,26 +69,44 @@ export default function SkillsQuestionScreen({
   );
 
   /*
-    ROLE
+  =====================================
+  ROLE
+  =====================================
   */
+
   const role =
     onboardingData
       .canonicalRole ||
-    onboardingData.role;
+    onboardingData.role ||
+    "";
 
   /*
-    SKILL OPTIONS
+  =====================================
+  SKILL OPTIONS
+  =====================================
   */
+
   const skillOptions =
     SKILLS_BY_ROLE[
       role
     ] || [];
 
   /*
-    START RECORDING
+  =====================================
+  START RECORDING
+  =====================================
   */
+
   const startRecording =
     async () => {
+
+      /*
+      PREVENT DOUBLE RECORDING
+      */
+
+      if (recording) {
+        return;
+      }
 
       try {
 
@@ -102,9 +127,11 @@ export default function SkillsQuestionScreen({
         }
 
         /*
-          AUDIO MODE
+        AUDIO MODE
         */
+
         await Audio.setAudioModeAsync({
+
           allowsRecordingIOS:
             true,
 
@@ -113,8 +140,9 @@ export default function SkillsQuestionScreen({
         });
 
         /*
-          CREATE RECORDING
+        CREATE RECORDING
         */
+
         const {
           recording,
         } =
@@ -138,8 +166,11 @@ export default function SkillsQuestionScreen({
     };
 
   /*
-    STOP RECORDING
+  =====================================
+  STOP RECORDING
+  =====================================
   */
+
   const stopRecording =
     async () => {
 
@@ -154,9 +185,13 @@ export default function SkillsQuestionScreen({
         const uri =
           recording.getURI();
 
-        setRecording(
-          null
-        );
+        setRecording(null);
+
+        setIsProcessing(true);
+
+        /*
+        UPLOAD AUDIO
+        */
 
         await uploadAudio(
           uri
@@ -170,12 +205,19 @@ export default function SkillsQuestionScreen({
           "Error",
           "Failed to stop recording"
         );
+
+      } finally {
+
+        setIsProcessing(false);
       }
     };
 
   /*
-    UPLOAD AUDIO
+  =====================================
+  UPLOAD AUDIO
+  =====================================
   */
+
   const uploadAudio =
     async (
       audioUri
@@ -201,7 +243,10 @@ export default function SkillsQuestionScreen({
         );
 
         const response =
-          await fetch(`${API_BASE_URL}/voice/upload-audio`,
+          await fetch(
+
+            `${API_BASE_URL}/voice/upload-audio`,
+
             {
               method:
                 "POST",
@@ -219,32 +264,48 @@ export default function SkillsQuestionScreen({
         const data =
           await response.json();
 
-        console.log(
-          data
-        );
+        console.log(data);
 
         /*
-          TRANSCRIPT
+        SAFETY
         */
+
+        if (!data.success) {
+
+          Alert.alert(
+            "Error",
+            data.error ||
+            "Failed to process audio"
+          );
+
+          return;
+        }
+
+        /*
+        TRANSCRIPT
+        */
+
         setTranscript(
-          data.transcript
+          data.transcript || ""
         );
 
         addTranscript(
-          data.transcript
+          data.transcript || ""
         );
 
         /*
-          AI SKILLS
+        EXTRACTED SKILLS
         */
+
         const extractedSkills =
           data
-            .extractedProfile
-            .skills || [];
+            ?.extractedProfile
+            ?.skills || [];
 
         /*
-          MERGE SKILLS
+        MERGE
         */
+
         const mergedSkills =
           [
             ...new Set([
@@ -268,14 +329,17 @@ export default function SkillsQuestionScreen({
 
         Alert.alert(
           "Error",
-          "Failed to process audio"
+          "Failed to upload audio"
         );
       }
     };
 
   /*
-    TOGGLE SKILL
+  =====================================
+  TOGGLE SKILL
+  =====================================
   */
+
   const toggleSkill =
     (skill) => {
 
@@ -283,8 +347,9 @@ export default function SkillsQuestionScreen({
         [];
 
       /*
-        REMOVE
+      REMOVE
       */
+
       if (
         selectedSkills.includes(
           skill
@@ -296,11 +361,13 @@ export default function SkillsQuestionScreen({
             (item) =>
               item !== skill
           );
+
       }
 
       /*
-        ADD
+      ADD
       */
+
       else {
 
         updatedSkills = [
@@ -320,14 +387,16 @@ export default function SkillsQuestionScreen({
     };
 
   /*
-    CONTINUE
+  =====================================
+  CONTINUE
+  =====================================
   */
+
   const handleContinue =
     () => {
 
       if (
-        selectedSkills.length ===
-        0
+        selectedSkills.length === 0
       ) {
 
         Alert.alert(
@@ -343,13 +412,23 @@ export default function SkillsQuestionScreen({
       );
     };
 
+  /*
+  =====================================
+  UI
+  =====================================
+  */
+
   return (
 
     <VoiceQuestionCard
 
-      title="What skills do you have?"
+      step={2}
 
-      subtitle="Select skills or speak naturally in your language."
+      totalSteps={5}
+
+      title="What kind of work can you do?"
+
+      subtitle="Tap skills or speak naturally in your language."
 
       transcript={
         transcript
@@ -359,7 +438,7 @@ export default function SkillsQuestionScreen({
         skillOptions
       }
 
-      selectedOption={
+      selectedOptions={
         selectedSkills
       }
 
@@ -367,10 +446,20 @@ export default function SkillsQuestionScreen({
         toggleSkill
       }
 
-      onVoicePress={
-        recording
-          ? stopRecording
-          : startRecording
+      isRecording={
+        !!recording
+      }
+
+      isProcessing={
+        isProcessing
+      }
+
+      onStartRecording={
+        startRecording
+      }
+
+      onStopRecording={
+        stopRecording
       }
 
       onContinue={

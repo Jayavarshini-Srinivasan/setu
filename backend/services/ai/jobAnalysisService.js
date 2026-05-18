@@ -61,23 +61,20 @@ const generateImprovementInsights =
     currentMatchScore
   ) => {
 
-    /*
-      NORMALIZE
-    */
     const normalizedWorkerSkills =
-      workerSkills.map(
+      (workerSkills || []).map(
         (skill) =>
-          skill.toLowerCase()
+          (skill || "").toString().toLowerCase()
       );
 
     /*
       MISSING
     */
     const missingSkills =
-      requiredSkills.filter(
+      (requiredSkills || []).filter(
         (skill) =>
           !normalizedWorkerSkills.includes(
-            skill.toLowerCase()
+            (skill || "").toString().toLowerCase()
           )
       );
 

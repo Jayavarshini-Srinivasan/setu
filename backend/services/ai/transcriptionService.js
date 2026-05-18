@@ -71,6 +71,8 @@ The speaker may use:
 - English
 - mixed Indian languages
 
+If the audio is completely silent, contains only background noise, or has no discernible speech, return the exact word "SILENCE".
+Do NOT hallucinate or make up phrases.
 Return ONLY the transcript text.
 `,
       ]);

@@ -8,12 +8,14 @@ const calculateMatchScore =
       jobs.map((job) => {
 
         /*
-          NORMALIZE JOB DATA
+        =====================================
+        NORMALIZE JOB
+        =====================================
         */
+
         const jobRole =
           (
-            job.role ||
-            job.workerCategory ||
+            job.canonicalRole ||
             ""
           ).toLowerCase();
 
@@ -22,52 +24,36 @@ const calculateMatchScore =
             job.title || ""
           ).toLowerCase();
 
-        const jobSkills =
-          (
-            job.skills ||
-            job.requiredSkills ||
-            []
-          ).map((skill) =>
-            skill.toLowerCase()
-          );
+        const jobSkills = (job.requiredSkills || []).map((skill) =>
+          (skill || "").toString().toLowerCase()
+        );
 
         const requiredExperience =
           parseInt(
-            job.experience_required ||
-            job.experienceRequired ||
-            0
+            job.experienceRequired || 0
           );
 
         const jobLocation =
           (
-            job.location ||
-            ""
+            job.location || ""
           ).toLowerCase();
 
         /*
-          NORMALIZE WORKER
+        =====================================
+        NORMALIZE WORKER
+        =====================================
         */
+
         const workerRole =
           (
             workerProfile
               .canonicalRole ||
-
-            workerProfile
-              .jobRole ||
-
-            workerProfile
-              .role ||
-
             ""
           ).toLowerCase();
 
-        const workerSkills =
-          (
-            workerProfile.skills ||
-            []
-          ).map((skill) =>
-            skill.toLowerCase()
-          );
+        const workerSkills = (workerProfile.skills || []).map((skill) =>
+          (skill || "").toString().toLowerCase()
+        );
 
         const workerLocation =
           (
@@ -82,8 +68,11 @@ const calculateMatchScore =
           );
 
         /*
-          MATCHED SKILLS
+        =====================================
+        MATCHED SKILLS
+        =====================================
         */
+
         const matchedSkills =
           workerSkills.filter(
             (skill) =>
@@ -93,8 +82,25 @@ const calculateMatchScore =
           );
 
         /*
-          SKILL COVERAGE
+        =====================================
+        MISSING SKILLS
+        =====================================
         */
+
+        const missingSkills =
+          jobSkills.filter(
+            (skill) =>
+              !workerSkills.includes(
+                skill
+              )
+          );
+
+        /*
+        =====================================
+        SKILL COVERAGE
+        =====================================
+        */
+
         const skillCoverage =
           jobSkills.length > 0
             ? matchedSkills.length /
@@ -102,69 +108,35 @@ const calculateMatchScore =
             : 0;
 
         /*
-          WEIGHTED SCORE
+        =====================================
+        WEIGHTED SCORE
+        =====================================
         */
+
         let score = 0;
 
         /*
-          SKILLS
-          50%
+        SKILLS
+        50%
         */
+
         score += Math.round(
           skillCoverage * 50
         );
 
         /*
-          ROLE COMPATIBILITY
-        */
-        const compatibleRoles = {
-
-          auto_driver: [
-            "driver",
-            "delivery",
-          ],
-
-          truck_driver: [
-            "driver",
-          ],
-
-          cab_driver: [
-            "driver",
-          ],
-
-          delivery_worker: [
-            "delivery",
-          ],
-
-          warehouse_worker: [
-            "warehouse",
-          ],
-
-          electrician_helper: [
-            "electrician",
-          ],
-        };
-
-        /*
-          ROLE MATCH
-          20%
+        ROLE MATCH
+        20%
         */
 
-        /*
-          DIRECT MATCH
-        */
         if (
-          jobRole ===
-          workerRole
+          workerRole ===
+          jobRole
         ) {
 
           score += 20;
-        }
 
-        /*
-          TITLE MATCH
-        */
-        else if (
+        } else if (
 
           jobTitle.includes(
             workerRole
@@ -172,50 +144,41 @@ const calculateMatchScore =
 
         ) {
 
-          score += 15;
+          score += 10;
         }
 
         /*
-          COMPATIBILITY MATCH
+        LOCATION
+        15%
         */
-        else if (
 
-          compatibleRoles[
-            workerRole
-          ]?.includes(
-            jobRole
-          )
-
-        ) {
-
-          score += 15;
-        }
-
-        /*
-          LOCATION
-          15%
-        */
         if (
           workerLocation ===
           jobLocation
         ) {
+
           score += 15;
         }
 
         /*
-          EXPERIENCE
-          15%
+        EXPERIENCE
+        15%
         */
+
         if (
           workerExperience >=
           requiredExperience
         ) {
+
           score += 15;
         }
 
         /*
-          ANALYSIS
+        =====================================
+        ANALYSIS
+        =====================================
         */
+
         const skillMatchPercentage =
           Math.round(
             skillCoverage * 100
@@ -234,23 +197,19 @@ const calculateMatchScore =
             : 70;
 
         return {
+
           ...job,
 
           matchScore: score,
 
           analysis: {
+
             skillMatch:
               skillMatchPercentage,
 
             matchedSkills,
 
-            missingSkills:
-              jobSkills.filter(
-                (skill) =>
-                  !workerSkills.includes(
-                    skill
-                  )
-              ),
+            missingSkills,
 
             experienceScore,
 
@@ -260,8 +219,11 @@ const calculateMatchScore =
       });
 
     /*
-      SORT DESC
+    =====================================
+    SORT DESC
+    =====================================
     */
+
     matchedJobs.sort(
       (a, b) =>
         b.matchScore -

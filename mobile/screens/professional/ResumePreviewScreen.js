@@ -19,6 +19,9 @@ import {
 
 import API from "../../services/api";
 
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+
 export default function ResumePreviewScreen() {
 
   /*
@@ -122,6 +125,69 @@ export default function ResumePreviewScreen() {
       </View>
     );
   }
+
+  /*
+    DOWNLOAD PDF
+  */
+  const handleDownloadPDF = async () => {
+    try {
+      const htmlContent = `
+        <html>
+          <head>
+            <style>
+              body { font-family: 'Helvetica', sans-serif; padding: 40px; color: #333; }
+              h1 { font-size: 36px; color: #111; margin-bottom: 10px; }
+              h2 { font-size: 24px; color: #444; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 30px; }
+              p { font-size: 16px; line-height: 1.5; }
+              .summary { font-style: italic; color: #555; }
+              .skill-tag { display: inline-block; background-color: #eee; padding: 5px 10px; border-radius: 15px; margin: 5px; font-size: 14px; }
+              .job { margin-bottom: 20px; }
+              .job-title { font-weight: bold; font-size: 18px; }
+              .job-company { color: #666; font-size: 16px; }
+              .links p { margin: 5px 0; }
+            </style>
+          </head>
+          <body>
+            <h1>${resume.role || "Professional"}</h1>
+            <h2>Professional Summary</h2>
+            <p class="summary">${(resume.summary || "").replace(/\n/g, '<br/>')}</p>
+            
+            <h2>Skills</h2>
+            <div>
+              ${(resume.skills || []).map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+            </div>
+            
+            <h2>Experience</h2>
+            ${(resume.experience || []).map(exp => `
+              <div class="job">
+                <div class="job-title">${exp.role || 'Role'}</div>
+                <div class="job-company">${exp.company || 'Company'} &bull; ${exp.years || 0} years</div>
+              </div>
+            `).join('')}
+            
+            <h2>Education</h2>
+            <div class="job">
+              <div class="job-title">${resume.education?.degree || 'Degree'}</div>
+              <div class="job-company">${resume.education?.institution || 'Institution'} &bull; Graduated: ${resume.education?.graduationYear || 'Year'}</div>
+            </div>
+            
+            <h2>Professional Links</h2>
+            <div class="links">
+              ${resume.links?.linkedin ? `<p><strong>LinkedIn:</strong> ${resume.links.linkedin}</p>` : ''}
+              ${resume.links?.github ? `<p><strong>GitHub:</strong> ${resume.links.github}</p>` : ''}
+              ${resume.links?.portfolio ? `<p><strong>Portfolio:</strong> ${resume.links.portfolio}</p>` : ''}
+            </div>
+          </body>
+        </html>
+      `;
+
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+    } catch (error) {
+      console.log('Error generating PDF:', error);
+      Alert.alert('Error', 'Failed to generate PDF');
+    }
+  };
 
   return (
 
@@ -428,6 +494,7 @@ export default function ResumePreviewScreen() {
         style={
           styles.button
         }
+        onPress={handleDownloadPDF}
       >
 
         <Text

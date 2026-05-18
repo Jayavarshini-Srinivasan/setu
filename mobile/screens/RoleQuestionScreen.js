@@ -38,6 +38,11 @@ export default function RoleQuestionScreen({
     RECORDING STATE
   */
   const [
+    isProcessing,
+    setIsProcessing,
+  ] = useState(false);
+
+  const [
     recording,
     setRecording,
   ] = useState(null);
@@ -75,6 +80,9 @@ export default function RoleQuestionScreen({
   */
   const startRecording =
     async () => {
+
+      // GUARD: prevent double recording
+      if (recording) return;
 
       try {
 
@@ -154,6 +162,8 @@ export default function RoleQuestionScreen({
           null
         );
 
+        setIsProcessing(true);
+
         /*
           UPLOAD AUDIO
         */
@@ -161,10 +171,13 @@ export default function RoleQuestionScreen({
           uri
         );
 
+        setIsProcessing(false);
+
       } catch (error) {
 
         console.log(error);
 
+        setIsProcessing(false);
         Alert.alert(
           "Error",
           "Failed to stop recording"
@@ -265,6 +278,7 @@ export default function RoleQuestionScreen({
 
         console.log(error);
 
+        setIsProcessing(false);
         Alert.alert(
           "Error",
           "Failed to process audio"
@@ -322,6 +336,8 @@ export default function RoleQuestionScreen({
   return (
 
     <VoiceQuestionCard
+      step={1}
+      totalSteps={5}
 
       title="What work do you do?"
 
@@ -343,11 +359,13 @@ export default function RoleQuestionScreen({
         handleSelectRole
       }
 
-      onVoicePress={
-        recording
-          ? stopRecording
-          : startRecording
-      }
+      isRecording={!!recording}
+
+      isProcessing={isProcessing}
+
+      onStartRecording={startRecording}
+
+      onStopRecording={stopRecording}
 
       onContinue={
         handleContinue

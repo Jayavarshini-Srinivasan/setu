@@ -3,7 +3,7 @@ import { TouchableOpacity, StyleSheet, Animated, View } from "react-native";
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function VoiceButton({ isRecording, onPress }) {
+export default function VoiceButton({ isRecording, onPress, onPressIn, onPressOut }) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -39,6 +39,8 @@ export default function VoiceButton({ isRecording, onPress }) {
       <TouchableOpacity
         style={[styles.button, isRecording && styles.buttonRecording]}
         onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={0.8}
       >
         <Ionicons

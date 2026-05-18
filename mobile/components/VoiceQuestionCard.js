@@ -4,10 +4,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 
-export default function VoiceQuestionCard({
+import VoiceButton from "./VoiceButton";
 
+export default function VoiceQuestionCard({
+  step,
+  totalSteps,
   title,
 
   subtitle,
@@ -28,7 +32,13 @@ export default function VoiceQuestionCard({
 
   onSelectOption,
 
-  onVoicePress,
+  onStartRecording,
+
+  onStopRecording,
+
+  isRecording,
+
+  isProcessing,
 
   onContinue,
 }) {
@@ -40,6 +50,21 @@ export default function VoiceQuestionCard({
         styles.container
       }
     >
+
+      {/* PROGRESS BAR */}
+      {step && totalSteps && (
+        <View style={styles.progressContainer}>
+          {Array.from({ length: totalSteps }).map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.progressSegment,
+                index + 1 <= step ? styles.progressActive : styles.progressInactive,
+              ]}
+            />
+          ))}
+        </View>
+      )}
 
       <Text
         style={
@@ -65,25 +90,26 @@ export default function VoiceQuestionCard({
 
       {/* MIC BUTTON */}
 
-      <TouchableOpacity
-        style={
-          styles.voiceButton
-        }
-
-        onPress={
-          onVoicePress
-        }
-      >
-
-        <Text
-          style={
-            styles.voiceText
-          }
-        >
-          🎤 Tap to Speak
-        </Text>
-
-      </TouchableOpacity>
+      <View style={{ alignItems: 'center', marginBottom: 30 }}>
+        {isProcessing ? (
+          <>
+            <ActivityIndicator size="large" color="#000" style={{ marginBottom: 10, padding: 18 }} />
+            <Text style={{ color: '#666', fontWeight: 'bold' }}>Analyzing your response...</Text>
+          </>
+        ) : (
+          <>
+            <Text style={{ marginBottom: 10, fontWeight: 'bold', fontSize: 18 }}>
+              {isRecording ? "Recording... Release to stop" : "Hold to Speak"}
+            </Text>
+            <VoiceButton
+              isRecording={isRecording}
+              onPressIn={onStartRecording}
+              onPressOut={onStopRecording}
+            />
+            {!isRecording && <Text style={{ color: '#666', marginTop: 10 }}>Press and hold the button while talking</Text>}
+          </>
+        )}
+      </View>
 
       {/* TRANSCRIPT */}
 
@@ -215,135 +241,123 @@ const styles =
 
     container: {
       flex: 1,
-
       padding: 24,
+      paddingTop: 40,
+      justifyContent: "flex-start", // changed from center to allow progress bar at top
+      backgroundColor: "#FAF9F6", // Premium off-white
+    },
 
-      justifyContent:
-        "center",
+    progressContainer: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 30,
+    },
 
-      backgroundColor:
-        "#fff",
+    progressSegment: {
+      flex: 1,
+      height: 4,
+      borderRadius: 2,
+    },
+
+    progressActive: {
+      backgroundColor: "#E85D04",
+    },
+
+    progressInactive: {
+      backgroundColor: "#E5E7EB",
     },
 
     title: {
-      fontSize: 30,
-
+      fontSize: 32,
       fontWeight: "bold",
-
-      marginBottom: 12,
+      color: "#111827",
+      marginBottom: 10,
     },
 
     subtitle: {
       fontSize: 16,
-
-      color: "#666",
-
-      marginBottom: 30,
-    },
-
-    voiceButton: {
-      backgroundColor:
-        "#27ae60",
-
-      padding: 18,
-
-      borderRadius: 16,
-
-      alignItems:
-        "center",
-
-      marginBottom: 30,
-    },
-
-    voiceText: {
-      color: "#fff",
-
-      fontSize: 18,
-
-      fontWeight: "bold",
+      color: "#6B7280",
+      marginBottom: 32,
+      lineHeight: 24,
     },
 
     transcriptBox: {
-      backgroundColor:
-        "#f4f6f8",
-
-      padding: 18,
-
+      backgroundColor: "#FFFFFF",
+      padding: 16,
       borderRadius: 12,
-
       marginBottom: 30,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
     },
 
     transcriptLabel: {
       fontWeight: "bold",
-
-      marginBottom: 10,
+      color: "#9CA3AF",
+      fontSize: 12,
+      textTransform: "uppercase",
+      marginBottom: 8,
     },
 
     transcriptText: {
       fontSize: 16,
-
-      color: "#333",
+      color: "#1F2937",
+      fontStyle: "italic",
     },
 
     optionsContainer: {
       flexDirection: "row",
-
       flexWrap: "wrap",
-
       gap: 12,
-
       marginBottom: 40,
     },
 
     optionChip: {
-      borderWidth: 1,
-
-      borderColor:
-        "#ccc",
-
-      borderRadius: 30,
-
-      paddingVertical: 12,
-
-      paddingHorizontal: 18,
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1.5,
+      borderColor: "#E5E7EB",
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
     },
 
     selectedChip: {
-      backgroundColor:
-        "#2980b9",
-
-      borderColor:
-        "#2980b9",
+      backgroundColor: "#FFF4ED",
+      borderColor: "#E85D04", // Premium Orange
     },
 
     optionText: {
       fontSize: 16,
+      color: "#4B5563",
+      fontWeight: "600",
     },
 
     selectedText: {
-      color: "#fff",
-
+      color: "#E85D04",
       fontWeight: "bold",
     },
 
     continueButton: {
-      backgroundColor:
-        "#000",
-
-      padding: 18,
-
-      borderRadius: 16,
-
-      alignItems:
-        "center",
+      backgroundColor: "#E85D04", // Premium Orange
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+      alignItems: "center",
+      marginTop: 10,
+      shadowColor: "#E85D04",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
     },
 
     continueText: {
-      color: "#fff",
-
+      color: "#FFFFFF",
       fontSize: 18,
-
       fontWeight: "bold",
     },
   });

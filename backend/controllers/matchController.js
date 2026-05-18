@@ -1,7 +1,8 @@
-const sampleJobs =
-  require(
-    "../data/jobs.json"
-  );
+const {
+  jobs,
+} = require(
+  "../data/jobs"
+);
 
 const {
   db,
@@ -23,13 +24,21 @@ const {
 
 const matchJobs =
   async (req, res) => {
+
     try {
-      const workerProfile =
-        req.body;
+
+      const workerProfile = req.body || {};
+
+      if (!workerProfile.role && !workerProfile.canonicalRole) {
+        return res.status(400).json({ error: "Missing worker role" });
+      }
 
       /*
-        FETCH FIRESTORE JOBS
+      =====================================
+      FETCH FIRESTORE JOBS
+      =====================================
       */
+
       const jobsSnapshot =
         await db
           .collection("jobs")
@@ -40,36 +49,40 @@ const matchJobs =
           )
           .get();
 
-      let jobs = [];
+      let availableJobs = [];
 
       /*
-        FIRESTORE JOBS
+      =====================================
+      FIRESTORE JOBS
+      =====================================
       */
+
       if (
         !jobsSnapshot.empty
       ) {
-        jobs =
+
+        availableJobs =
           jobsSnapshot.docs.map(
-            (doc) =>
-              doc.data()
+            (doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })
           );
-          console.log(
-  JSON.stringify(
-    jobs,
-    null,
-    2
-  )
-);
 
         console.log(
           "Using Firestore jobs"
         );
+
       } else {
+
         /*
-          FALLBACK
+        =====================================
+        FALLBACK SAMPLE JOBS
+        =====================================
         */
-        jobs =
-          sampleJobs;
+
+        availableJobs =
+          jobs;
 
         console.log(
           "Using sample jobs fallback"
@@ -77,36 +90,38 @@ const matchJobs =
       }
 
       /*
-        MATCHING
+      =====================================
+      MATCHING
+      =====================================
       */
+
       const matchedJobs =
         calculateMatchScore(
           workerProfile,
-          jobs
+          availableJobs
         );
 
       /*
-        FILTER LOW SCORES
+      =====================================
+      FILTER LOW QUALITY
+      =====================================
       */
+
       const filteredJobs =
         matchedJobs.filter(
           (job) =>
-            job.matchScore >=
-            30
+            job.matchScore >= 30
         );
-        console.log(
-  matchedJobs.map(
-    (job) => ({
-      title: job.title,
-      score: job.matchScore,
-    })
-  )
-);
+
       /*
-        AI ANALYSIS
+      =====================================
+      AI ANALYSIS
+      =====================================
       */
+
       const analyzedJobs =
         await Promise.all(
+
           filteredJobs.map(
             async (job) =>
               await analyzeMatchedJob(
@@ -117,24 +132,33 @@ const matchJobs =
         );
 
       /*
-        SORT DESC
+      =====================================
+      SORT DESC
+      =====================================
       */
+
       analyzedJobs.sort(
         (a, b) =>
           b.matchScore -
           a.matchScore
       );
 
-      res
+      return res
         .status(200)
-        .json(analyzedJobs);
+        .json(
+          analyzedJobs
+        );
+
     } catch (error) {
+
       console.log(error);
 
-      res.status(500).json({
-        error:
-          "Failed to match jobs",
-      });
+      return res
+        .status(500)
+        .json({
+          error:
+            "Failed to match jobs",
+        });
     }
   };
 

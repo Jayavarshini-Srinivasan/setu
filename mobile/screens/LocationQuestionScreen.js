@@ -8,9 +8,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
+
+import VoiceButton from "../components/VoiceButton";
 
 import {
   Audio,
@@ -58,6 +61,11 @@ export default function LocationQuestionScreen({
     RECORDING
   */
   const [
+    isProcessing,
+    setIsProcessing,
+  ] = useState(false);
+
+  const [
     recording,
     setRecording,
   ] = useState(null);
@@ -81,6 +89,9 @@ export default function LocationQuestionScreen({
   */
   const startRecording =
     async () => {
+
+      // GUARD: prevent double recording
+      if (recording) return;
 
       try {
 
@@ -157,14 +168,22 @@ export default function LocationQuestionScreen({
           null
         );
 
+        setIsProcessing(true);
+
+        /*
+          UPLOAD AUDIO
+        */
         await uploadAudio(
           uri
         );
+
+        setIsProcessing(false);
 
       } catch (error) {
 
         console.log(error);
 
+        setIsProcessing(false);
         Alert.alert(
           "Error",
           "Failed to stop recording"
@@ -255,6 +274,7 @@ export default function LocationQuestionScreen({
 
         console.log(error);
 
+        setIsProcessing(false);
         Alert.alert(
           "Error",
           "Failed to process audio"
@@ -316,6 +336,19 @@ export default function LocationQuestionScreen({
       }
     >
 
+      {/* PROGRESS BAR */}
+      <View style={styles.progressContainer}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.progressSegment,
+              index + 1 <= 4 ? styles.progressActive : styles.progressInactive,
+            ]}
+          />
+        ))}
+      </View>
+
       <Text
         style={
           styles.title
@@ -352,27 +385,26 @@ export default function LocationQuestionScreen({
 
       {/* VOICE */}
 
-      <TouchableOpacity
-        style={
-          styles.voiceButton
-        }
-
-        onPress={
-          recording
-            ? stopRecording
-            : startRecording
-        }
-      >
-
-        <Text
-          style={
-            styles.voiceText
-          }
-        >
-          🎤 Tap to Speak
-        </Text>
-
-      </TouchableOpacity>
+      <View style={{ alignItems: 'center', marginBottom: 24 }}>
+        {isProcessing ? (
+          <>
+            <ActivityIndicator size="large" color="#000" style={{ marginBottom: 10, padding: 18 }} />
+            <Text style={{ color: '#666', fontWeight: 'bold' }}>Analyzing your response...</Text>
+          </>
+        ) : (
+          <>
+            <Text style={{ marginBottom: 10, fontWeight: 'bold', fontSize: 18 }}>
+              {recording ? "Recording... Release to stop" : "Hold to Speak"}
+            </Text>
+            <VoiceButton
+              isRecording={!!recording}
+              onPressIn={startRecording}
+              onPressOut={stopRecording}
+            />
+            {!recording && <Text style={{ color: '#666', marginTop: 10 }}>Press and hold the button while talking</Text>}
+          </>
+        )}
+      </View>
 
       {/* TRANSCRIPT */}
 
@@ -491,14 +523,30 @@ const styles =
 
     container: {
       flex: 1,
-
       padding: 24,
+      paddingTop: 40,
+      justifyContent: "flex-start",
+      backgroundColor: "#FAF9F6",
+    },
 
-      justifyContent:
-        "center",
+    progressContainer: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 30,
+    },
 
-      backgroundColor:
-        "#fff",
+    progressSegment: {
+      flex: 1,
+      height: 4,
+      borderRadius: 2,
+    },
+
+    progressActive: {
+      backgroundColor: "#E85D04",
+    },
+
+    progressInactive: {
+      backgroundColor: "#E5E7EB",
     },
 
     title: {

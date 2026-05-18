@@ -113,6 +113,19 @@ export default function PreferencesQuestionScreen({
       }
     >
 
+      {/* PROGRESS BAR */}
+      <View style={styles.progressContainer}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.progressSegment,
+              index + 1 <= 5 ? styles.progressActive : styles.progressInactive,
+            ]}
+          />
+        ))}
+      </View>
+
       {/* TITLE */}
 
       <Text
@@ -286,14 +299,30 @@ const styles =
 
     container: {
       flexGrow: 1,
-
       padding: 24,
+      paddingTop: 40,
+      justifyContent: "flex-start",
+      backgroundColor: "#FAF9F6",
+    },
 
-      justifyContent:
-        "center",
+    progressContainer: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 30,
+    },
 
-      backgroundColor:
-        "#fff",
+    progressSegment: {
+      flex: 1,
+      height: 4,
+      borderRadius: 2,
+    },
+
+    progressActive: {
+      backgroundColor: "#E85D04",
+    },
+
+    progressInactive: {
+      backgroundColor: "#E5E7EB",
     },
 
     title: {
