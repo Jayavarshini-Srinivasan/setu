@@ -86,6 +86,10 @@ export default function ReviewOnboardingScreen({
                 onboardingData
                   .location,
 
+              phoneNumber:
+                onboardingData
+                  .phoneNumber || "",
+
               labourData: {
 
                 availability:
@@ -220,6 +224,18 @@ export default function ReviewOnboardingScreen({
         <Text style={styles.value}>
           {
             t("shiftOptions." + onboardingData.preferredShift) || onboardingData.preferredShift
+          }
+        </Text>
+      </View>
+      <View style={styles.card}>
+
+        <Text style={styles.label}>
+          {t("phonePrompt") || "Phone Number"}
+        </Text>
+
+        <Text style={styles.value}>
+          {
+            onboardingData.phoneNumber || "—"
           }
         </Text>
 

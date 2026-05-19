@@ -94,6 +94,9 @@ export default function ProfessionalReviewScreen({
               portfolio:
                 onboardingData.portfolio,
 
+              email:
+                onboardingData.email || "",
+
               /*
                 preferredRoles — keep for backward compat
                 careerGoal     — string, used by learningPathService
@@ -121,8 +124,8 @@ export default function ProfessionalReviewScreen({
         console.log(error);
 
         Alert.alert(
-          "Error",
-          "Failed to save profile. Please try again."
+          t("error") || "Error",
+          t("failedToSaveProfile") || "Failed to save profile. Please try again."
         );
       }
     };
@@ -238,7 +241,7 @@ export default function ProfessionalReviewScreen({
                 </Text>
 
                 <Text style={styles.secondary}>
-                  {item.years} {t("years") || "years"}
+                  {item.years} {t("experienceOnboarding.yearsSuffix") || "years"}
                 </Text>
 
               </View>
@@ -307,6 +310,22 @@ export default function ProfessionalReviewScreen({
             (
               onboardingData.preferredRoles || []
             ).map(g => t("goals." + g.replace(/\s+/g, "_")) || g).join(", ")
+          }
+        </Text>
+
+      </View>
+
+      {/* EMAIL */}
+
+      <View style={styles.card}>
+
+        <Text style={styles.label}>
+          {t("emailAddressLabel") || "Email Address"}
+        </Text>
+
+        <Text style={styles.value}>
+          {
+            onboardingData.email || "—"
           }
         </Text>
 

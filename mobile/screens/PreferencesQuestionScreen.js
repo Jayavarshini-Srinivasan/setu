@@ -104,7 +104,7 @@ export default function PreferencesQuestionScreen({
         NEXT
       */
       navigation.navigate(
-        "ReviewOnboarding"
+        "ContactQuestion"
       );
     };
 

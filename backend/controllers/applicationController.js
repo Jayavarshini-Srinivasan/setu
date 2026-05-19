@@ -316,6 +316,54 @@ const updateApplicationStatus = async (req, res) => {
     if (applicationDoc.data().recruiterId !== recruiterId) return res.status(403).json({ error: "Unauthorized" });
 
     await applicationRef.update({ status, updatedAt: new Date() });
+
+    // Send localized notification to candidate upon shortlisting (accepting)
+    if (status === "shortlisted") {
+      try {
+        const appData = applicationDoc.data();
+        const workerId = appData.workerId;
+        const jobId = appData.jobId;
+
+        const workerDoc = await db.collection("users").doc(workerId).get();
+        const jobDoc = await db.collection("jobs").doc(jobId).get();
+
+        if (workerDoc.exists && jobDoc.exists) {
+          const workerData = workerDoc.data();
+          const jobData = jobDoc.data();
+          const lang = workerData.profile?.language || workerData.language || "en";
+          const jobTitle = jobData.title || "Job";
+
+          let notifTitle = "Application Shortlisted! 🎉";
+          let notifMessage = `Congratulations! Your application for "${jobTitle}" has been shortlisted. The recruiter will contact you soon.`;
+
+          if (lang === "hi") {
+            notifTitle = "आवेदन शॉर्टलिस्ट किया गया! 🎉";
+            notifMessage = `बधाई हो! "${jobTitle}" के लिए आपके आवेदन को शॉर्टलिस्ट किया गया है। भर्तीकर्ता जल्द ही आपसे संपर्क करेगा।`;
+          } else if (lang === "ta") {
+            notifTitle = "விண்ணப்பம் தேர்ந்தெடுக்கப்பட்டது! 🎉";
+            notifMessage = `வாழ்த்துகள்! "${jobTitle}" க்கான உங்கள் விண்ணப்பம் தேர்ந்தெடுக்கப்பட்டுள்ளது. பணியமர்த்துபவர் விரைவில் உங்களைத் தொடர்புகொள்வார்.`;
+          } else if (lang === "mr") {
+            notifTitle = "अर्ज शॉर्टलिस्ट केला! 🎉";
+            notifMessage = `अभिनंदन! "${jobTitle}" साठी तुमचा अर्ज शॉर्टलिस्ट करण्यात आला आहे. रिक्रूटर्स लवकरच तुमच्याशी संपर्क साधतील.`;
+          }
+
+          await db
+            .collection("users")
+            .doc(workerId)
+            .collection("notifications")
+            .add({
+              title: notifTitle,
+              message: notifMessage,
+              jobId,
+              status: "unread",
+              createdAt: new Date(),
+            });
+        }
+      } catch (err) {
+        console.log("NOTIFICATION ERROR:", err.message);
+      }
+    }
+
     res.status(200).json({ message: "Application status updated" });
   } catch (error) {
     console.log(error);

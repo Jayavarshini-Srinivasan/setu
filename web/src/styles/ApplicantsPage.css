@@ -160,3 +160,28 @@
 
   cursor: not-allowed;
 }
+
+.locked-contact {
+  color: #e74c3c;
+  font-weight: 500;
+  background-color: #fadbd8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  display: inline-block;
+}
+
+.unlocked-contact {
+  color: #27ae60;
+  font-weight: bold;
+  background-color: #d4efdf;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.95em;
+  display: inline-block;
+}
+
+.contact-email-link {
+  color: #27ae60;
+  text-decoration: underline;
+}

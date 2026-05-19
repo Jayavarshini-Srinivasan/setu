@@ -111,6 +111,24 @@ export default function ApplicantCard({
                     ", "
                   ) || "N/A"}
               </p>
+
+              <p>
+                <strong>
+                  Contact:
+                </strong>
+
+                {" "}
+
+                {app.status === APPLICATION_STATUS.SHORTLISTED ? (
+                  <span className="unlocked-contact">
+                    📞 <a href={`tel:${app.worker.profile?.phoneNumber || ""}`} style={{ color: "#27ae60", textDecoration: "none" }}>{app.worker.profile?.phoneNumber || "N/A"}</a>
+                  </span>
+                ) : (
+                  <span className="locked-contact">
+                    🔒 Hidden (Shortlist to view)
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         ) : (
@@ -170,6 +188,24 @@ export default function ApplicantCard({
                   ?.skills?.join(
                     ", "
                   ) || "N/A"}
+              </p>
+
+              <p>
+                <strong>
+                  Contact:
+                </strong>
+
+                {" "}
+
+                {app.status === APPLICATION_STATUS.SHORTLISTED ? (
+                  <span className="unlocked-contact">
+                    📧 <a href={`mailto:${app.worker.profile?.email || ""}`} className="contact-email-link">{app.worker.profile?.email || "N/A"}</a>
+                  </span>
+                ) : (
+                  <span className="locked-contact">
+                    🔒 Hidden (Shortlist to view)
+                  </span>
+                )}
               </p>
             </div>
 

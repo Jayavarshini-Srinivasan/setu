@@ -14,6 +14,7 @@ import {
 import {
   useOnboarding,
 } from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function EducationScreen({
   navigation,
@@ -27,6 +28,7 @@ export default function EducationScreen({
 
     updateField,
   } = useOnboarding();
+  const { t } = useI18n();
 
   /*
     LOCAL STATE
@@ -65,8 +67,8 @@ export default function EducationScreen({
       ) {
 
         Alert.alert(
-          "Required",
-          "Please complete all education fields"
+          t("required") || "Required",
+          t("educationOnboarding.completeAllFieldsError") || "Please complete all education fields"
         );
 
         return;
@@ -97,17 +99,17 @@ export default function EducationScreen({
     <View style={styles.container}>
 
       <Text style={styles.title}>
-        Tell us about your education
+        {t("educationOnboarding.title") || "Tell us about your education"}
       </Text>
 
       <Text style={styles.subtitle}>
-        This helps build your resume and career recommendations.
+        {t("educationOnboarding.subtitle") || "This helps build your resume and career recommendations."}
       </Text>
 
       <TextInput
         style={styles.input}
 
-        placeholder="Degree"
+        placeholder={t("educationOnboarding.degreePlaceholder") || "Degree"}
 
         value={degree}
 
@@ -117,7 +119,7 @@ export default function EducationScreen({
       <TextInput
         style={styles.input}
 
-        placeholder="Institution"
+        placeholder={t("educationOnboarding.institutionPlaceholder") || "Institution"}
 
         value={institution}
 
@@ -127,7 +129,7 @@ export default function EducationScreen({
       <TextInput
         style={styles.input}
 
-        placeholder="Graduation Year"
+        placeholder={t("educationOnboarding.gradYearPlaceholder") || "Graduation Year"}
 
         keyboardType="numeric"
 
@@ -143,7 +145,7 @@ export default function EducationScreen({
       >
 
         <Text style={styles.buttonText}>
-          Continue
+          {t("continue") || "Continue"}
         </Text>
 
       </TouchableOpacity>

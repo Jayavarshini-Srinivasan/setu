@@ -13,6 +13,7 @@ import {
 import {
   useOnboarding,
 } from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function ProfessionalLinksScreen({
   navigation,
@@ -26,6 +27,7 @@ export default function ProfessionalLinksScreen({
 
     updateField,
   } = useOnboarding();
+  const { t } = useI18n();
 
   /*
     LOCAL STATE
@@ -85,17 +87,17 @@ export default function ProfessionalLinksScreen({
     <View style={styles.container}>
 
       <Text style={styles.title}>
-        Add your professional links
+        {t("links.title") || "Add your professional links"}
       </Text>
 
       <Text style={styles.subtitle}>
-        These links help recruiters and AI understand your work better.
+        {t("links.subtitle") || "These links help recruiters and AI understand your work better."}
       </Text>
 
       <TextInput
         style={styles.input}
 
-        placeholder="LinkedIn URL"
+        placeholder={t("links.linkedinPlaceholder") || "LinkedIn URL"}
 
         value={linkedin}
 
@@ -107,7 +109,7 @@ export default function ProfessionalLinksScreen({
       <TextInput
         style={styles.input}
 
-        placeholder="GitHub URL"
+        placeholder={t("links.githubPlaceholder") || "GitHub URL"}
 
         value={github}
 
@@ -119,7 +121,7 @@ export default function ProfessionalLinksScreen({
       <TextInput
         style={styles.input}
 
-        placeholder="Portfolio URL"
+        placeholder={t("links.portfolioPlaceholder") || "Portfolio URL"}
 
         value={portfolio}
 
@@ -135,7 +137,7 @@ export default function ProfessionalLinksScreen({
       >
 
         <Text style={styles.buttonText}>
-          Continue
+          {t("continue") || "Continue"}
         </Text>
 
       </TouchableOpacity>

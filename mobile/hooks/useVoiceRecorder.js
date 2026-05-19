@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Alert } from "react-native";
 import { Audio } from "expo-av";
-import { API_BASE_URL } from "@env";
+import { API_BASE_URL } from "../services/api";
 
 
 
