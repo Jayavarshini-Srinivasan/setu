@@ -14,6 +14,7 @@ import {
 import {
   useOnboarding,
 } from "../context/OnboardingContext";
+import { useI18n } from "../context/I18nContext";
 
 export default function PreferencesQuestionScreen({
   navigation,
@@ -27,6 +28,8 @@ export default function PreferencesQuestionScreen({
 
     updateField,
   } = useOnboarding();
+
+  const { t } = useI18n();
 
   /*
     AVAILABILITY
@@ -133,7 +136,7 @@ export default function PreferencesQuestionScreen({
           styles.title
         }
       >
-        Work Preferences
+        {t("workPreferences") || "Work Preferences"}
       </Text>
 
       <Text
@@ -141,7 +144,7 @@ export default function PreferencesQuestionScreen({
           styles.subtitle
         }
       >
-        Select your preferred work type and shift.
+        {t("workPrefSubtitle") || "Select your preferred work type and shift."}
       </Text>
 
       {/* AVAILABILITY */}
@@ -151,7 +154,7 @@ export default function PreferencesQuestionScreen({
           styles.sectionTitle
         }
       >
-        Availability
+        {t("availability") || "Availability"}
       </Text>
 
       <View
@@ -195,7 +198,7 @@ export default function PreferencesQuestionScreen({
                         styles.selectedText,
                     ]}
                   >
-                    {option}
+                    {t(`availabilityOptions.${option}`) || option}
                   </Text>
 
                 </TouchableOpacity>
@@ -213,7 +216,7 @@ export default function PreferencesQuestionScreen({
           styles.sectionTitle
         }
       >
-        Preferred Shift
+        {t("preferredShift") || "Preferred Shift"}
       </Text>
 
       <View
@@ -257,7 +260,7 @@ export default function PreferencesQuestionScreen({
                         styles.selectedText,
                     ]}
                   >
-                    {option}
+                    {t(`shiftOptions.${option}`) || option}
                   </Text>
 
                 </TouchableOpacity>
@@ -285,7 +288,7 @@ export default function PreferencesQuestionScreen({
             styles.continueText
           }
         >
-          Continue
+          {t("continue") || "Continue"}
         </Text>
 
       </TouchableOpacity>

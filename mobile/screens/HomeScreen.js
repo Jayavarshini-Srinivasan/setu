@@ -10,11 +10,13 @@ import {
 
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
+import { useI18n } from "../context/I18nContext";
 
 export default function HomeScreen({ navigation }) {
 
   const [profile,  setProfile]  = useState(null);
   const [loading,  setLoading]  = useState(true);
+  const { t } = useI18n();
 
   useEffect(() => { fetchProfile(); }, []);
 
@@ -43,7 +45,7 @@ export default function HomeScreen({ navigation }) {
   if (!profile) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>No profile found.</Text>
+        <Text style={styles.emptyText}>{t("noProfileFound") || "No profile found."}</Text>
       </View>
     );
   }
@@ -68,9 +70,9 @@ export default function HomeScreen({ navigation }) {
 
       {/* ── GREETING ── */}
       <View style={styles.greeting}>
-        <Text style={styles.greetingHi}>👋  Hello, {name}</Text>
+        <Text style={styles.greetingHi}>👋  {t("hello") || "Hello"}, {name}</Text>
         <Text style={styles.greetingRole}>
-          {role || (isProfessional ? "Professional" : "Worker")}
+          {t("roles." + role) || role || (isProfessional ? (t("professional") || "Professional") : (t("worker") || "Worker"))}
         </Text>
         <Text style={styles.greetingLocation}>📍 {location}</Text>
       </View>
@@ -81,7 +83,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.profileCardRow}>
           <View style={styles.profileStat}>
             <Text style={styles.profileStatValue}>{skills.length}</Text>
-            <Text style={styles.profileStatLabel}>Skills</Text>
+            <Text style={styles.profileStatLabel}>{t("skills") || "Skills"}</Text>
           </View>
           <View style={styles.profileStatDivider} />
           <View style={styles.profileStat}>
@@ -91,15 +93,15 @@ export default function HomeScreen({ navigation }) {
                 : (p.experience || 0)}
             </Text>
             <Text style={styles.profileStatLabel}>
-              {isProfessional ? "Roles" : "Yrs Exp"}
+              {isProfessional ? (t("rolesCount") || "Roles") : (t("yrsExp") || "Yrs Exp")}
             </Text>
           </View>
           <View style={styles.profileStatDivider} />
           <View style={styles.profileStat}>
             <Text style={styles.profileStatValue}>
-              {isProfessional ? "Pro" : "Labour"}
+              {isProfessional ? (t("pro") || "Pro") : (t("labour") || "Labour")}
             </Text>
-            <Text style={styles.profileStatLabel}>Type</Text>
+            <Text style={styles.profileStatLabel}>{t("type") || "Type"}</Text>
           </View>
         </View>
 
@@ -108,7 +110,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.skillsRow}>
             {skills.slice(0, 5).map((s, i) => (
               <View key={i} style={styles.skillChip}>
-                <Text style={styles.skillChipText}>{s}</Text>
+                <Text style={styles.skillChipText}>{t("skills." + s) || s}</Text>
               </View>
             ))}
             {skills.length > 5 && (
@@ -122,7 +124,7 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       {/* ── QUICK ACTIONS ── */}
-      <Text style={styles.sectionLabel}>Quick Actions</Text>
+      <Text style={styles.sectionLabel}>{t("quickActions") || "Quick Actions"}</Text>
 
       <TouchableOpacity
         style={[styles.actionCard, styles.primaryAction]}
@@ -131,9 +133,9 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.actionCardIcon}>🎯</Text>
         <View>
-          <Text style={styles.actionCardTitle}>View Matched Jobs</Text>
+          <Text style={styles.actionCardTitle}>{t("viewMatchedJobs") || "View Matched Jobs"}</Text>
           <Text style={styles.actionCardSubtitle}>
-            See AI-matched opportunities for you
+            {t("viewMatchedJobsSub") || "See AI-matched opportunities for you"}
           </Text>
         </View>
       </TouchableOpacity>
@@ -146,9 +148,9 @@ export default function HomeScreen({ navigation }) {
         >
           <Text style={styles.actionCardIcon}>📄</Text>
           <View>
-            <Text style={styles.actionCardTitleDark}>View Resume</Text>
+            <Text style={styles.actionCardTitleDark}>{t("viewResume") || "View Resume"}</Text>
             <Text style={styles.actionCardSubtitleDark}>
-              Your AI-generated professional resume
+              {t("viewResumeSub") || "Your AI-generated professional resume"}
             </Text>
           </View>
         </TouchableOpacity>
@@ -161,9 +163,9 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.actionCardIcon}>✏️</Text>
         <View>
-          <Text style={styles.actionCardTitleDark}>Edit Profile</Text>
+          <Text style={styles.actionCardTitleDark}>{t("editProfile") || "Edit Profile"}</Text>
           <Text style={styles.actionCardSubtitleDark}>
-            Update your skills, role, and experience
+            {t("editProfileSub") || "Update your skills, role, and experience"}
           </Text>
         </View>
       </TouchableOpacity>

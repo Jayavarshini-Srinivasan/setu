@@ -21,6 +21,7 @@ import API from "../../services/api";
 
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import { useI18n } from "../../context/I18nContext";
 
 export default function ResumePreviewScreen() {
 
@@ -36,6 +37,8 @@ export default function ResumePreviewScreen() {
     resume,
     setResume,
   ] = useState(null);
+  
+  const { t } = useI18n();
 
   /*
     LOAD RESUME
@@ -148,13 +151,13 @@ export default function ResumePreviewScreen() {
             </style>
           </head>
           <body>
-            <h1>${resume.role || "Professional"}</h1>
+            <h1>${t("roles." + resume.role) || resume.role || "Professional"}</h1>
             <h2>Professional Summary</h2>
             <p class="summary">${(resume.summary || "").replace(/\n/g, '<br/>')}</p>
             
             <h2>Skills</h2>
             <div>
-              ${(resume.skills || []).map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              ${(resume.skills || []).map(skill => `<span class="skill-tag">${t("skills." + skill) || skill}</span>`).join('')}
             </div>
             
             <h2>Experience</h2>
@@ -205,7 +208,7 @@ export default function ResumePreviewScreen() {
         }
       >
         {
-          resume.role
+          t("roles." + resume.role) || resume.role
         }
       </Text>
 
@@ -280,7 +283,7 @@ export default function ResumePreviewScreen() {
                       styles.skillText
                     }
                   >
-                    {skill}
+                    {t("skills." + skill) || skill}
                   </Text>
 
                 </View>

@@ -6,13 +6,14 @@ import {
 
 import { formatSalary } from "../utils/formatters";
 import PrimaryButton from "./PrimaryButton";
+import { useI18n } from "../context/I18nContext";
 
 
 
 const RECOMMENDATION_LABELS = {
-  best_pick:   { label: "Best Pick",    color: "#16A34A", bg: "#F0FDF4" },
-  good_fit:    { label: "Good Fit",     color: "#2563EB", bg: "#EFF6FF" },
-  average_fit: { label: "Average Fit",  color: "#9CA3AF", bg: "#F9FAFB" },
+  best_pick:   { labelKey: "bestPick", color: "#16A34A", bg: "#F0FDF4" },
+  good_fit:    { labelKey: "goodFit", color: "#2563EB", bg: "#EFF6FF" },
+  average_fit: { labelKey: "averageFit", color: "#9CA3AF", bg: "#F9FAFB" },
 };
 
 function scoreColor(score) {
@@ -22,6 +23,7 @@ function scoreColor(score) {
 }
 
 export default function JobCard({ job, onApply }) {
+  const { t } = useI18n();
 
   const rec     = RECOMMENDATION_LABELS[job.recommendationType] || RECOMMENDATION_LABELS.average_fit;
   const isBest  = job.recommendationType === "best_pick";
@@ -34,7 +36,7 @@ export default function JobCard({ job, onApply }) {
 
       {isBest && (
         <View style={styles.bestBanner}>
-          <Text style={styles.bestBannerText}>🏆  Best Pick for You</Text>
+          <Text style={styles.bestBannerText}>🏆  {t("bestPickForYou") || "Best Pick for You"}</Text>
         </View>
       )}
 
@@ -46,12 +48,12 @@ export default function JobCard({ job, onApply }) {
         </View>
         <View style={[styles.scoreBadge, { backgroundColor: scoreColor(job.matchScore) }]}>
           <Text style={styles.scoreValue}>{job.matchScore}%</Text>
-          <Text style={styles.scoreLabel}>Match</Text>
+          <Text style={styles.scoreLabel}>{t("match") || "Match"}</Text>
         </View>
       </View>
 
       <View style={[styles.recChip, { backgroundColor: rec.bg }]}>
-        <Text style={[styles.recChipText, { color: rec.color }]}>{rec.label}</Text>
+        <Text style={[styles.recChipText, { color: rec.color }]}>{t(rec.labelKey) || rec.labelKey}</Text>
       </View>
 
       {job.aiSummary ? (
@@ -63,7 +65,7 @@ export default function JobCard({ job, onApply }) {
 
           {pros.length > 0 && (
             <View style={styles.prosBox}>
-              <Text style={styles.prosTitle}>✓  Strengths</Text>
+              <Text style={styles.prosTitle}>✓  {t("strengths") || "Strengths"}</Text>
               {pros.map((p, i) => (
                 <Text key={i} style={styles.proItem}>• {p}</Text>
               ))}
@@ -72,7 +74,7 @@ export default function JobCard({ job, onApply }) {
 
           {cons.length > 0 && (
             <View style={styles.consBox}>
-              <Text style={styles.consTitle}>✗  Gaps</Text>
+              <Text style={styles.consTitle}>✗  {t("gaps") || "Gaps"}</Text>
               {cons.map((c, i) => (
                 <Text key={i} style={styles.conItem}>• {c}</Text>
               ))}
@@ -84,7 +86,7 @@ export default function JobCard({ job, onApply }) {
 
       {job.metrics?.skillMatch !== undefined && (
         <View style={styles.metricRow}>
-          <Text style={styles.metricLabel}>Skill match</Text>
+          <Text style={styles.metricLabel}>{t("skillMatch") || "Skill match"}</Text>
           <View style={styles.metricBarTrack}>
             <View
               style={[
@@ -105,7 +107,7 @@ export default function JobCard({ job, onApply }) {
       {missing.length > 0 && (
         <View style={styles.improvementSection}>
           <View style={styles.improvementHeader}>
-            <Text style={styles.improvementTitle}>Skills to bridge this gap</Text>
+            <Text style={styles.improvementTitle}>{t("skillsToBridge") || "Skills to bridge this gap"}</Text>
             {job.potentialMatchScore && (
               <Text style={styles.improvementScore}>
                 {job.matchScore}% → {job.potentialMatchScore}%
@@ -114,16 +116,19 @@ export default function JobCard({ job, onApply }) {
           </View>
 
           <View style={styles.skillsContainer}>
-            {missing.map((skill, i) => (
-              <View key={i} style={styles.skillChip}>
-                <Text style={styles.skillText}>{skill}</Text>
-              </View>
-            ))}
+            {missing.map((skill, i) => {
+              const displaySkill = t(`skills.${skill}`);
+              return (
+                <View key={i} style={styles.skillChip}>
+                  <Text style={styles.skillText}>{displaySkill || skill}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
       )}
 
-      <PrimaryButton title="Apply Now" onPress={() => onApply(job)} />
+      <PrimaryButton title={t("applyNow") || "Apply Now"} onPress={() => onApply(job)} />
 
     </View>
   );

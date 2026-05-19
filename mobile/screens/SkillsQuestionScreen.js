@@ -76,9 +76,9 @@ export default function SkillsQuestionScreen({ navigation }) {
       title={t("whatSkills") || "What are your skills?"}
       subtitle={t("skillsSubtitle") || "Tap skills below or speak to auto-detect them."}
       transcript={transcript}
-      extractionLabel="Detected Skills"
+      extractionLabel={t("detectedSkills") || "Detected Skills"}
       extractionDisplay={extractedSkillsDisplay}
-      options={skillOptions}
+      options={skillOptions.map(s => ({ value: s, label: t(`skills.${s}`) || s }))}
       selectedOptions={selectedSkills}
       onSelectOption={toggleSkill}
       voiceState={voiceState}

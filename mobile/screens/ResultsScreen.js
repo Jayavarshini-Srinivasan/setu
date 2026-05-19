@@ -10,6 +10,7 @@ import API from "../services/api";
 
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
+import { useI18n } from "../context/I18nContext";
 
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
@@ -20,6 +21,7 @@ import { getErrorMessage } from "../utils/errorHandler";
 import useAsync from "../hooks/useAsync";
 
 export default function ResultsScreen({ navigation }) {
+  const { t, language } = useI18n();
 
   const loadMatches = async () => {
 
@@ -58,6 +60,7 @@ export default function ResultsScreen({ navigation }) {
       location:      profile.location || "",
       experience,
       isProfessional,
+      language,
     };
 
     /* ── Match API ── */
@@ -127,14 +130,14 @@ export default function ResultsScreen({ navigation }) {
   };
 
   /* ── Render states ── */
-  if (loading) return <LoadingSpinner text="Finding your matches…" />;
+  if (loading) return <LoadingSpinner text={t("loadingJobs") || "Finding your matches…"} />;
   if (error)   return <ErrorState message={getErrorMessage(error)} />;
 
   if (jobs.length === 0) {
     return (
       <EmptyState
-        title="No Matches Found"
-        description="No matching jobs are available right now. Try updating your profile."
+        title={t("noMatches") || "No Matches Found"}
+        description={t("noMatchesDesc") || "No matching jobs are available right now. Try updating your profile."}
       />
     );
   }
@@ -153,7 +156,7 @@ export default function ResultsScreen({ navigation }) {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <Text style={styles.header}>
-            {jobs.length} match{jobs.length !== 1 ? "es" : ""} found
+            {jobs.length} {t("matchesFound") || (jobs.length !== 1 ? "matches found" : "match found")}
           </Text>
         }
         ListFooterComponent={
@@ -167,9 +170,9 @@ export default function ResultsScreen({ navigation }) {
             >
               <Text style={styles.careerPathIcon}>🎯</Text>
               <View>
-                <Text style={styles.careerPathTitle}>Generate My Career Path</Text>
+                <Text style={styles.careerPathTitle}>{t("generateCareerPath") || "Generate My Career Path"}</Text>
                 <Text style={styles.careerPathSubtitle}>
-                  AI-powered roadmap based on your match gaps
+                  {t("careerPathSubtitle") || "AI-powered roadmap based on your match gaps"}
                 </Text>
               </View>
             </TouchableOpacity>

@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
 } from "react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -33,6 +34,10 @@ export const I18nProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    loadLanguage();
+  }, []);
+
   /*
     CHANGE LANGUAGE
   */
@@ -45,13 +50,47 @@ export const I18nProvider = ({ children }) => {
     }
   };
 
+  const getValueCaseInsensitive = (obj, key) => {
+    if (!obj || typeof obj !== "object") return undefined;
+    const target = key.toLowerCase().replace(/[-_\s]+/g, "");
+    const foundKey = Object.keys(obj).find(
+      (k) => k.toLowerCase().replace(/[-_\s]+/g, "") === target
+    );
+    return foundKey ? obj[foundKey] : undefined;
+  };
+
   /*
     TRANSLATE FUNCTION
     Usage: t("login") => "साइन इन करें" (in Hindi)
   */
   const t = (key) => {
+    if (!key) return "";
+    
     const langStrings = translations[language] || translations.en;
-    return langStrings[key] || translations.en[key] || key;
+    
+    // Support nested keys like "roles.auto_driver"
+    if (key.includes(".")) {
+      const keys = key.split(".");
+      
+      // Try finding in current language
+      let result = langStrings;
+      for (const k of keys) {
+        result = getValueCaseInsensitive(result, k);
+        if (result === undefined) break;
+      }
+      if (result !== undefined) return result;
+      
+      // Fallback to English
+      let fallbackResult = translations.en;
+      for (const k of keys) {
+        fallbackResult = getValueCaseInsensitive(fallbackResult, k);
+        if (fallbackResult === undefined) break;
+      }
+      return fallbackResult !== undefined ? fallbackResult : undefined;
+    }
+
+    // Flat key fallback
+    return getValueCaseInsensitive(langStrings, key) || getValueCaseInsensitive(translations.en, key) || undefined;
   };
 
   return (

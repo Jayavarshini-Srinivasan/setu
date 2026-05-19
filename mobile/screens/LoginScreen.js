@@ -14,6 +14,7 @@ import {
 } from "firebase/auth";
 
 import { auth } from "../services/firebase";
+import { useI18n } from "../context/I18nContext";
 
 export default function LoginScreen({navigation}) {
   const [email, setEmail] =
@@ -21,7 +22,7 @@ export default function LoginScreen({navigation}) {
 
   const [password, setPassword] =
     useState("");
-
+  const { t } = useI18n();
   const handleLogin = async () => {
     try {
       const userCredential =
@@ -46,26 +47,26 @@ export default function LoginScreen({navigation}) {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>
-        Login
+        {t("login") || "Login"}
       </Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder={t("email") || "Email"}
         value={email}
         onChangeText={setEmail}
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Password"
+        placeholder={t("password") || "Password"}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
       <Button
-        title="Login"
+        title={t("login") || "Login"}
         onPress={handleLogin}
       />
       <TouchableOpacity
@@ -87,8 +88,7 @@ export default function LoginScreen({navigation}) {
               "#2980b9",
           }}
         >
-          Don't have an account?
-          Sign Up
+          {t("dontHaveAccount") || "Don't have an account? Sign Up"}
         </Text>
 
       </TouchableOpacity>

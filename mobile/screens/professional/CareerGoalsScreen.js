@@ -14,6 +14,7 @@ import {
 import {
   useOnboarding,
 } from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function CareerGoalsScreen({
   navigation,
@@ -27,6 +28,8 @@ export default function CareerGoalsScreen({
 
     updateField,
   } = useOnboarding();
+
+  const { t } = useI18n();
 
   /*
     GOAL OPTIONS
@@ -138,11 +141,11 @@ export default function CareerGoalsScreen({
     <View style={styles.container}>
 
       <Text style={styles.title}>
-        What are your career goals?
+        {t("careerGoalsTitle") || "What are your career goals?"}
       </Text>
 
       <Text style={styles.subtitle}>
-        This helps Setu personalize learning paths and job recommendations.
+        {t("careerGoalsSubtitle") || "This helps Setu personalize learning paths and job recommendations."}
       </Text>
 
       <ScrollView
@@ -189,7 +192,7 @@ export default function CareerGoalsScreen({
                         styles.selectedText,
                     ]}
                   >
-                    {goal}
+                    {t(`goals.${goal.replace(/\s+/g, '_')}`) || goal}
                   </Text>
 
                 </TouchableOpacity>
@@ -207,7 +210,7 @@ export default function CareerGoalsScreen({
       >
 
         <Text style={styles.buttonText}>
-          Continue
+          {t("continue") || "Continue"}
         </Text>
 
       </TouchableOpacity>

@@ -10,6 +10,7 @@ import {
 
 import API from "../../services/api";
 import { auth } from "../../services/firebase";
+import { useI18n } from "../../context/I18nContext";
 
 
 const fmt = (n) => n?.toLocaleString("en-IN") ?? "–";
@@ -20,11 +21,11 @@ const PHASE_COLORS = {
   Advanced:     { bg: "#FFF7ED", text: "#C2410C", badge: "#FED7AA" },
 };
 
-function PhaseChip({ phase }) {
+function PhaseChip({ phase, t }) {
   const colors = PHASE_COLORS[phase] || PHASE_COLORS.Foundation;
   return (
     <View style={[styles.phaseChip, { backgroundColor: colors.badge }]}>
-      <Text style={[styles.phaseChipText, { color: colors.text }]}>{phase}</Text>
+      <Text style={[styles.phaseChipText, { color: colors.text }]}>{t(phase) || phase}</Text>
     </View>
   );
 }
@@ -41,6 +42,7 @@ function ScoreBar({ value, max = 100, color = "#E85D04" }) {
 export default function LearningPathScreen({ route }) {
 
   const { matchContext } = route?.params || {};
+  const { t, language } = useI18n();
 
   const [loading, setLoading]   = useState(true);
   const [plan,    setPlan]      = useState(null);
@@ -55,6 +57,7 @@ export default function LearningPathScreen({ route }) {
       const response = await API.post("/learning/path", {
         userId,
         matchContext: matchContext || {},
+        language,
       });
 
       setPlan(response.data);
@@ -70,7 +73,7 @@ export default function LearningPathScreen({ route }) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#E85D04" />
-        <Text style={styles.loadingLabel}>Building your career roadmap…</Text>
+        <Text style={styles.loadingLabel}>{t("buildingRoadmap") || "Building your career roadmap…"}</Text>
       </View>
     );
   }
@@ -105,9 +108,9 @@ export default function LearningPathScreen({ route }) {
 
       {/* ── HEADER ── */}
       <View style={styles.headerBlock}>
-        <Text style={styles.headerLabel}>Career Intelligence</Text>
-        <Text style={styles.headerRole}>{role}</Text>
-        <Text style={styles.headerTarget}>↗ Target: {targetRole}</Text>
+        <Text style={styles.headerLabel}>{t("careerIntelligenceTitle") || "Career Intelligence"}</Text>
+        <Text style={styles.headerRole}>{t(`roles.${role}`) || role}</Text>
+        <Text style={styles.headerTarget}>↗ Target: {t(`roles.${targetRole}`) || targetRole}</Text>
       </View>
 
       {/* ── CURRENT ASSESSMENT ── */}
@@ -192,7 +195,7 @@ export default function LearningPathScreen({ route }) {
         <View style={styles.gapChips}>
           {(skillGaps || []).map((skill, i) => (
             <View key={i} style={styles.gapChip}>
-              <Text style={styles.gapChipText}>{skill}</Text>
+              <Text style={styles.gapChipText}>{t(`skills.${skill}`) || skill}</Text>
             </View>
           ))}
         </View>
@@ -226,18 +229,24 @@ export default function LearningPathScreen({ route }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={styles.roadmapTitleRow}>
-                    <Text style={styles.roadmapTitle}>{item.title}</Text>
+                    <Text style={styles.roadmapTitle}>
+                      {t("build") || "Build"} {t(`skills.${item.skill}`) || item.skill} {t("proficiency") || "Proficiency"}
+                    </Text>
                     {item.priority === "high" && (
                       <View style={styles.priorityBadge}>
-                        <Text style={styles.priorityBadgeText}>Critical</Text>
+                        <Text style={styles.priorityBadgeText}>{t("critical") || "Critical"}</Text>
                       </View>
                     )}
                   </View>
-                  <PhaseChip phase={item.phase} />
+                  <PhaseChip phase={item.phase} t={t} />
                 </View>
               </View>
 
-              <Text style={styles.roadmapDescription}>{item.description}</Text>
+              <Text style={styles.roadmapDescription}>
+                {item.priority === "high" 
+                  ? t("learningPathDescHigh") || "Required by your top matched job — closing this gap directly improves your match score."
+                  : t("learningPathDescMedium") || "Present across multiple matched roles — adding this skill broadens your opportunities."}
+              </Text>
 
               <View style={styles.roadmapMeta}>
                 <Text style={styles.roadmapMetaText}>

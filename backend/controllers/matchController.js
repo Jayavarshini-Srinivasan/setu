@@ -1,167 +1,73 @@
-const {
-  jobs,
-} = require(
-  "../data/jobs"
-);
-
-const {
-  db,
-} = require(
-  "../config/firebase"
-);
-
-const {
-  analyzeMatchedJob,
-} = require(
-  "../services/ai/jobAnalysisService"
-);
-
-const {
-  calculateMatchScore,
-} = require(
-  "../services/matchService"
-);
-
-const matchJobs =
-  async (req, res) => {
-
-    try {
-
-      const workerProfile = req.body || {};
-
-      if (!workerProfile.role && !workerProfile.canonicalRole) {
-        return res.status(400).json({ error: "Missing worker role" });
-      }
-
-      /*
-      =====================================
-      FETCH FIRESTORE JOBS
-      =====================================
-      */
-
-      const jobsSnapshot =
-        await db
-          .collection("jobs")
-          .where(
-            "isActive",
-            "==",
-            true
-          )
-          .get();
-
-      let availableJobs = [];
-
-      /*
-      =====================================
-      FIRESTORE JOBS
-      =====================================
-      */
-
-      if (
-        !jobsSnapshot.empty
-      ) {
-
-        availableJobs =
-          jobsSnapshot.docs.map(
-            (doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            })
-          );
-
-        console.log(
-          "Using Firestore jobs"
-        );
-
-      } else {
-
-        /*
-        =====================================
-        FALLBACK SAMPLE JOBS
-        =====================================
-        */
-
-        availableJobs =
-          jobs;
-
-        console.log(
-          "Using sample jobs fallback"
-        );
-      }
-
-      /*
-      =====================================
-      MATCHING
-      =====================================
-      */
-
-      const matchedJobs =
-        calculateMatchScore(
-          workerProfile,
-          availableJobs
-        );
-
-      /*
-      =====================================
-      FILTER LOW QUALITY
-      =====================================
-      */
-
-      const filteredJobs =
-        matchedJobs.filter(
-          (job) =>
-            job.matchScore >= 30
-        );
-
-      /*
-      =====================================
-      AI ANALYSIS
-      =====================================
-      */
-
-      const analyzedJobs =
-        await Promise.all(
-
-          filteredJobs.map(
-            async (job) =>
-              await analyzeMatchedJob(
-                workerProfile,
-                job
-              )
-          )
-        );
-
-      /*
-      =====================================
-      SORT DESC
-      =====================================
-      */
-
-      analyzedJobs.sort(
-        (a, b) =>
-          b.matchScore -
-          a.matchScore
-      );
-
-      return res
-        .status(200)
-        .json(
-          analyzedJobs
-        );
-
-    } catch (error) {
-
-      console.log(error);
-
-      return res
-        .status(500)
-        .json({
-          error:
-            "Failed to match jobs",
-        });
+const { jobs: localJobs }     = require("../data/jobs");
+const { db }                   = require("../config/firebase");
+const { analyzeMatchedJob }    = require("../services/ai/jobAnalysisService");
+const { calculateMatchScore }  = require("../services/matchService");
+const matchJobs = async (req, res) => {
+  try {
+    const body = req.body || {};
+    const isProfessional = body.isProfessional === true;
+    const workerProfile = {
+      canonicalRole: (body.role || "").trim(),
+      role:          (body.role || "").trim(),
+      skills:        Array.isArray(body.skills) ? body.skills.map(s => (s || "").toString().toLowerCase()) : [],
+      location:      (body.location || "").trim(),
+      experience:    parseInt(body.experience || 0, 10),
+      isProfessional,
+    };
+    if (!workerProfile.canonicalRole && !workerProfile.role) {
+      return res.status(400).json({ error: "Missing worker role" });
     }
-  };
-
-module.exports = {
-  matchJobs,
+    let availableJobs = [];
+    try {
+      const snapshot = await db
+        .collection("jobs")
+        .where("isActive", "==", true)
+        .get();
+      if (!snapshot.empty) {
+        availableJobs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        console.log(`Using Firestore jobs (${availableJobs.length})`);
+      }
+    } catch (fsErr) {
+      console.warn("[matchController] Firestore fetch failed:", fsErr?.message);
+    }
+    if (availableJobs.length === 0) {
+      availableJobs = localJobs;
+      console.log(`Using local jobs fallback (${availableJobs.length})`);
+    }
+    const targetCategory = isProfessional ? "professional" : "labour";
+    const categoryJobs   = availableJobs.filter((j) => {
+      const jobCat = (j.category || j.workerCategory || "").toLowerCase();
+      return !jobCat || jobCat === targetCategory;
+    });
+    const matchedJobs = calculateMatchScore(workerProfile, categoryJobs);
+    const MIN_SCORE  = isProfessional ? 5 : 10;
+    const filteredJobs = matchedJobs.filter((j) => j.matchScore >= MIN_SCORE);
+    const language = body.language || "en";
+    const settledResults = await Promise.allSettled(
+      filteredJobs.map((job) => analyzeMatchedJob(workerProfile, job, language))
+    );
+    const analyzedJobs = settledResults.map((result, i) => {
+      if (result.status === "fulfilled") {
+        return result.value;
+      }
+      console.warn(`[matchController] analyzeMatchedJob failed for job ${filteredJobs[i]?.id}:`, result.reason?.message);
+      return {
+        ...filteredJobs[i],
+        aiSummary:           `${filteredJobs[i].matchScore}% match for ${filteredJobs[i].title}.`,
+        pros:                [],
+        cons:                [],
+        missingSkills:       filteredJobs[i].analysis?.missingSkills || [],
+        potentialMatchScore: Math.min(98, (filteredJobs[i].matchScore || 0) + 10),
+        recommendationType:  filteredJobs[i].matchScore >= 80 ? "best_pick"
+                           : filteredJobs[i].matchScore >= 50 ? "good_fit"
+                           : "average_fit",
+      };
+    });
+    analyzedJobs.sort((a, b) => b.matchScore - a.matchScore);
+    return res.status(200).json(analyzedJobs);
+  } catch (error) {
+    console.error("[matchController] matchJobs:", error);
+    return res.status(500).json({ error: "Failed to match jobs" });
+  }
 };
+module.exports = { matchJobs };

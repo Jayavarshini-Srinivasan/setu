@@ -142,6 +142,11 @@ function ProfessionalTabs() {
       />
 
       <Tab.Screen
+        name="Learning Path"
+        component={LearningPathScreen}
+      />
+
+      <Tab.Screen
         name="Profile"
         component={ProfileScreen}
       />

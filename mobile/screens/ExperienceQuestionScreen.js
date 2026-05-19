@@ -12,6 +12,7 @@ import {
 import VoiceButton from "../components/VoiceButton";
 import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
 import { useOnboarding } from "../context/OnboardingContext";
+import { useI18n } from "../context/I18nContext";
 
 const EXPERIENCE_OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"];
 
@@ -22,6 +23,8 @@ export default function ExperienceQuestionScreen({ navigation }) {
     updateField,
     addTranscript,
   } = useOnboarding();
+  
+  const { t } = useI18n();
 
   const [experience, setExperience] = useState(
     onboardingData.experience?.toString() || ""
@@ -71,7 +74,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
       return (
         <View style={styles.voiceCenter}>
           <ActivityIndicator size="large" color="#E85D04" style={{ marginBottom: 10 }} />
-          <Text style={styles.processingLabel}>Analysing your response…</Text>
+          <Text style={styles.processingLabel}>{t("analyzingResponse") || "Analysing your response…"}</Text>
         </View>
       );
     }
@@ -80,17 +83,17 @@ export default function ExperienceQuestionScreen({ navigation }) {
       return (
         <View style={styles.voiceCenter}>
           <View style={styles.recordedBadge}>
-            <Text style={styles.recordedBadgeText}>🎙️  Recording ready</Text>
+            <Text style={styles.recordedBadgeText}>🎙️  {t("recordingReady") || "Recording ready"}</Text>
           </View>
           <View style={styles.actionRow}>
             <TouchableOpacity style={[styles.actionBtn, styles.playBtn]} onPress={playRecording}>
-              <Text style={styles.actionBtnText}>▶  Play</Text>
+              <Text style={styles.actionBtnText}>▶  {t("play") || "Play"}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.retakeBtn]} onPress={retakeRecording}>
-              <Text style={styles.actionBtnText}>🔄  Retake</Text>
+              <Text style={styles.actionBtnText}>🔄  {t("retake") || "Retake"}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.submitBtn]} onPress={submitRecording}>
-              <Text style={styles.actionBtnText}>✅  Submit</Text>
+              <Text style={styles.actionBtnText}>✅  {t("submit") || "Submit"}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -101,8 +104,8 @@ export default function ExperienceQuestionScreen({ navigation }) {
       <View style={styles.voiceCenter}>
         <Text style={styles.holdLabel}>
           {voiceState === VOICE_STATE.RECORDING
-            ? "🔴  Recording… release to stop"
-            : "Hold to speak"}
+            ? "🔴  " + (t("recordingReleaseToStop") || "Recording… release to stop")
+            : t("holdToSpeak") || "Hold to speak"}
         </Text>
         <VoiceButton
           isRecording={voiceState === VOICE_STATE.RECORDING}
@@ -110,7 +113,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
           onPressOut={stopRecording}
         />
         {voiceState === VOICE_STATE.IDLE && (
-          <Text style={styles.hintText}>Press and hold the button while talking</Text>
+          <Text style={styles.hintText}>{t("pressAndHoldHint") || "Press and hold the button while talking"}</Text>
         )}
       </View>
     );
@@ -132,13 +135,13 @@ export default function ExperienceQuestionScreen({ navigation }) {
         ))}
       </View>
 
-      <Text style={styles.title}>How many years of experience do you have?</Text>
-      <Text style={styles.subtitle}>Type a number, tap a chip, or speak naturally.</Text>
+      <Text style={styles.title}>{t("howManyYears") || "How many years of experience do you have?"}</Text>
+      <Text style={styles.subtitle}>{t("experienceSubtitle") || "Type a number, tap a chip, or speak naturally."}</Text>
 
       {/* TEXT INPUT */}
       <TextInput
         style={styles.input}
-        placeholder="e.g. 3"
+        placeholder={t("experiencePlaceholder") || "e.g. 3"}
         keyboardType="numeric"
         value={experience}
         onChangeText={setExperience}
@@ -171,14 +174,14 @@ export default function ExperienceQuestionScreen({ navigation }) {
       {/* TRANSCRIPT */}
       {transcript ? (
         <View style={styles.transcriptBox}>
-          <Text style={styles.transcriptLabel}>Transcript</Text>
+          <Text style={styles.transcriptLabel}>{t("transcript") || "Transcript"}</Text>
           <Text style={styles.transcriptText}>{transcript}</Text>
         </View>
       ) : null}
 
       {/* CONTINUE */}
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueText}>Continue</Text>
+        <Text style={styles.continueText}>{t("continue") || "Continue"}</Text>
       </TouchableOpacity>
 
     </View>

@@ -24,28 +24,28 @@ function scoreColor(score) {
   return "#DC2626";
 }
 
-function buildAiSummary(p, isProfessional, matchScore, topJob) {
+function buildAiSummary(p, isProfessional, matchScore, topJob, t) {
   const role     = isProfessional
-    ? (p.professionalRole || "professional")
-    : (p.canonicalRole || p.role || "worker");
+    ? (p.professionalRole || t("professional") || "professional")
+    : (t("roles." + (p.canonicalRole || p.role)) || p.canonicalRole || p.role || t("worker") || "worker");
   const skillCount = isProfessional
     ? (p.professionalSkills?.length || 0)
     : (p.skills?.length || 0);
   const expYears   = isProfessional
     ? (p.experienceDetails?.length || 0)
     : (p.experience || 0);
-  const location   = p.location || "India";
+  const location   = p.location || t("india") || "India";
 
-  let summary = `${role} based in ${location} with ${skillCount} verified skills`;
-  if (expYears > 0) summary += ` and ${expYears} year${expYears !== 1 ? "s" : ""} of experience`;
+  let summary = `${role} ${t("basedIn") || "based in"} ${location} ${t("with") || "with"} ${skillCount} ${t("verifiedSkills") || "verified skills"}`;
+  if (expYears > 0) summary += ` ${t("and") || "and"} ${expYears} ${t("yearsOfExperience") || "years of experience"}`;
   summary += ".";
 
   if (matchScore >= 80 && topJob) {
-    summary += ` Strong match for ${topJob.title} (${matchScore}% compatibility).`;
+    summary += ` ${t("strongMatchFor") || "Strong match for"} ${topJob.title} (${matchScore}% ${t("compatibility") || "compatibility"}).`;
   } else if (matchScore >= 50 && topJob) {
-    summary += ` Moderately matched for ${topJob.title} — skill gap present.`;
+    summary += ` ${t("moderatelyMatchedFor") || "Moderately matched for"} ${topJob.title} — ${t("skillGapPresent") || "skill gap present"}.`;
   } else if (topJob) {
-    summary += ` Growing profile — ${topJob.title} match improving.`;
+    summary += ` ${t("growingProfile") || "Growing profile"} — ${topJob.title} ${t("matchImproving") || "match improving"}.`;
   }
 
   return summary;
@@ -77,7 +77,7 @@ function computeProfileReadiness(p, isProfessional, matchScore) {
 export default function ProfileScreen() {
 
   const { setFullOnboardingData, refreshOnboarding } = useOnboarding();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const [profile,       setProfile]       = useState(null);
   const [loading,       setLoading]       = useState(true);
@@ -119,6 +119,7 @@ export default function ProfileScreen() {
         location:    p.location || "",
         experience:  isProfessional ? (p.experienceDetails?.length || 0) : (p.experience || 0),
         isProfessional,
+        language,
       };
 
       const response = await API.post("/match", payload);
@@ -204,7 +205,7 @@ export default function ProfileScreen() {
   const isProfessional = profile.workerType === "professional";
   const role           = isProfessional ? p.professionalRole : (p.canonicalRole || p.role);
   const skills         = isProfessional ? (p.professionalSkills || []) : (p.skills || []);
-  const aiSummary      = buildAiSummary(p, isProfessional, matchScore, topJob);
+  const aiSummary      = buildAiSummary(p, isProfessional, matchScore, topJob, t);
   const readiness      = computeProfileReadiness(p, isProfessional, matchScore);
 
   return (
@@ -215,7 +216,7 @@ export default function ProfileScreen() {
 
       {/* ── HEADER CARD ── */}
       <View style={styles.headerCard}>
-        <Text style={styles.name}>{role || t("worker") || "Worker"}</Text>
+        <Text style={styles.name}>{t("roles." + role) || role || t("worker") || "Worker"}</Text>
         <Text style={styles.email}>{auth.currentUser?.email}</Text>
         <Text style={styles.locationText}>
           📍 {p.location || t("locationNotSet") || "Location not set"}
@@ -243,7 +244,7 @@ export default function ProfileScreen() {
           <Text style={styles.cardTitle}>📊  {t("matchReadiness") || "Match Readiness"}</Text>
           {topJob && (
             <Text style={styles.topJobLabel}>
-              vs. {topJob.title}
+              {t("vs") || "vs."} {topJob.title}
             </Text>
           )}
         </View>
@@ -287,7 +288,7 @@ export default function ProfileScreen() {
           <View style={styles.chipsRow}>
             {allMissing.map((s, i) => (
               <View key={i} style={styles.gapChip}>
-                <Text style={styles.gapChipText}>{s}</Text>
+                <Text style={styles.gapChipText}>{t(`skills.${s}`) || s}</Text>
               </View>
             ))}
           </View>
@@ -305,7 +306,7 @@ export default function ProfileScreen() {
           <View style={styles.chipsRow}>
             {skills.map((s, i) => (
               <View key={i} style={styles.skillChip}>
-                <Text style={styles.skillChipText}>{s}</Text>
+                <Text style={styles.skillChipText}>{t(`skills.${s}`) || s}</Text>
               </View>
             ))}
           </View>

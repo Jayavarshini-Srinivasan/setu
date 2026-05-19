@@ -107,7 +107,7 @@ export default function VoiceQuestionCard({
       ) : null}
 
       <Text style={styles.confirmedPrompt}>
-        Is this correct?
+        {t("isThisCorrect") || "Is this correct?"}
       </Text>
 
       <View style={styles.confirmedActions}>
@@ -117,7 +117,7 @@ export default function VoiceQuestionCard({
           onPress={onReject}
           activeOpacity={0.8}
         >
-          <Text style={styles.confirmedBtnText}>🔄  Try Again</Text>
+          <Text style={styles.confirmedBtnText}>🔄  {t("tryAgain") || "Try Again"}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -125,7 +125,7 @@ export default function VoiceQuestionCard({
           onPress={onConfirm}
           activeOpacity={0.8}
         >
-          <Text style={styles.confirmedBtnText}>✓  Looks Right</Text>
+          <Text style={styles.confirmedBtnText}>✓  {t("looksRight") || "Looks Right"}</Text>
         </TouchableOpacity>
 
       </View>
@@ -137,7 +137,7 @@ export default function VoiceQuestionCard({
     <View style={styles.voiceCenter}>
 
       <View style={styles.recordedBadge}>
-        <Text style={styles.recordedBadgeText}>🎙️  Recording ready</Text>
+        <Text style={styles.recordedBadgeText}>🎙️  {t("recordingReady") || "Recording ready"}</Text>
       </View>
 
       <View style={styles.actionRow}>
@@ -148,7 +148,7 @@ export default function VoiceQuestionCard({
           activeOpacity={0.8}
         >
           <Text style={styles.actionIcon}>▶</Text>
-          <Text style={styles.actionBtnText}>Play</Text>
+          <Text style={styles.actionBtnText}>{t("play") || "Play"}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -157,7 +157,7 @@ export default function VoiceQuestionCard({
           activeOpacity={0.8}
         >
           <Text style={styles.actionIcon}>🔄</Text>
-          <Text style={styles.actionBtnText}>Retake</Text>
+          <Text style={styles.actionBtnText}>{t("retake") || "Retake"}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -166,7 +166,7 @@ export default function VoiceQuestionCard({
           activeOpacity={0.8}
         >
           <Text style={styles.actionIcon}>✅</Text>
-          <Text style={styles.actionBtnText}>Submit</Text>
+          <Text style={styles.actionBtnText}>{t("submit") || "Submit"}</Text>
         </TouchableOpacity>
 
       </View>
@@ -179,8 +179,8 @@ export default function VoiceQuestionCard({
 
       <Text style={styles.holdLabel}>
         {voiceState === VOICE_STATE.RECORDING
-          ? "🔴  Recording…  release to stop"
-          : "Hold to speak"}
+          ? "🔴  " + (t("recordingReleaseToStop") || "Recording…  release to stop")
+          : t("holdToSpeak") || "Hold to speak"}
       </Text>
 
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
@@ -193,7 +193,7 @@ export default function VoiceQuestionCard({
 
       {voiceState === VOICE_STATE.IDLE && (
         <Text style={styles.hintText}>
-          Press and hold the button while talking
+          {t("pressAndHoldHint") || "Press and hold the button while talking"}
         </Text>
       )}
 
@@ -240,25 +240,29 @@ export default function VoiceQuestionCard({
         <ScrollView contentContainerStyle={styles.optionsContainer}>
           {options.map((option) => {
 
+            const isObject = typeof option === "object" && option !== null;
+            const optionValue = isObject ? option.value : option;
+            const optionLabel = isObject ? option.label : option;
+
             const isSelected =
               selectedOptions.length > 0
-                ? selectedOptions.includes(option)
-                : selectedOption === option;
+                ? selectedOptions.includes(optionValue)
+                : selectedOption === optionValue;
 
             return (
               <TouchableOpacity
-                key={option}
+                key={optionValue}
                 style={[
                   styles.optionChip,
                   isSelected && styles.selectedChip,
                 ]}
-                onPress={() => onSelectOption(option)}
+                onPress={() => onSelectOption(optionValue)}
               >
                 <Text style={[
                   styles.optionText,
                   isSelected && styles.selectedText,
                 ]}>
-                  {option}
+                  {optionLabel}
                 </Text>
               </TouchableOpacity>
             );
@@ -271,7 +275,7 @@ export default function VoiceQuestionCard({
           style={styles.continueButton}
           onPress={onContinue}
         >
-          <Text style={styles.continueText}>Continue</Text>
+          <Text style={styles.continueText}>{t("continue") || "Continue"}</Text>
         </TouchableOpacity>
       )}
 

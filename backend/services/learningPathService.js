@@ -1,155 +1,215 @@
-const {
-  roleRequirements,
-} = require(
-  "../data/roleRequirements"
-);
-
 /*
-  GENERATE LEARNING PATH
+  LEARNING PATH SERVICE
+  ──────────────────────────────────────────────────────────────────────────────
+  Generates a career progression roadmap derived from REAL match failures.
+
+  Context object:
+  {
+    role              string    professionalRole from Firestore
+    skills            string[]  professionalSkills from Firestore
+    careerGoal        string    e.g. "Senior Software Engineer"
+    experience        object[]  experienceDetails array
+    topJob            object    best-matched job from /match endpoint
+    allMissingSkills  string[]  union of skill gaps across ALL matched jobs
+    currentMatchScore number    best job's matchScore (0-100)
+  }
 */
-const generateLearningPath =
-  async (
-    profile
-  ) => {
 
-    /*
-      CURRENT SKILLS
-    */
-    const currentSkills =
-      (
-        profile.professionalSkills || []
-      ).map(
-        (skill) =>
-          skill.toLowerCase()
-      );
+/* ─── Salary range lookup by role ─────────────────────────────────── */
+const ROLE_SALARY_MAP = {
+  "Software Engineer":    { entry: 600000,  senior: 1800000 },
+  "Frontend Developer":   { entry: 500000,  senior: 1500000 },
+  "Backend Developer":    { entry: 600000,  senior: 1800000 },
+  "Full Stack Developer": { entry: 700000,  senior: 2000000 },
+  "Data Analyst":         { entry: 550000,  senior: 1600000 },
+  "UI/UX Designer":       { entry: 450000,  senior: 1400000 },
+  "Product Manager":      { entry: 900000,  senior: 2500000 },
+  "Marketing Specialist": { entry: 400000,  senior: 1200000 },
+  "HR Executive":         { entry: 350000,  senior: 1000000 },
+  "Finance Associate":    { entry: 500000,  senior: 1500000 },
+  "Business Analyst":     { entry: 600000,  senior: 1700000 },
+};
 
-    /*
-      TARGET ROLE
-    */
-    const targetRole =
-      (
-        profile.preferredRoles || []
-      )[0];
+/* ─── Typical weeks to build each skill ──────────────────────────── */
+const SKILL_WEEK_MAP = {
+  default: 3,
+  "machine learning": 8,
+  "deep learning": 8,
+  "pytorch": 6,
+  "react": 5,
+  "react native": 5,
+  "node.js": 4,
+  "mongodb": 3,
+  "python": 4,
+  "sql": 3,
+  "aws": 6,
+  "docker": 4,
+  "kubernetes": 6,
+  "typescript": 3,
+  "graphql": 3,
+  "figma": 2,
+  "data structures": 4,
+  "system design": 6,
+};
 
-    /*
-      ROLE DATA
-    */
-    const roleData =
-      roleRequirements[
-        targetRole
-      ];
+function weeksForSkill(skill) {
+  return SKILL_WEEK_MAP[skill.toLowerCase()] || SKILL_WEEK_MAP.default;
+}
 
-    /*
-      FALLBACK
-    */
-    if (!roleData) {
+/* ─── Phase labels ─────────────────────────────────────────────────── */
+function phaseLabel(index) {
+  if (index < 2) return "Foundation";
+  if (index < 5) return "Core Growth";
+  return "Advanced";
+}
 
-      return {
+/* ─── Match improvement projection ────────────────────────────────── */
+function projectMatchImprovement(currentScore, missingSkillCount) {
+  const gainPerSkill = missingSkillCount > 0
+    ? Math.round((100 - currentScore) / missingSkillCount * 0.7)
+    : 0;
+  return Math.min(100, currentScore + gainPerSkill * missingSkillCount);
+}
 
-        targetRole,
+/* ─── Salary projection ────────────────────────────────────────────── */
+function projectSalaryGrowth(role, currentMatchScore) {
+  const map   = ROLE_SALARY_MAP[role] || { entry: 500000, senior: 1500000 };
+  const ratio = currentMatchScore / 100;
+  const currentEstimate = Math.round(
+    map.entry + (map.senior - map.entry) * ratio
+  );
+  const projected = Math.round(
+    map.entry + (map.senior - map.entry) * Math.min(1, ratio + 0.35)
+  );
+  return { currentEstimate, projected };
+}
 
-        currentSkills,
+/* ─── MAIN ─────────────────────────────────────────────────────────── */
+const generateLearningPath = async (context) => {
 
-        missingSkills:
-          [],
+  const {
+    role              = "",
+    skills            = [],
+    careerGoal        = "",
+    experience        = [],
+    topJob            = null,
+    allMissingSkills  = [],
+    currentMatchScore = 0,
+  } = context;
 
-        recommendedSkills:
-          [],
+  const currentSkillsNorm = skills.map((s) => s.toLowerCase().trim());
 
-        roadmap:
-          [],
+  /*
+    ── SKILL GAP
+    Derive from REAL match failures (allMissingSkills from /match),
+    fall back to job-specific missing skills if context is partial.
+  */
+  const rawGaps =
+    allMissingSkills.length > 0
+      ? allMissingSkills
+      : topJob?.missingSkills || [];
 
-        estimatedMatchImprovement:
-          0,
-      };
-    }
+  /* De-duplicate and exclude already-held skills */
+  const skillGaps = [...new Set(
+    rawGaps
+      .map((s) => s.toLowerCase().trim())
+      .filter((s) => !currentSkillsNorm.includes(s))
+  )];
 
-    /*
-      REQUIRED SKILLS
-    */
-    const requiredSkills =
-      roleData.requiredSkills;
+  /*
+    ── PRIORITY ORDER
+    Skills missing from the TOP job are highest priority.
+  */
+  const topJobMissing = (topJob?.missingSkills || []).map((s) =>
+    s.toLowerCase().trim()
+  );
 
-    /*
-      SKILL GAP
-    */
-    const missingSkills =
-      requiredSkills.filter(
-        (skill) =>
-          !currentSkills.includes(
-            skill
-          )
-      );
+  const prioritized = [
+    ...skillGaps.filter((s) => topJobMissing.includes(s)),
+    ...skillGaps.filter((s) => !topJobMissing.includes(s)),
+  ];
 
-    /*
-      PRIORITIZE
-    */
-    const prioritizedSkills =
-      [
-        ...roleData.foundationalSkills.filter(
-          (skill) =>
-            missingSkills.includes(
-              skill
-            )
-        ),
+  /*
+    ── ROADMAP PHASES
+    Each skill becomes a step with a phase label, weeks estimate,
+    and a description rooted in WHY it matters for this specific role.
+  */
+  let cumulativeWeeks = 0;
 
-        ...missingSkills.filter(
-          (skill) =>
-            !roleData.foundationalSkills.includes(
-              skill
-            )
-        ),
-      ];
-
-    /*
-      ROADMAP
-    */
-    const roadmap =
-      prioritizedSkills.map(
-        (
-          skill,
-          index
-        ) => ({
-
-          step:
-            index + 1,
-
-          skill,
-
-          title:
-            `Learn ${skill}`,
-
-          description:
-            `Develop practical skills in ${skill} to improve your readiness for ${targetRole}.`,
-        })
-      );
-
-    /*
-      IMPROVEMENT ESTIMATE
-    */
-    const estimatedMatchImprovement =
-      Math.min(
-        95,
-        missingSkills.length * 12
-      );
+  const roadmap = prioritized.map((skill, index) => {
+    const weeks        = weeksForSkill(skill);
+    cumulativeWeeks   += weeks;
+    const phase        = phaseLabel(index);
+    const fromTopJob   = topJobMissing.includes(skill);
 
     return {
-
-      targetRole,
-
-      currentSkills,
-
-      missingSkills,
-
-      recommendedSkills:
-        prioritizedSkills,
-
-      roadmap,
-
-      estimatedMatchImprovement,
+      step:         index + 1,
+      phase,
+      skill,
+      title:        `Build ${skill.charAt(0).toUpperCase() + skill.slice(1)} Proficiency`,
+      description:  fromTopJob
+        ? `Required by "${topJob?.title || "your top matched job"}" — closing this gap directly improves your match score.`
+        : `Present across multiple matched roles for ${role} — adding this skill broadens your opportunities.`,
+      estimatedWeeks: weeks,
+      cumulativeWeeks,
+      priority: fromTopJob ? "high" : "medium",
     };
+  });
+
+  /*
+    ── PROJECTIONS
+  */
+  const projectedMatchScore  = projectMatchImprovement(currentMatchScore, prioritized.length);
+  const salary               = projectSalaryGrowth(role, currentMatchScore);
+  const totalWeeks           = cumulativeWeeks;
+  const targetRole           = careerGoal || (role ? `Senior ${role}` : "Target Role");
+
+  /*
+    ── CURRENT ASSESSMENT
+  */
+  const currentAssessment = {
+    role,
+    skillCount:    currentSkillsNorm.length,
+    matchScore:    currentMatchScore,
+    experienceYears: Array.isArray(experience) ? experience.length : 0,
+    strengths:     currentSkillsNorm.slice(0, 5),
+    topMatchedJob: topJob ? {
+      title:      topJob.title,
+      matchScore: topJob.matchScore,
+      location:   topJob.location,
+    } : null,
   };
 
-module.exports = {
-  generateLearningPath,
+  return {
+    /* Header info */
+    role,
+    targetRole,
+    careerGoal,
+
+    /* Gap analysis */
+    currentSkills:   currentSkillsNorm,
+    skillGaps:       prioritized,
+    totalGapCount:   prioritized.length,
+
+    /* Roadmap */
+    roadmap,
+    totalWeeks,
+
+    /* Projections */
+    currentMatchScore,
+    projectedMatchScore,
+    matchImprovementDelta: projectedMatchScore - currentMatchScore,
+
+    salary: {
+      currentEstimate:   salary.currentEstimate,
+      projectedEstimate: salary.projected,
+      currency:          "INR",
+    },
+
+    /* Context */
+    currentAssessment,
+    topJob,
+  };
 };
+
+module.exports = { generateLearningPath };

@@ -121,7 +121,8 @@ const generateImprovementInsights =
 const analyzeMatchedJob =
   async (
     workerProfile,
-    matchedJob
+    matchedJob,
+    language
   ) => {
 
     /*
@@ -241,7 +242,8 @@ const analyzeMatchedJob =
       await generateMatchExplanation(
         workerProfile,
         matchedJob,
-        explanationData
+        explanationData,
+        language
       );
 
     /*

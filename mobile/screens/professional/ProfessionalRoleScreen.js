@@ -4,6 +4,7 @@ import { Alert } from "react-native";
 import VoiceQuestionCard from "../../components/VoiceQuestionCard";
 import useVoiceRecorder from "../../hooks/useVoiceRecorder";
 import { useOnboarding } from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 
 const PROFESSIONAL_ROLES = [
   "Software Engineer",
@@ -22,6 +23,7 @@ const PROFESSIONAL_ROLES = [
 export default function ProfessionalRoleScreen({ navigation }) {
 
   const { onboardingData, updateField, addTranscript } = useOnboarding();
+  const { t } = useI18n();
 
   const [selectedRole, setSelectedRole] = useState(
     onboardingData.professionalRole || ""
@@ -75,14 +77,14 @@ export default function ProfessionalRoleScreen({ navigation }) {
     <VoiceQuestionCard
       step={1}
       totalSteps={7}
-      title="What professional role are you aiming for?"
-      subtitle="Tap a role below, or hold the mic and speak in your own language."
+      title={t("professionalRoleTitle") || "What professional role are you aiming for?"}
+      subtitle={t("professionalRoleSubtitle") || "Tap a role below, or hold the mic and speak in your own language."}
       transcript={transcript}
-      extractionLabel="Detected Role"
+      extractionLabel={t("detectedRole") || "Detected Role"}
       extractionDisplay={
         extractedProfile?.rawRole || extractedProfile?.canonicalRole || ""
       }
-      options={PROFESSIONAL_ROLES}
+      options={PROFESSIONAL_ROLES.map(r => ({ value: r, label: t(`roles.${r}`) || r }))}
       selectedOption={selectedRole}
       onSelectOption={handleSelectRole}
       voiceState={voiceState}

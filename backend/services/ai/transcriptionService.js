@@ -1,68 +1,32 @@
-const fs =
-  require("fs");
+const fs   = require("fs");
+const mime = require("mime-types");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const mime =
-  require("mime-types");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-const {
-  GoogleGenerativeAI,
-} = require(
-  "@google/generative-ai"
-);
+/*
+  transcribeAudio
+  ──────────────────────────────────────────────────────────────────────────────
+  Sends the audio file to Gemini as inline base64 data.
+  If the model is unavailable or the audio is too short, returns an
+  empty string instead of throwing — callers must handle empty transcripts.
+*/
+const transcribeAudio = async (filePath) => {
 
-const genAI =
-  new GoogleGenerativeAI(
-    process.env
-      .GEMINI_API_KEY
-  );
+  try {
 
-const model =
-  genAI.getGenerativeModel(
-    {
-      model:
-        "gemini-3-flash-preview",
-    }
-  );
+    const audioBuffer = fs.readFileSync(filePath);
+    const mimeType    = mime.lookup(filePath) || "audio/m4a";
 
-const transcribeAudio =
-  async (
-    filePath
-  ) => {
-
-    /*
-      READ AUDIO FILE
-    */
-    const audioBuffer =
-      fs.readFileSync(
-        filePath
-      );
-
-    /*
-      MIME TYPE
-    */
-    const mimeType =
-      mime.lookup(
-        filePath
-      );
-
-    /*
-      GEMINI REQUEST
-    */
-    const result =
-      await model.generateContent([
-        {
-          inlineData: {
-            data:
-              audioBuffer.toString(
-                "base64"
-              ),
-
-            mimeType,
-          },
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          data:     audioBuffer.toString("base64"),
+          mimeType,
         },
-
-        `
-Transcribe this audio accurately.
+      },
+      `Transcribe this audio accurately.
 
 The speaker may use:
 - Hindi
@@ -73,16 +37,19 @@ The speaker may use:
 
 If the audio is completely silent, contains only background noise, or has no discernible speech, return the exact word "SILENCE".
 Do NOT hallucinate or make up phrases.
-Return ONLY the transcript text.
-`,
-      ]);
+Return ONLY the transcript text.`,
+    ]);
 
-    const response =
-      result.response;
+    const text = result.response.text().trim();
+    return text === "SILENCE" ? "" : text;
 
-    return response.text();
-  };
+  } catch (err) {
 
-module.exports = {
-  transcribeAudio,
+    console.warn("[transcriptionService] transcribeAudio failed:", err?.message);
+    /* Return empty string — voiceRoutes will still respond with success:true
+       and an empty transcript so the mobile app gets a graceful result */
+    return "";
+  }
 };
+
+module.exports = { transcribeAudio };

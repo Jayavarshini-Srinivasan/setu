@@ -22,6 +22,7 @@ import {
 import {
   useOnboarding,
 } from "../context/OnboardingContext";
+import { useI18n } from "../context/I18nContext";
 
 export default function ReviewOnboardingScreen({
   navigation,
@@ -34,6 +35,8 @@ export default function ReviewOnboardingScreen({
 
     refreshOnboarding,
   } = useOnboarding();
+
+  const { t } = useI18n();
 
   /*
     COMPLETE
@@ -127,23 +130,22 @@ export default function ReviewOnboardingScreen({
     >
 
       <Text style={styles.title}>
-        Review Your Profile
+        {t("reviewProfile") || "Review Your Profile"}
       </Text>
 
       <Text style={styles.subtitle}>
-        Confirm your details before continuing.
+        {t("confirmDetails") || "Confirm your details before continuing."}
       </Text>
 
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Role
+          {t("roleLabel") || "Role"}
         </Text>
 
         <Text style={styles.value}>
           {
-            onboardingData
-              .canonicalRole
+            t("roles." + onboardingData.canonicalRole) || onboardingData.canonicalRole
           }
         </Text>
 
@@ -152,14 +154,14 @@ export default function ReviewOnboardingScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Skills
+          {t("skillsLabel") || "Skills"}
         </Text>
 
         <Text style={styles.value}>
           {
             (
               onboardingData.skills || []
-            ).join(", ")
+            ).map(s => t("skills." + s) || s).join(", ")
           }
         </Text>
 
@@ -168,14 +170,14 @@ export default function ReviewOnboardingScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Experience
+          {t("experienceLabel") || "Experience"}
         </Text>
 
         <Text style={styles.value}>
           {
             onboardingData
               .experience
-          } years
+          } {t("years") || "years"}
         </Text>
 
       </View>
@@ -183,7 +185,7 @@ export default function ReviewOnboardingScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Location
+          {t("locationLabel") || "Location"}
         </Text>
 
         <Text style={styles.value}>
@@ -198,13 +200,12 @@ export default function ReviewOnboardingScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Availability
+          {t("availability") || "Availability"}
         </Text>
 
         <Text style={styles.value}>
           {
-            onboardingData
-              .availability
+            t("availabilityOptions." + onboardingData.availability) || onboardingData.availability
           }
         </Text>
 
@@ -213,13 +214,12 @@ export default function ReviewOnboardingScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Preferred Shift
+          {t("preferredShift") || "Preferred Shift"}
         </Text>
 
         <Text style={styles.value}>
           {
-            onboardingData
-              .preferredShift
+            t("shiftOptions." + onboardingData.preferredShift) || onboardingData.preferredShift
           }
         </Text>
 
@@ -240,7 +240,7 @@ export default function ReviewOnboardingScreen({
             styles.completeText
           }
         >
-          Complete Onboarding
+          {t("completeOnboarding") || "Complete Onboarding"}
         </Text>
 
       </TouchableOpacity>

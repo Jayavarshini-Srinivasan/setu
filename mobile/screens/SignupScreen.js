@@ -24,6 +24,7 @@ import {
   auth,
   db,
 } from "../services/firebase";
+import { useI18n } from "../context/I18nContext";
 
 export default function SignupScreen({
   navigation,
@@ -44,6 +45,7 @@ export default function SignupScreen({
     setLoading,
   ] = useState(false);
 
+  const { t } = useI18n();
   /*
     SIGNUP
   */
@@ -129,7 +131,7 @@ export default function SignupScreen({
           styles.heading
         }
       >
-        Create Account
+        {t("createAccount") || "Create Account"}
       </Text>
 
       <TextInput
@@ -137,7 +139,7 @@ export default function SignupScreen({
           styles.input
         }
 
-        placeholder="Email"
+        placeholder={t("email") || "Email"}
 
         value={email}
 
@@ -153,7 +155,7 @@ export default function SignupScreen({
           styles.input
         }
 
-        placeholder="Password"
+        placeholder={t("password") || "Password"}
 
         secureTextEntry
 
@@ -181,8 +183,8 @@ export default function SignupScreen({
         >
           {
             loading
-              ? "Creating..."
-              : "Sign Up"
+              ? (t("creating") || "Creating...")
+              : (t("signUp") || "Sign Up")
           }
         </Text>
 
@@ -201,8 +203,7 @@ export default function SignupScreen({
             styles.linkText
           }
         >
-          Already have an account?
-          Login
+          {t("alreadyHaveAccount") || "Already have an account? Login"}
         </Text>
 
       </TouchableOpacity>

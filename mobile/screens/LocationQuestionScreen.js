@@ -14,6 +14,7 @@ import {
 import VoiceButton from "../components/VoiceButton";
 import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
 import { useOnboarding } from "../context/OnboardingContext";
+import { useI18n } from "../context/I18nContext";
 
 const LOCATION_OPTIONS = [
   "Chennai",
@@ -33,6 +34,8 @@ export default function LocationQuestionScreen({ navigation }) {
     updateField,
     addTranscript,
   } = useOnboarding();
+
+  const { t } = useI18n();
 
   const [location, setLocation] = useState(onboardingData.location || "");
 
@@ -86,7 +89,7 @@ export default function LocationQuestionScreen({ navigation }) {
       return (
         <View style={styles.voiceCenter}>
           <ActivityIndicator size="large" color="#E85D04" style={{ marginBottom: 10 }} />
-          <Text style={styles.processingLabel}>Analysing your response…</Text>
+          <Text style={styles.processingLabel}>{t("analyzingResponse") || "Analysing your response…"}</Text>
         </View>
       );
     }
@@ -95,17 +98,17 @@ export default function LocationQuestionScreen({ navigation }) {
       return (
         <View style={styles.voiceCenter}>
           <View style={styles.recordedBadge}>
-            <Text style={styles.recordedBadgeText}>🎙️  Recording ready</Text>
+            <Text style={styles.recordedBadgeText}>🎙️  {t("recordingReady") || "Recording ready"}</Text>
           </View>
           <View style={styles.actionRow}>
             <TouchableOpacity style={[styles.actionBtn, styles.playBtn]} onPress={playRecording}>
-              <Text style={styles.actionBtnText}>▶  Play</Text>
+              <Text style={styles.actionBtnText}>▶  {t("play") || "Play"}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.retakeBtn]} onPress={retakeRecording}>
-              <Text style={styles.actionBtnText}>🔄  Retake</Text>
+              <Text style={styles.actionBtnText}>🔄  {t("retake") || "Retake"}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.submitBtn]} onPress={submitRecording}>
-              <Text style={styles.actionBtnText}>✅  Submit</Text>
+              <Text style={styles.actionBtnText}>✅  {t("submit") || "Submit"}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -116,8 +119,8 @@ export default function LocationQuestionScreen({ navigation }) {
       <View style={styles.voiceCenter}>
         <Text style={styles.holdLabel}>
           {voiceState === VOICE_STATE.RECORDING
-            ? "🔴  Recording… release to stop"
-            : "Hold to speak"}
+            ? "🔴  " + (t("recordingReleaseToStop") || "Recording… release to stop")
+            : t("holdToSpeak") || "Hold to speak"}
         </Text>
         <VoiceButton
           isRecording={voiceState === VOICE_STATE.RECORDING}
@@ -125,7 +128,7 @@ export default function LocationQuestionScreen({ navigation }) {
           onPressOut={stopRecording}
         />
         {voiceState === VOICE_STATE.IDLE && (
-          <Text style={styles.hintText}>Press and hold the button while talking</Text>
+          <Text style={styles.hintText}>{t("pressAndHoldHint") || "Press and hold the button while talking"}</Text>
         )}
       </View>
     );
@@ -147,13 +150,13 @@ export default function LocationQuestionScreen({ navigation }) {
         ))}
       </View>
 
-      <Text style={styles.title}>Which city do you work in?</Text>
-      <Text style={styles.subtitle}>Type, select a city, or speak your location.</Text>
+      <Text style={styles.title}>{t("whichCity") || "Which city do you work in?"}</Text>
+      <Text style={styles.subtitle}>{t("citySubtitle") || "Type, select a city, or speak your location."}</Text>
 
       {/* TEXT INPUT */}
       <TextInput
         style={styles.input}
-        placeholder="Enter city"
+        placeholder={t("enterCity") || "Enter city"}
         value={location}
         onChangeText={setLocation}
       />
@@ -164,7 +167,7 @@ export default function LocationQuestionScreen({ navigation }) {
       {/* TRANSCRIPT */}
       {transcript ? (
         <View style={styles.transcriptBox}>
-          <Text style={styles.transcriptLabel}>Transcript</Text>
+          <Text style={styles.transcriptLabel}>{t("transcript") || "Transcript"}</Text>
           <Text style={styles.transcriptText}>{transcript}</Text>
         </View>
       ) : null}
@@ -180,7 +183,7 @@ export default function LocationQuestionScreen({ navigation }) {
               onPress={() => selectLocation(city)}
             >
               <Text style={[styles.optionText, isSelected && styles.selectedText]}>
-                {city}
+                {t("cities." + city) || city}
               </Text>
             </TouchableOpacity>
           );
@@ -189,7 +192,7 @@ export default function LocationQuestionScreen({ navigation }) {
 
       {/* CONTINUE */}
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueText}>Continue</Text>
+        <Text style={styles.continueText}>{t("continue") || "Continue"}</Text>
       </TouchableOpacity>
 
     </View>

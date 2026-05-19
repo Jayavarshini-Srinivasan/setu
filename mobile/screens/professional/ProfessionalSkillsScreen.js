@@ -14,6 +14,7 @@ import {
 import {
   useOnboarding,
 } from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function ProfessionalSkillsScreen({
   navigation,
@@ -24,9 +25,9 @@ export default function ProfessionalSkillsScreen({
   */
   const {
     onboardingData,
-
     updateField,
   } = useOnboarding();
+  const { t } = useI18n();
 
   /*
     AVAILABLE SKILLS
@@ -152,11 +153,11 @@ export default function ProfessionalSkillsScreen({
     <View style={styles.container}>
 
       <Text style={styles.title}>
-        Select your professional skills
+        {t("selectProfessionalSkills") || "Select your professional skills"}
       </Text>
 
       <Text style={styles.subtitle}>
-        These skills improve job matching and AI recommendations.
+        {t("skillsImproveMatching") || "These skills improve job matching and AI recommendations."}
       </Text>
 
       <ScrollView
@@ -196,14 +197,11 @@ export default function ProfessionalSkillsScreen({
 
                   <Text
                     style={[
-
                       styles.skillText,
-
-                      isSelected &&
-                        styles.selectedText,
+                      isSelected && styles.selectedText,
                     ]}
                   >
-                    {skill}
+                    {t(`skills.${skill}`) || skill}
                   </Text>
 
                 </TouchableOpacity>
@@ -221,7 +219,7 @@ export default function ProfessionalSkillsScreen({
       >
 
         <Text style={styles.buttonText}>
-          Continue
+          {t("continue") || "Continue"}
         </Text>
 
       </TouchableOpacity>

@@ -17,9 +17,8 @@ import {
   db,
 } from "../../services/firebase";
 
-import {
-  useOnboarding,
-} from "../../context/OnboardingContext";
+import {useOnboarding,} from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function ProfessionalReviewScreen({
   navigation,
@@ -35,6 +34,8 @@ export default function ProfessionalReviewScreen({
 
     refreshOnboarding,
   } = useOnboarding();
+
+  const { t } = useI18n();
 
   /*
     COMPLETE ONBOARDING
@@ -135,11 +136,11 @@ export default function ProfessionalReviewScreen({
     >
 
       <Text style={styles.title}>
-        Review Your Professional Profile
+        {t("reviewProProfile") || "Review Your Professional Profile"}
       </Text>
 
       <Text style={styles.subtitle}>
-        Confirm your details before continuing.
+        {t("confirmDetails") || "Confirm your details before continuing."}
       </Text>
 
       {/* ROLE */}
@@ -147,12 +148,12 @@ export default function ProfessionalReviewScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Professional Role
+          {t("professionalRoleLabel") || "Professional Role"}
         </Text>
 
         <Text style={styles.value}>
           {
-            onboardingData.professionalRole
+            t("roles." + onboardingData.professionalRole) || onboardingData.professionalRole
           }
         </Text>
 
@@ -163,7 +164,7 @@ export default function ProfessionalReviewScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Education
+          {t("education") || "Education"}
         </Text>
 
         <Text style={styles.value}>
@@ -179,7 +180,7 @@ export default function ProfessionalReviewScreen({
         </Text>
 
         <Text style={styles.secondary}>
-          Graduation:
+          {t("graduation") || "Graduation"}:
           {" "}
           {
             onboardingData.education?.graduationYear
@@ -193,14 +194,14 @@ export default function ProfessionalReviewScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Professional Skills
+          {t("professionalSkillsLabel") || "Professional Skills"}
         </Text>
 
         <Text style={styles.value}>
           {
             (
               onboardingData.professionalSkills || []
-            ).join(", ")
+            ).map(s => t("skills." + s) || s).join(", ")
           }
         </Text>
 
@@ -211,7 +212,7 @@ export default function ProfessionalReviewScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Experience
+          {t("experienceLabel") || "Experience"}
         </Text>
 
         {
@@ -237,7 +238,7 @@ export default function ProfessionalReviewScreen({
                 </Text>
 
                 <Text style={styles.secondary}>
-                  {item.years} years
+                  {item.years} {t("years") || "years"}
                 </Text>
 
               </View>
@@ -252,7 +253,7 @@ export default function ProfessionalReviewScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Professional Links
+          {t("professionalLinks") || "Professional Links"}
         </Text>
 
         {
@@ -298,14 +299,14 @@ export default function ProfessionalReviewScreen({
       <View style={styles.card}>
 
         <Text style={styles.label}>
-          Career Goals
+          {t("careerGoalsLabel") || "Career Goals"}
         </Text>
 
         <Text style={styles.value}>
           {
             (
               onboardingData.preferredRoles || []
-            ).join(", ")
+            ).map(g => t("goals." + g.replace(/\s+/g, "_")) || g).join(", ")
           }
         </Text>
 
@@ -320,7 +321,7 @@ export default function ProfessionalReviewScreen({
       >
 
         <Text style={styles.buttonText}>
-          Complete Professional Onboarding
+          {t("completeProfessionalOnboarding") || "Complete Professional Onboarding"}
         </Text>
 
       </TouchableOpacity>

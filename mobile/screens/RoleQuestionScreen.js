@@ -4,6 +4,7 @@ import { Alert } from "react-native";
 import VoiceQuestionCard from "../components/VoiceQuestionCard";
 import useVoiceRecorder from "../hooks/useVoiceRecorder";
 import { useOnboarding } from "../context/OnboardingContext";
+import { useI18n } from "../context/I18nContext";
 
 const ROLE_OPTIONS = [
   "auto_driver",
@@ -20,7 +21,7 @@ const ROLE_OPTIONS = [
 export default function RoleQuestionScreen({ navigation }) {
 
   const { onboardingData, updateField, addTranscript } = useOnboarding();
-
+  const { t } = useI18n();
   const [selectedRole, setSelectedRole] = useState(
     onboardingData.canonicalRole || ""
   );
@@ -74,12 +75,12 @@ export default function RoleQuestionScreen({ navigation }) {
     <VoiceQuestionCard
       step={1}
       totalSteps={5}
-      title="What work do you do?"
-      subtitle="Tap a role below, or hold the mic and speak in your own language."
+      title={t("whatWorkDoYouDo") || "What work do you do?"}
+      subtitle={t("roleSubtitle") || "Tap a role below, or hold the mic and speak in your own language."}
       transcript={transcript}
-      extractionLabel="Detected Role"
+      extractionLabel={t("detectedRole") || "Detected Role"}
       extractionDisplay={extractedProfile?.canonicalRole || extractedProfile?.role || ""}
-      options={ROLE_OPTIONS}
+      options={ROLE_OPTIONS.map(r => ({ value: r, label: t(`roles.${r}`) || r }))}
       selectedOption={selectedRole}
       onSelectOption={handleSelectRole}
       voiceState={voiceState}
