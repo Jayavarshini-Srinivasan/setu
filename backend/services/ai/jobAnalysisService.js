@@ -1,6 +1,10 @@
 const {
   generateMatchExplanation,
 } = require("../aiService");
+const {
+  getCachedExplanation,
+  saveExplanationCache,
+} = require("./explanationCacheService");
 
 /*
   SALARY SCORE
@@ -122,7 +126,8 @@ const analyzeMatchedJob =
   async (
     workerProfile,
     matchedJob,
-    language
+    language,
+    skipAi = false
   ) => {
 
     /*
@@ -238,13 +243,34 @@ const analyzeMatchedJob =
     /*
       AI SUMMARY
     */
-    const aiSummary =
-      await generateMatchExplanation(
-        workerProfile,
-        matchedJob,
-        explanationData,
-        language
-      );
+    const jobId = matchedJob.id || matchedJob.jobId;
+    let aiSummary = await getCachedExplanation(workerProfile, jobId);
+
+    if (!aiSummary) {
+      if (skipAi) {
+        aiSummary = `${skillMatch}% skill alignment for ${matchedJob.title || "this role"}${analysisMissingSkills.length > 0 ? `. Missing: ${analysisMissingSkills.slice(0, 2).join(", ")}.` : "."}`;
+      } else {
+        try {
+          aiSummary = await generateMatchExplanation(
+            workerProfile,
+            matchedJob,
+            explanationData,
+            language
+          );
+          if (aiSummary) {
+            await saveExplanationCache(
+              workerProfile,
+              jobId,
+              workerProfile.workerId,
+              aiSummary
+            );
+          }
+        } catch (error) {
+          console.warn(`[jobAnalysisService] generateMatchExplanation failed for job ${jobId}:`, error?.message);
+          aiSummary = `${skillMatch}% skill alignment for ${matchedJob.title || "this role"}${analysisMissingSkills.length > 0 ? `. Missing: ${analysisMissingSkills.slice(0, 2).join(", ")}.` : "."}`;
+        }
+      }
+    }
 
     /*
       IMPROVEMENT INSIGHTS

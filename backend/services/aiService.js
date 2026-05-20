@@ -1,16 +1,53 @@
 const {
   GoogleGenerativeAI,
 } = require("@google/generative-ai");
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY_RECOMMENDATION || process.env.GEMINI_API_KEY
+);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-const safeGenerate = async (prompt, fallback = "") => {
-  try {
-    const result   = await model.generateContent(prompt);
-    return result.response.text().trim();
-  } catch (err) {
-    console.warn("[aiService] generateContent failed:", err?.message || err);
-    return fallback;
+
+class GeminiQueue {
+  constructor() {
+    this.queue = [];
+    this.running = 0;
   }
+
+  async add(fn) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ fn, resolve, reject });
+      this.next();
+    });
+  }
+
+  async next() {
+    if (this.running >= 1 || this.queue.length === 0) {
+      return;
+    }
+    this.running++;
+    const { fn, resolve, reject } = this.queue.shift();
+    try {
+      const res = await fn();
+      resolve(res);
+    } catch (err) {
+      reject(err);
+    } finally {
+      this.running--;
+      this.next();
+    }
+  }
+}
+const geminiQueue = new GeminiQueue();
+
+const safeGenerate = async (prompt, fallback = "") => {
+  return geminiQueue.add(async () => {
+    try {
+      const result   = await model.generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err) {
+      console.warn("[aiService] generateContent failed:", err?.message || err);
+      return fallback;
+    }
+  });
 };
 const generateMatchExplanation = async (
   workerProfile,
