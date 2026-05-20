@@ -7,6 +7,7 @@ const matchJobs = async (req, res) => {
     const body = req.body || {};
     const isProfessional = body.isProfessional === true;
     const workerProfile = {
+      workerId:      (body.workerId || "anonymous").trim(),
       canonicalRole: (body.role || "").trim(),
       role:          (body.role || "").trim(),
       skills:        Array.isArray(body.skills) ? body.skills.map(s => (s || "").toString().toLowerCase()) : [],
@@ -43,8 +44,10 @@ const matchJobs = async (req, res) => {
     const MIN_SCORE  = isProfessional ? 5 : 10;
     const filteredJobs = matchedJobs.filter((j) => j.matchScore >= MIN_SCORE);
     const language = body.language || "en";
+    // Explicitly ensure the jobs are sorted in descending order of matchScore
+    filteredJobs.sort((a, b) => b.matchScore - a.matchScore);
     const settledResults = await Promise.allSettled(
-      filteredJobs.map((job) => analyzeMatchedJob(workerProfile, job, language))
+      filteredJobs.map((job, idx) => analyzeMatchedJob(workerProfile, job, language, idx >= 3))
     );
     const analyzedJobs = settledResults.map((result, i) => {
       if (result.status === "fulfilled") {

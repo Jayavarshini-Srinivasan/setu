@@ -1,6 +1,10 @@
 const {
   generateMatchExplanation,
 } = require("../aiService");
+const {
+  getCachedExplanation,
+  saveExplanationCache,
+} = require("./explanationCacheService");
 
 /*
   SALARY SCORE
@@ -116,13 +120,33 @@ const generateImprovementInsights =
   };
 
 /*
+  LOCALIZED FALLBACK EXPLANATION
+*/
+const getFallbackExplanation = (skillMatch, jobTitle, missingSkills, language = "en") => {
+  const title = jobTitle || "this role";
+  const missingStr = missingSkills.slice(0, 2).join(", ");
+  
+  if (language === "hi") {
+    return `${title} के लिए ${skillMatch}% कौशल संरेखण।${missingSkills.length > 0 ? ` अनुपलब्ध: ${missingStr}।` : ""}`;
+  }
+  if (language === "ta") {
+    return `${title}க்கான ${skillMatch}% திறன் பொருத்தம். ${missingSkills.length > 0 ? ` விடுபட்டவை: ${missingStr}.` : ""}`;
+  }
+  if (language === "mr") {
+    return `${title} साठी ${skillMatch}% कौशल्य संरेखन. ${missingSkills.length > 0 ? ` गहाळ कौशल्ये: ${missingStr}.` : ""}`;
+  }
+  return `${skillMatch}% skill alignment for ${title}${missingSkills.length > 0 ? `. Missing: ${missingStr}.` : "."}`;
+};
+
+/*
   ANALYZE MATCHED JOB
 */
 const analyzeMatchedJob =
   async (
     workerProfile,
     matchedJob,
-    language
+    language,
+    skipAi = false
   ) => {
 
     /*
@@ -238,13 +262,35 @@ const analyzeMatchedJob =
     /*
       AI SUMMARY
     */
-    const aiSummary =
-      await generateMatchExplanation(
-        workerProfile,
-        matchedJob,
-        explanationData,
-        language
-      );
+    const jobId = matchedJob.id || matchedJob.jobId;
+    let aiSummary = await getCachedExplanation(workerProfile, jobId, language);
+
+    if (!aiSummary) {
+      if (skipAi) {
+        aiSummary = getFallbackExplanation(skillMatch, matchedJob.title, analysisMissingSkills, language);
+      } else {
+        try {
+          aiSummary = await generateMatchExplanation(
+            workerProfile,
+            matchedJob,
+            explanationData,
+            language
+          );
+          if (aiSummary) {
+            await saveExplanationCache(
+              workerProfile,
+              jobId,
+              workerProfile.workerId,
+              aiSummary,
+              language
+            );
+          }
+        } catch (error) {
+          console.warn(`[jobAnalysisService] generateMatchExplanation failed for job ${jobId}:`, error?.message);
+          aiSummary = getFallbackExplanation(skillMatch, matchedJob.title, analysisMissingSkills, language);
+        }
+      }
+    }
 
     /*
       IMPROVEMENT INSIGHTS

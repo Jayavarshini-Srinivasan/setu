@@ -55,6 +55,7 @@ export default function ResultsScreen({ navigation }) {
       : (profile.experience || 0);
 
     const payload = {
+      workerId:      currentUser.uid,
       role,
       skills,
       location:      profile.location || "",

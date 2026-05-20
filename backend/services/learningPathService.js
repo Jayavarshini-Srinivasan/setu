@@ -1,19 +1,4 @@
-/*
-  LEARNING PATH SERVICE
-  ──────────────────────────────────────────────────────────────────────────────
-  Generates a career progression roadmap derived from REAL match failures.
 
-  Context object:
-  {
-    role              string    professionalRole from Firestore
-    skills            string[]  professionalSkills from Firestore
-    careerGoal        string    e.g. "Senior Software Engineer"
-    experience        object[]  experienceDetails array
-    topJob            object    best-matched job from /match endpoint
-    allMissingSkills  string[]  union of skill gaps across ALL matched jobs
-    currentMatchScore number    best job's matchScore (0-100)
-  }
-*/
 
 /* ─── Salary range lookup by role ─────────────────────────────────── */
 const ROLE_SALARY_MAP = {
