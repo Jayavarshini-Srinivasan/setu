@@ -67,7 +67,7 @@ export default function ProfessionalRoleScreen({ navigation }) {
   /* CONTINUE */
   const handleContinue = () => {
     if (!selectedRole) {
-      Alert.alert("Required", "Please select a professional role.");
+      Alert.alert(t("required") || "Required", t("selectRoleError") || "Please select a professional role.");
       return;
     }
     navigation.navigate("Education");

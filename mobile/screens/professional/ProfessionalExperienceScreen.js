@@ -15,6 +15,7 @@ import {
 import {
   useOnboarding,
 } from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function ProfessionalExperienceScreen({
   navigation,
@@ -28,6 +29,7 @@ export default function ProfessionalExperienceScreen({
 
     updateField,
   } = useOnboarding();
+  const { t } = useI18n();
 
   /*
     LOCAL STATE
@@ -71,8 +73,8 @@ export default function ProfessionalExperienceScreen({
       ) {
 
         Alert.alert(
-          "Required",
-          "Please complete all required fields"
+          t("required") || "Required",
+          t("experienceOnboarding.completeAllFieldsError") || "Please complete all required fields"
         );
 
         return;
@@ -116,8 +118,8 @@ export default function ProfessionalExperienceScreen({
       setAchievements("");
 
       Alert.alert(
-        "Added",
-        "Experience added successfully"
+        t("added") || "Added",
+        t("experienceOnboarding.experienceAddedSuccess") || "Experience added successfully"
       );
     };
 
@@ -132,8 +134,8 @@ export default function ProfessionalExperienceScreen({
       ) {
 
         Alert.alert(
-          "Required",
-          "Please add at least one experience"
+          t("required") || "Required",
+          t("experienceOnboarding.addExperienceError") || "Please add at least one experience"
         );
 
         return;
@@ -153,17 +155,17 @@ export default function ProfessionalExperienceScreen({
     >
 
       <Text style={styles.title}>
-        Add your work experience
+        {t("experienceOnboarding.title") || "Add your work experience"}
       </Text>
 
       <Text style={styles.subtitle}>
-        This helps generate professional resumes and career insights.
+        {t("experienceOnboarding.subtitle") || "This helps generate professional resumes and career insights."}
       </Text>
 
       <TextInput
         style={styles.input}
 
-        placeholder="Company"
+        placeholder={t("experienceOnboarding.companyPlaceholder") || "Company"}
 
         value={company}
 
@@ -173,7 +175,7 @@ export default function ProfessionalExperienceScreen({
       <TextInput
         style={styles.input}
 
-        placeholder="Role"
+        placeholder={t("experienceOnboarding.rolePlaceholder") || "Role"}
 
         value={role}
 
@@ -183,7 +185,7 @@ export default function ProfessionalExperienceScreen({
       <TextInput
         style={styles.input}
 
-        placeholder="Years of Experience"
+        placeholder={t("experienceOnboarding.yearsPlaceholder") || "Years of Experience"}
 
         keyboardType="numeric"
 
@@ -198,7 +200,7 @@ export default function ProfessionalExperienceScreen({
           styles.textArea,
         ]}
 
-        placeholder="Key achievements"
+        placeholder={t("experienceOnboarding.achievementsPlaceholder") || "Key achievements"}
 
         multiline
 
@@ -216,7 +218,7 @@ export default function ProfessionalExperienceScreen({
       >
 
         <Text style={styles.buttonText}>
-          Add Experience
+          {t("experienceOnboarding.addButtonLabel") || "Add Experience"}
         </Text>
 
       </TouchableOpacity>
@@ -245,7 +247,7 @@ export default function ProfessionalExperienceScreen({
               </Text>
 
               <Text style={styles.cardText}>
-                {item.years} years
+                {item.years} {t("experienceOnboarding.yearsSuffix") || "years"}
               </Text>
 
               {
@@ -268,7 +270,7 @@ export default function ProfessionalExperienceScreen({
       >
 
         <Text style={styles.buttonText}>
-          Continue
+          {t("continue") || "Continue"}
         </Text>
 
       </TouchableOpacity>

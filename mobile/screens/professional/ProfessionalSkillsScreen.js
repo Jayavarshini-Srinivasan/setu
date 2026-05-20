@@ -136,8 +136,8 @@ export default function ProfessionalSkillsScreen({
       ) {
 
         Alert.alert(
-          "Required",
-          "Please select at least one skill"
+          t("required") || "Required",
+          t("selectSkillsError") || "Please select at least one skill"
         );
 
         return;

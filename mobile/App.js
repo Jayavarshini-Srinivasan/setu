@@ -69,8 +69,11 @@ import CareerGoalsScreen from "./screens/professional/CareerGoalsScreen";
 
 import ProfessionalReviewScreen from "./screens/professional/ProfessionalReviewScreen";
 
+import NotificationsScreen from "./screens/NotificationsScreen";
+
 import LearningPathScreen from "./screens/professional/LearningPathScreen";
 import SplashScreen from "./screens/SplashScreen";
+import ContactQuestionScreen from "./screens/ContactQuestionScreen";
 /*
   MAIN APP
 */
@@ -156,6 +159,26 @@ function ProfessionalTabs() {
 }
 
 /*
+  LABOUR APP STACK
+  Wraps the tabs so Notifications can be pushed as a full-screen Stack route.
+*/
+function LabourApp() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="LabourTabs"
+        component={LabourTabs}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ headerShown: true, title: "" }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+/*
   PROFESSIONAL APP STACK
   Wraps the tabs so LearningPath can be pushed
   as a full-screen Stack route with route.params.
@@ -174,6 +197,12 @@ function ProfessionalApp() {
         name="LearningPath"
         component={LearningPathScreen}
         options={{ headerShown: true, title: "Career Intelligence" }}
+      />
+
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ headerShown: true, title: "" }}
       />
 
     </Stack.Navigator>
@@ -419,6 +448,13 @@ function AppNavigator() {
           }
         />
 
+        <Stack.Screen
+          name="ContactQuestion"
+          component={
+            ContactQuestionScreen
+          }
+        />
+
 
       </Stack.Navigator>
     );
@@ -437,7 +473,7 @@ function AppNavigator() {
     );
   }
 
-  return <LabourTabs />;
+  return <LabourApp />;
 }
 
 /*

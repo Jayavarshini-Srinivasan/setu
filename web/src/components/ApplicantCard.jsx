@@ -53,6 +53,7 @@ export default function ApplicantCard({ app, jobId, updatingId, updateStatus, fo
         </div>
       )}
 
+
       {/* SKILLS BREAKDOWN */}
       <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
         <div style={{ flex: 1 }}>
@@ -63,6 +64,79 @@ export default function ApplicantCard({ app, jobId, updatingId, updateStatus, fo
                 {skill}
               </span>
             )) : <span style={{ color: 'var(--text)', fontSize: '13px' }}>None recorded</span>}
+
+            <div className="profile-grid">
+              <p>
+                <strong>
+                  Role:
+                </strong>
+
+                {" "}
+
+                {formatExperience(
+                app.worker.profile
+                    ?.experience
+                )}
+              </p>
+
+              <p>
+                <strong>
+                  Experience:
+                </strong>
+
+                {" "}
+
+                {formatSkills(
+                app.worker.profile
+                    ?.skills
+                )}
+                years
+              </p>
+
+              <p>
+                <strong>
+                  Location:
+                </strong>
+
+                {" "}
+
+                {app.worker.profile
+                  ?.location ||
+                  "N/A"}
+              </p>
+
+              <p>
+                <strong>
+                  Skills:
+                </strong>
+
+                {" "}
+
+                {app.worker.profile
+                  ?.skills?.join(
+                    ", "
+                  ) || "N/A"}
+              </p>
+
+              <p>
+                <strong>
+                  Contact:
+                </strong>
+
+                {" "}
+
+                {app.status === APPLICATION_STATUS.SHORTLISTED ? (
+                  <span className="unlocked-contact">
+                    📞 <a href={`tel:${app.worker.profile?.phoneNumber || ""}`} style={{ color: "#27ae60", textDecoration: "none" }}>{app.worker.profile?.phoneNumber || "N/A"}</a>
+                  </span>
+                ) : (
+                  <span className="locked-contact">
+                    🔒 Hidden (Shortlist to view)
+                  </span>
+                )}
+              </p>
+            </div>
+
           </div>
         </div>
 
@@ -74,6 +148,95 @@ export default function ApplicantCard({ app, jobId, updatingId, updateStatus, fo
                 {skill}
               </span>
             )) : <span style={{ color: 'var(--text)', fontSize: '13px' }}>None missing!</span>}
+
+            <div className="profile-grid">
+              <p>
+                <strong>
+                  Role:
+                </strong>
+
+                {" "}
+
+                {app.worker.profile
+                  ?.jobRole ||
+                  "N/A"}
+              </p>
+
+              <p>
+                <strong>
+                  Experience:
+                </strong>
+
+                {" "}
+
+                {app.worker.profile
+                  ?.experience ||
+                  "N/A"}{" "}
+                years
+              </p>
+
+              <p>
+                <strong>
+                  Education:
+                </strong>
+
+                {" "}
+
+                {app.worker.profile
+                  ?.professionalData
+                  ?.education ||
+                  "N/A"}
+              </p>
+
+              <p>
+                <strong>
+                  Skills:
+                </strong>
+
+                {" "}
+
+                {app.worker.profile
+                  ?.skills?.join(
+                    ", "
+                  ) || "N/A"}
+              </p>
+
+              <p>
+                <strong>
+                  Contact:
+                </strong>
+
+                {" "}
+
+                {app.status === APPLICATION_STATUS.SHORTLISTED ? (
+                  <span className="unlocked-contact">
+                    📧 <a href={`mailto:${app.worker.profile?.email || ""}`} className="contact-email-link">{app.worker.profile?.email || "N/A"}</a>
+                  </span>
+                ) : (
+                  <span className="locked-contact">
+                    🔒 Hidden (Shortlist to view)
+                  </span>
+                )}
+              </p>
+            </div>
+
+            {app.worker.profile
+              ?.generatedResumeUrl && (
+              <div className="resume-link-container">
+                <a
+                  href={
+                    app.worker
+                      .profile
+                      .generatedResumeUrl
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="resume-link"
+                >
+                  📄 View Resume
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

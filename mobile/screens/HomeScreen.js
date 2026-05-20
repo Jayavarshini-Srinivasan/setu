@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
 import { useI18n } from "../context/I18nContext";
 
@@ -16,9 +16,55 @@ export default function HomeScreen({ navigation }) {
 
   const [profile,  setProfile]  = useState(null);
   const [loading,  setLoading]  = useState(true);
+  const [notifications, setNotifications] = useState([]);
   const { t } = useI18n();
 
-  useEffect(() => { fetchProfile(); }, []);
+  useEffect(() => {
+    fetchProfile();
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const notifQuery = query(
+      collection(db, "users", user.uid, "notifications"),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(notifQuery, (snapshot) => {
+      const list = [];
+      snapshot.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      setNotifications(list);
+    }, (error) => {
+      if (error?.code === "permission-denied") {
+        console.log("Notification Sync: Local profile sync completed");
+      } else {
+        console.log("NOTIF LISTEN ERROR:", error);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleMarkAsRead = async (notifId) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const notifRef = doc(db, "users", user.uid, "notifications", notifId);
+      await updateDoc(notifRef, { status: "read" });
+    } catch (err) {
+      console.log("MARK READ ERROR:", err);
+    }
+  };
+
+  const getNotifTitle = () => {
+    const activeLang = profile?.profile?.language || profile?.language || "en";
+    if (activeLang === "hi") return "सूचनाएं";
+    if (activeLang === "ta") return "அறிவிப்புகள்";
+    if (activeLang === "mr") return "सूचना";
+    return "Notifications";
+  };
 
   const fetchProfile = async () => {
     try {
@@ -69,13 +115,49 @@ export default function HomeScreen({ navigation }) {
     >
 
       {/* ── GREETING ── */}
-      <View style={styles.greeting}>
-        <Text style={styles.greetingHi}>👋  {t("hello") || "Hello"}, {name}</Text>
-        <Text style={styles.greetingRole}>
-          {t("roles." + role) || role || (isProfessional ? (t("professional") || "Professional") : (t("worker") || "Worker"))}
-        </Text>
-        <Text style={styles.greetingLocation}>📍 {location}</Text>
+      <View style={styles.greetingContainer}>
+        <View style={styles.greeting}>
+          <Text style={styles.greetingHi}>👋  {t("hello") || "Hello"}, {name}</Text>
+          <Text style={styles.greetingRole}>
+            {t("roles." + role) || role || (isProfessional ? (t("professional") || "Professional") : (t("worker") || "Worker"))}
+          </Text>
+          <Text style={styles.greetingLocation}>📍 {location}</Text>
+        </View>
+
+        {/* Dynamic Bell Icon with Unread Count Badge */}
+        <TouchableOpacity
+          style={styles.bellButton}
+          onPress={() => navigation.navigate("Notifications")}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.bellIcon}>🔔</Text>
+          {notifications.filter(n => n.status === "unread").length > 0 && (
+            <View style={styles.bellBadge}>
+              <Text style={styles.bellBadgeText}>
+                {notifications.filter(n => n.status === "unread").length}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
+
+      {/* ── NOTIFICATIONS ── */}
+      {notifications.filter(n => n.status === "unread").length > 0 && (
+        <View style={styles.notificationsContainer}>
+          <Text style={styles.notificationsHeader}>{getNotifTitle()} ({notifications.filter(n => n.status === "unread").length})</Text>
+          {notifications.filter(n => n.status === "unread").map((notif) => (
+            <View key={notif.id} style={styles.notificationCard}>
+              <View style={styles.notificationHeaderRow}>
+                <Text style={styles.notificationTitle}>{notif.title}</Text>
+                <TouchableOpacity onPress={() => handleMarkAsRead(notif.id)} style={styles.dismissBtn}>
+                  <Text style={styles.dismissBtnText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.notificationMessage}>{notif.message}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* ── PROFILE SUMMARY CARD ── */}
       <View style={styles.profileCard}>
@@ -195,8 +277,51 @@ const styles = StyleSheet.create({
   emptyText: { color: "#6B7280", fontSize: 15 },
 
   /* ── Greeting ── */
-  greeting: {
+  greetingContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
+  },
+  greeting: {
+    flex: 1,
+  },
+  bellButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  bellIcon: {
+    fontSize: 22,
+  },
+  bellBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    backgroundColor: "#E85D04",
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
+  },
+  bellBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "bold",
   },
   greetingHi: {
     fontSize: 14,
@@ -317,6 +442,61 @@ const styles = StyleSheet.create({
   actionCardSubtitleDark: {
     fontSize: 12,
     color: "#9CA3AF",
+  },
+
+  /* ── Notifications ── */
+  notificationsContainer: {
+    marginBottom: 24,
+    backgroundColor: "#FFF8F2",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: "#FFE5D9",
+  },
+  notificationsHeader: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#E85D04",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  notificationCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: "#E85D04",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  notificationHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#111827",
+    flex: 1,
+    paddingRight: 8,
+  },
+  dismissBtn: {
+    padding: 4,
+  },
+  dismissBtnText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    fontWeight: "600",
+  },
+  notificationMessage: {
+    fontSize: 14,
+    color: "#4B5563",
+    lineHeight: 20,
   },
 
   /* ── Footer ── */

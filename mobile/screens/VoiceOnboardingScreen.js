@@ -9,7 +9,7 @@ import {
 import { Audio } from "expo-av";
 import { auth, db } from "../services/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { API_BASE_URL } from "@env";
+import { API_BASE_URL } from "../services/api";
 import { COLORS, SPACING, BORDER_RADIUS } from "../constants/theme";
 import VoiceButton from "../components/VoiceButton";
 import LoadingSpinner from "../components/LoadingSpinner";

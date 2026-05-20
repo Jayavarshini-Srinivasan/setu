@@ -119,20 +119,17 @@ export default function CareerGoalsScreen({
   const handleContinue =
     () => {
 
-      if (
-        selectedGoals.length === 0
-      ) {
-
+      if (selectedGoals.length === 0) {
         Alert.alert(
-          "Required",
-          "Please select at least one career goal"
+          t("required") || "Required",
+          t("selectCareerGoalError") || "Please select at least one career goal"
         );
 
         return;
       }
 
       navigation.navigate(
-        "ProfessionalReview"
+        "ContactQuestion"
       );
     };
 

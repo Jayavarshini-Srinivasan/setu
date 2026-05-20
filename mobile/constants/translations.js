@@ -211,6 +211,82 @@ export const translations = {
     error: "Error",
     required: "Required",
     networkError: "Network error — please check your connection",
+    contactInfoTitle: "Contact Information",
+    phonePrompt: "What is your phone number?",
+    emailPrompt: "What is your email address?",
+    phoneSubtitle: "Employers will use this to contact you for job offers.",
+    emailSubtitle: "Recruiters will use this to send you interviews and feedback.",
+    enterValidPhone: "Please enter a valid 10-digit phone number.",
+    enterValidEmail: "Please enter a valid email address.",
+    phonePlaceholder: "e.g., 9876543210",
+    emailPlaceholder: "e.g., candidate@example.com",
+    selectRoleError: "Please select a professional role.",
+    selectSkillsError: "Please select at least one skill.",
+    professionalRoleTitle: "What professional role are you aiming for?",
+    professionalRoleSubtitle: "Tap a role below, or hold the mic and speak in your own language.",
+    detectedRole: "Detected Role",
+    selectProfessionalSkills: "Select your professional skills",
+    skillsImproveMatching: "These skills improve job matching and AI recommendations.",
+    careerGoalsTitle: "What are your career goals?",
+    careerGoalsSubtitle: "This helps Setu personalize learning paths and job recommendations.",
+    selectCareerGoalError: "Please select at least one career goal.",
+    educationOnboarding: {
+      title: "Tell us about your education",
+      subtitle: "This helps build your resume and career recommendations.",
+      degreePlaceholder: "Degree",
+      institutionPlaceholder: "Institution",
+      gradYearPlaceholder: "Graduation Year",
+      completeAllFieldsError: "Please complete all education fields."
+    },
+    experienceOnboarding: {
+      title: "Add your work experience",
+      subtitle: "This helps generate professional resumes and career insights.",
+      companyPlaceholder: "Company",
+      rolePlaceholder: "Role",
+      yearsPlaceholder: "Years of Experience",
+      achievementsPlaceholder: "Key achievements",
+      completeAllFieldsError: "Please complete all required fields.",
+      experienceAddedSuccess: "Experience added successfully.",
+      addExperienceError: "Please add at least one experience.",
+      addButtonLabel: "Add Experience",
+      yearsSuffix: "years"
+    },
+    links: {
+      title: "Add your professional links",
+      subtitle: "These links help recruiters and AI understand your work better.",
+      linkedinPlaceholder: "LinkedIn URL",
+      githubPlaceholder: "GitHub URL",
+      portfolioPlaceholder: "Portfolio URL"
+    },
+    failedToSaveProfile: "Failed to save profile. Please try again.",
+    graduation: "Graduation",
+    emailAddressLabel: "Email Address",
+    notifications: {
+      title: "Notifications",
+      markAllRead: "Mark all as read",
+      emptyState: "No new notifications",
+      emptyStateSubtitle: "We will notify you when a recruiter updates your application status.",
+      shortlisted: {
+        title: "🎉 Shortlisted",
+        message: "Your application for \"{jobTitle}\" was shortlisted by \"{companyName}\"."
+      },
+      rejected: {
+        title: "❌ Update Received",
+        message: "Your application for \"{jobTitle}\" has been reviewed by \"{companyName}\"."
+      },
+      interview: {
+        title: "📅 Interview Scheduled",
+        message: "An interview has been scheduled for \"{jobTitle}\" by \"{companyName}\"."
+      },
+      selected: {
+        title: "🏆 Selected!",
+        message: "Congratulations! You have been selected for \"{jobTitle}\" by \"{companyName}\"."
+      },
+      update: {
+        title: "🔔 Application Update",
+        message: "Your application for \"{jobTitle}\" has been updated."
+      }
+    },
     cities: {
       chennai: "Chennai",
       bangalore: "Bangalore",
@@ -455,6 +531,82 @@ export const translations = {
     error: "गड़बड़ी",
     required: "आवश्यक",
     networkError: "नेटवर्क त्रुटि — कृपया अपना कनेक्शन जांचें",
+    contactInfoTitle: "सम्पर्क करने की जानकारी",
+    phonePrompt: "आपका फ़ोन नंबर क्या है?",
+    emailPrompt: "आपका ईमेल पता क्या है?",
+    phoneSubtitle: "नियोक्ता नौकरी के प्रस्तावों के लिए आपसे संपर्क करने के लिए इसका उपयोग करेंगे।",
+    emailSubtitle: "भर्तीकर्ता आपको साक्षात्कार और प्रतिक्रिया भेजने के लिए इसका उपयोग करेंगे।",
+    enterValidPhone: "कृपया एक वैध 10-अंकीय फ़ोन नंबर दर्ज करें।",
+    enterValidEmail: "कृपया एक वैध ईमेल पता दर्ज करें।",
+    phonePlaceholder: "उदा., 9876543210",
+    emailPlaceholder: "उदा., candidate@example.com",
+    selectRoleError: "कृपया एक व्यावसायिक भूमिका चुनें।",
+    selectSkillsError: "कृपया कम से कम एक कौशल चुनें।",
+    professionalRoleTitle: "आप किस व्यावसायिक भूमिका का लक्ष्य रख रहे हैं?",
+    professionalRoleSubtitle: "नीचे किसी भूमिका पर टैप करें, या माइक दबाकर अपनी भाषा में बोलें।",
+    detectedRole: "पहचानी गई भूमिका",
+    selectProfessionalSkills: "अपने व्यावसायिक कौशल चुनें",
+    skillsImproveMatching: "ये कौशल नौकरी के मिलान और एआई सिफारिशों में सुधार करते हैं।",
+    careerGoalsTitle: "आपके करियर के लक्ष्य क्या हैं?",
+    careerGoalsSubtitle: "यह सेतु को शिक्षण पथों और नौकरी की सिफारिशों को व्यक्तिगत बनाने में मदद करता है।",
+    selectCareerGoalError: "कृपया कम से कम एक करियर लक्ष्य चुनें।",
+    educationOnboarding: {
+      title: "हमें अपनी शिक्षा के बारे में बताएं",
+      subtitle: "यह आपका बायोडाटा और करियर सिफारिशें बनाने में मदद करता है।",
+      degreePlaceholder: "डिग्री",
+      institutionPlaceholder: "संस्थान",
+      gradYearPlaceholder: "स्नातक वर्ष",
+      completeAllFieldsError: "कृपया शिक्षा के सभी क्षेत्र पूरे करें।"
+    },
+    experienceOnboarding: {
+      title: "अपना कार्य अनुभव जोड़ें",
+      subtitle: "यह पेशेवर बायोडाटा और करियर अंतर्दृष्टि उत्पन्न करने में मदद करता है।",
+      companyPlaceholder: "कंपनी",
+      rolePlaceholder: "भूमिका",
+      yearsPlaceholder: "अनुभव के वर्ष",
+      achievementsPlaceholder: "प्रमुख उपलब्धियां",
+      completeAllFieldsError: "कृपया सभी आवश्यक क्षेत्र पूरे करें।",
+      experienceAddedSuccess: "अनुभव सफलतापूर्वक जोड़ा गया।",
+      addExperienceError: "कृपया कम से कम एक अनुभव जोड़ें।",
+      addButtonLabel: "अनुभव जोड़ें",
+      yearsSuffix: "वर्ष"
+    },
+    links: {
+      title: "अपने व्यावसायिक लिंक जोड़ें",
+      subtitle: "ये लिंक नियोक्ताओं और एआई को आपके काम को बेहतर ढंग से समझने में मदद करते हैं।",
+      linkedinPlaceholder: "लिंक्डइन यूआरएल (LinkedIn URL)",
+      githubPlaceholder: "गिटहब यूआरएल (GitHub URL)",
+      portfolioPlaceholder: "पोर्टफोलियो यूआरएल (Portfolio URL)"
+    },
+    failedToSaveProfile: "प्रोफ़ाइल सहेजने में विफल। कृपया पुन: प्रयास करें।",
+    graduation: "स्नातक",
+    emailAddressLabel: "ईमेल पता",
+    notifications: {
+      title: "सूचनाएं",
+      markAllRead: "सभी को पढ़ा हुआ चिह्नित करें",
+      emptyState: "कोई नई सूचना नहीं",
+      emptyStateSubtitle: "भर्तीकर्ता द्वारा आपके आवेदन की स्थिति अपडेट करने पर हम आपको सूचित करेंगे।",
+      shortlisted: {
+        title: "🎉 शॉर्टलिस्ट किया गया",
+        message: "\"{companyName}\" द्वारा \"{jobTitle}\" के लिए आपके आवेदन को शॉर्टलिस्ट किया गया है।"
+      },
+      rejected: {
+        title: "❌ अपडेट प्राप्त हुआ",
+        message: "\"{companyName}\" द्वारा \"{jobTitle}\" के लिए आपके आवेदन की समीक्षा की गई है।"
+      },
+      interview: {
+        title: "📅 साक्षात्कार निर्धारित",
+        message: "\"{companyName}\" द्वारा \"{jobTitle}\" के लिए एक साक्षात्कार निर्धारित किया गया है।"
+      },
+      selected: {
+        title: "🏆 चयनित!",
+        message: "बधाई हो! \"{companyName}\" द्वारा \"{jobTitle}\" के लिए आपका चयन किया गया है।"
+      },
+      update: {
+        title: "🔔 आवेदन अपडेट",
+        message: "\"{jobTitle}\" के लिए आपका आवेदन अपडेट किया गया है।"
+      }
+    },
     cities: {
       chennai: "चेन्नई",
       bangalore: "बेंगलुरु",
@@ -699,6 +851,82 @@ export const translations = {
     error: "பிழை",
     required: "தேவை",
     networkError: "நெட்வொர்க் பிழை — உங்கள் இணைப்பை சரிபார்க்கவும்",
+    contactInfoTitle: "தொடர்பு தகவல்",
+    phonePrompt: "உங்கள் தொலைபேசி எண் என்ன?",
+    emailPrompt: "உங்கள் மின்னஞ்சல் முகவரி என்ன?",
+    phoneSubtitle: "வேலை வாய்ப்புகளுக்கு உங்களைத் தொடர்பு கொள்ள முதலாளிகள் இதைப் பயன்படுத்துவார்கள்.",
+    emailSubtitle: "உங்களுக்கு நேர்காணல்கள் மற்றும் கருத்துக்களை அனுப்ப பணியமர்த்துபவர்கள் இதைப் பயன்படுத்துவார்கள்.",
+    enterValidPhone: "தயவுசெய்து சரியான 10-இலக்க தொலைபேசி எண்ணை உள்ளிடவும்.",
+    enterValidEmail: "தயவுசெய்து சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.",
+    phonePlaceholder: "எ.கா., 9876543210",
+    emailPlaceholder: "எ.கா., candidate@example.com",
+    selectRoleError: "தயவுசெய்து ஒரு தொழில்முறை பாத்திரத்தைத் தேர்ந்தெடுக்கவும்.",
+    selectSkillsError: "தயவுசெய்து குறைந்தது ஒரு திறனையாவது தேர்ந்தெடுக்கவும்.",
+    professionalRoleTitle: "நீங்கள் எந்த தொழில்முறை பாத்திரத்தை இலக்காகக் கொண்டுள்ளீர்கள்?",
+    professionalRoleSubtitle: "கீழே உள்ள பாத்திரத்தைத் தட்டவும், அல்லது மைக்கை அழுத்தி உங்கள் சொந்த மொழியில் பேசவும்.",
+    detectedRole: "கண்டறியப்பட்ட பாத்திரம்",
+    selectProfessionalSkills: "உங்கள் தொழில்முறை திறன்களைத் தேர்ந்தெடுக்கவும்",
+    skillsImproveMatching: "இந்தத் திறன்கள் வேலைப் பொருத்தம் மற்றும் AI பரிந்துரைகளை மேம்படுத்துகின்றன.",
+    careerGoalsTitle: "உங்கள் தொழில் இலக்குகள் என்ன?",
+    careerGoalsSubtitle: "இது சேது கற்றல் பாதைகள் மற்றும் வேலை பரிந்துரைகளைத் தனிப்பயனாக்க உதவுகிறது.",
+    selectCareerGoalError: "தயவுசெய்து குறைந்தது ஒரு தொழில் இலக்கையாவது தேர்ந்தெடுக்கவும்.",
+    educationOnboarding: {
+      title: "உங்கள் கல்வியைப் பற்றி எங்களிடம் கூறுங்கள்",
+      subtitle: "இது உங்கள் ரெஸ்யூம் மற்றும் தொழில்முறை பரிந்துரைகளை உருவாக்க உதவுகிறது.",
+      degreePlaceholder: "பட்டம் (Degree)",
+      institutionPlaceholder: "கல்வி நிறுவனம்",
+      gradYearPlaceholder: "பட்டம் பெற்ற ஆண்டு",
+      completeAllFieldsError: "தயவுசெய்து அனைத்து கல்வி புலங்களையும் பூர்த்தி செய்யவும்."
+    },
+    experienceOnboarding: {
+      title: "உங்கள் பணி அனுபவத்தைச் சேர்க்கவும்",
+      subtitle: "இது தொழில்முறை ரெஸ்யூம்கள் மற்றும் தொழில்முறை நுண்ணறிவுகளை உருவாக்க உதவுகிறது.",
+      companyPlaceholder: "நிறுவனம் (Company)",
+      rolePlaceholder: "பணி பாத்திரம்",
+      yearsPlaceholder: "அनुபவ ஆண்டுகள்",
+      achievementsPlaceholder: "முக்கிய சாதனைகள்",
+      completeAllFieldsError: "தயவுசெய்து தேவையான அனைத்து புலங்களையும் பூர்த்தி செய்யவும்.",
+      experienceAddedSuccess: "அனுபவம் வெற்றிகரமாக சேர்க்கப்பட்டது.",
+      addExperienceError: "தயவுசெய்து குறைந்தது ஒரு அனுபவத்தையாவது சேர்க்கவும்.",
+      addButtonLabel: "அனுபவத்தைச் சேர்",
+      yearsSuffix: "ஆண்டுகள்"
+    },
+    links: {
+      title: "உங்கள் தொழில்முறை இணைப்புகளைச் சேர்க்கவும்",
+      subtitle: "இந்த இணைப்புகள் பணியமர்த்துபவர்களுக்கும் AI-க்கும் உங்கள் வேலையை நன்றாகப் புரிந்துகொள்ள உதவுகின்றன.",
+      linkedinPlaceholder: "LinkedIn URL",
+      githubPlaceholder: "GitHub URL",
+      portfolioPlaceholder: "Portfolio URL"
+    },
+    failedToSaveProfile: "சுயவிவரத்தைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    graduation: "பட்டம் பெறுதல்",
+    emailAddressLabel: "மின்னஞ்சல் முகவரி",
+    notifications: {
+      title: "அறிவிப்புகள்",
+      markAllRead: "அனைத்தையும் படித்ததாகக் குறிக்கவும்",
+      emptyState: "புதிய அறிவிப்புகள் எதுவும் இல்லை",
+      emptyStateSubtitle: "ஒரு பணியமர்த்துபவர் உங்கள் விண்ணப்ப நிலையை புதுப்பிக்கும்போது நாங்கள் உங்களுக்கு அறிவிப்போம்.",
+      shortlisted: {
+        title: "🎉 தேர்ந்தெடுக்கப்பட்டது",
+        message: "\"{companyName}\" ஆல் \"{jobTitle}\" க்கான உங்கள் விண்ணப்பம் தேர்ந்தெடுக்கப்பட்டுள்ளது."
+      },
+      rejected: {
+        title: "❌ புதுப்பிப்பு பெறப்பட்டது",
+        message: "\"{companyName}\" ஆல் \"{jobTitle}\" க்கான உங்கள் விண்ணப்பம் மதிப்பாய்வு செய்யப்பட்டது."
+      },
+      interview: {
+        title: "📅 நேர்காணல் திட்டமிடப்பட்டது",
+        message: "\"{companyName}\" ஆல் \"{jobTitle}\" க்கான நேர்காணல் திட்டமிடப்பட்டுள்ளது."
+      },
+      selected: {
+        title: "🏆 தேர்வு செய்யப்பட்டார்!",
+        message: "வாழ்த்துகள்! \"{companyName}\" ஆல் \"{jobTitle}\" க்காக நீங்கள் தேர்ந்தெடுக்கப்பட்டுள்ளீர்கள்."
+      },
+      update: {
+        title: "🔔 விண்ணப்ப புதுப்பிப்பு",
+        message: "\"{jobTitle}\" க்கான உங்கள் விண்ணப்பம் புதுப்பிக்கப்பட்டுள்ளது."
+      }
+    },
     cities: {
       chennai: "சென்னை",
       bangalore: "பெங்களூரு",
@@ -943,6 +1171,82 @@ export const translations = {
     error: "त्रुटी",
     required: "आवश्यक",
     networkError: "नेटवर्क त्रुटी — कृपया तुमचे कनेक्शन तपासा",
+    contactInfoTitle: "संपर्क माहिती",
+    phonePrompt: "तुमचा फोन नंबर काय आहे?",
+    emailPrompt: "तुमचा ईमेल पत्ता काय आहे?",
+    phoneSubtitle: "नोकरीच्या ऑफरसाठी नियोक्ते तुमच्याशी संपर्क साधण्यासाठी याचा वापर करतील.",
+    emailSubtitle: "रिक्रूटर्स तुम्हाला मुलाखती आणि अभिप्राय पाठवण्यासाठी याचा वापर करतील.",
+    enterValidPhone: "कृपया एक वैध 10-अंकी फोन नंबर प्रविष्ट करा.",
+    enterValidEmail: "कृपया एक वैध ईमेल पत्ता प्रविष्ट करा.",
+    phonePlaceholder: "उदा., 9876543210",
+    emailPlaceholder: "उदा., candidate@example.com",
+    selectRoleError: "कृपया एक व्यावसायिक भूमिका निवडा.",
+    selectSkillsError: "कृपया किमान एक कौशल्य निवडा.",
+    professionalRoleTitle: "तुम्ही कोणत्या व्यावसायिक भूमिकेचे उद्दिष्ट ठेवत आहात?",
+    professionalRoleSubtitle: "खालील भूमिकेवर टॅप करा किंवा माइक दाबून तुमच्या स्वतःच्या भाषेत बोला.",
+    detectedRole: "शोधलेली भूमिका",
+    selectProfessionalSkills: "तुमची व्यावसायिक कौशल्ये निवडा",
+    skillsImproveMatching: "ही कौशल्ये नोकरीचे जुळणी आणि एआय शिफारसी सुधारतात.",
+    careerGoalsTitle: "तुमची करिअर उद्दिष्टे काय आहेत?",
+    careerGoalsSubtitle: "हे सेतूला शिक्षण मार्ग आणि नोकरीच्या शिफारसी वैयक्तिकृत करण्यात मदत करते.",
+    selectCareerGoalError: "कृपया किमान एक करिअर उद्दिष्ट निवडा.",
+    educationOnboarding: {
+      title: "आम्हाला तुमच्या शिक्षणाबद्दल सांगा",
+      subtitle: "हे तुमचे रेझ्युमे आणि करिअरच्या शिफारसी तयार करण्यात मदत करते.",
+      degreePlaceholder: "पदवी (Degree)",
+      institutionPlaceholder: "संस्था",
+      gradYearPlaceholder: "उत्तीर्ण वर्ष",
+      completeAllFieldsError: "कृपया शिक्षणाचे सर्व रकाने पूर्ण करा."
+    },
+    experienceOnboarding: {
+      title: "तुमचा कामाचा अनुभव जोडा",
+      subtitle: "हे व्यावसायिक रेझ्युमे आणि करिअर अंतर्दृष्टी निर्माण करण्यास मदत करते.",
+      companyPlaceholder: "कंपनी",
+      rolePlaceholder: "भूमिका",
+      yearsPlaceholder: "अनुभवाची वर्षे",
+      achievementsPlaceholder: "प्रमुख यश/कामगिरी",
+      completeAllFieldsError: "कृपया सर्व आवश्यक रकाने पूर्ण करा.",
+      experienceAddedSuccess: "अनुभव यशस्वीरित्या जोडला गेला.",
+      addExperienceError: "कृपया किमान एक कामाचा अनुभव जोडा.",
+      addButtonLabel: "कामाचा अनुभव जोडा",
+      yearsSuffix: "वर्षे"
+    },
+    links: {
+      title: "तुमच्या व्यावसायिक लिंक्स जोडा",
+      subtitle: "या लिंक्स नियोक्त्यांना आणि एआयला तुमचे काम चांगल्या प्रकारे समजून घेण्यास मदत करते.",
+      linkedinPlaceholder: "LinkedIn URL",
+      githubPlaceholder: "GitHub URL",
+      portfolioPlaceholder: "Portfolio URL"
+    },
+    failedToSaveProfile: "प्रोफाइल जतन करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+    graduation: "उत्तीर्ण वर्ष",
+    emailAddressLabel: "ईमेल पत्ता",
+    notifications: {
+      title: "सूचना",
+      markAllRead: "सर्व वाचलेले म्हणून चिन्हांकित करा",
+      emptyState: "कोणतीही नवीन सूचना नाही",
+      emptyStateSubtitle: "जेव्हा रिक्रूटर्स तुमच्या अर्जाची स्थिती अपडेट करतील तेव्हा आम्ही तुम्हाला सूचित करू.",
+      shortlisted: {
+        title: "🎉 शॉर्टलिस्ट केले",
+        message: "\"{companyName}\" द्वारे \"{jobTitle}\" साठी तुमचा अर्ज शॉर्टलिस्ट करण्यात आला आहे।"
+      },
+      rejected: {
+        title: "❌ अपडेट प्राप्त झाले",
+        message: "\"{companyName}\" द्वारे \"{jobTitle}\" साठी तुमच्या अर्जाचे पुनरावलोकन केले गेले आहे।"
+      },
+      interview: {
+        title: "📅 मुलाखत नियोजित",
+        message: "\"{companyName}\" द्वारे \"{jobTitle}\" साठी मुलाखत नियोजित करण्यात आली आहे।"
+      },
+      selected: {
+        title: "🏆 निवड झाली!",
+        message: "अभिनंदन! \"{companyName}\" द्वारे \"{jobTitle}\" साठी तुमची निवड झाली आहे।"
+      },
+      update: {
+        title: "🔔 अर्ज अपडेट",
+        message: "\"{jobTitle}\" साठी तुमचा अर्ज अपडेट केला गेला आहे।"
+      }
+    },
     cities: {
       chennai: "चेन्नई",
       bangalore: "बंगळुरू",
