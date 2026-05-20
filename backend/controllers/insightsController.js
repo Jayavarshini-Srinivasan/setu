@@ -1,4 +1,5 @@
 const { db } = require("../config/firebase");
+const { generateInsightsRecommendations } = require("../services/aiService");
 
 const getRecruiterInsights = async (req, res) => {
   try {
@@ -29,17 +30,44 @@ const getRecruiterInsights = async (req, res) => {
       .slice(0, 10)
       .map(([skill, count]) => ({ skill, count }));
 
-    const recommendations = [
-      "Skill Gap Alert: 40% of applicants lack 'Advanced Safety Training'. Consider adding it to your required skills.",
-      "Most of your applicants are in the Professional tier. Review your pay scales.",
-      "Hiring is slowing down this week. Try bumping your active jobs.",
-      `Your most abundant talent pool knows: ${topSkills[0]?.skill || 'Basic Labor'}.`
-    ];
-
-    res.status(200).json({
+    const stats = {
       totalApplicants: applicationsSnapshot.size,
       workerTypeCounts,
-      topSkills,
+      topSkills
+    };
+
+    // Caching Logic
+    let recommendations = [];
+    const recruiterRef = db.collection("recruiters").doc(recruiterId);
+    const recruiterDoc = await recruiterRef.get();
+    
+    if (recruiterDoc.exists) {
+      const data = recruiterDoc.data();
+      const cachedInsights = data.cachedInsights;
+      
+      // Check if cache is less than 1 hour old
+      const oneHour = 60 * 60 * 1000;
+      if (cachedInsights && cachedInsights.timestamp && (Date.now() - cachedInsights.timestamp.toMillis() < oneHour)) {
+        recommendations = cachedInsights.recommendations;
+        console.log("Using cached AI insights for recruiter:", recruiterId);
+      } else {
+        console.log("Generating new AI insights for recruiter:", recruiterId);
+        recommendations = await generateInsightsRecommendations(stats);
+        
+        // Save to cache
+        await recruiterRef.update({
+          cachedInsights: {
+            recommendations,
+            timestamp: new Date()
+          }
+        }).catch(err => console.error("Failed to update insights cache", err));
+      }
+    } else {
+      recommendations = await generateInsightsRecommendations(stats);
+    }
+
+    res.status(200).json({
+      ...stats,
       recommendations
     });
 

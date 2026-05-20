@@ -69,46 +69,33 @@ export const AuthProvider =
               }
 
               /*
-                FETCH FIRESTORE USER
+                FETCH USER PROFILE FROM BACKEND
+                This bypasses client-side Firestore security rules.
               */
-              const userRef =
-                doc(
-                  db,
-                  "users",
-                  firebaseUser.uid
-                );
-
-              const userSnap =
-                await getDoc(
-                  userRef
-                );
-
-              console.log(
-                "FIRESTORE SNAP:",
-                userSnap.exists()
-              );
-
-              /*
-                USER PROFILE MISSING
-              */
-              if (
-                !userSnap.exists()
-              ) {
-                console.log(
-                  "PROFILE MISSING"
-                );
-
+              let userData;
+              try {
+                // We use fetch directly with the token to avoid interceptor timing issues
+                const token = await firebaseUser.getIdToken();
+                const response = await fetch("http://localhost:5000/auth/profile", {
+                  headers: {
+                    Authorization: `Bearer ${token}`
+                  }
+                });
+                
+                if (!response.ok) {
+                  console.log("PROFILE FETCH FAILED OR MISSING");
+                  setUser(null);
+                  setLoading(false);
+                  return;
+                }
+                
+                userData = await response.json();
+              } catch (err) {
+                console.log("Error fetching profile", err);
                 setUser(null);
-
-                setLoading(
-                  false
-                );
-
+                setLoading(false);
                 return;
               }
-
-              const userData =
-                userSnap.data();
 
               console.log(
                 "USER DATA:",
