@@ -44,3 +44,13 @@ export async function updateApplicationStatus(
     throw error;
   }
 }
+
+export async function getApplicationById(applicationId) {
+  try {
+    const response = await API.get(`/apply/${applicationId}`);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

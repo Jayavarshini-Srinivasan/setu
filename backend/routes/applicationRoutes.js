@@ -8,6 +8,7 @@ const {
   applyToJob,
   getApplicantsForJob,
   updateApplicationStatus,
+  getApplicationById,
 } = require(
   "../controllers/applicationController"
 );
@@ -51,6 +52,15 @@ router.patch(
   verifyToken,
   recruiterMiddleware,
   updateApplicationStatus
+);
+
+/*
+  GET APPLICATION BY ID
+*/
+router.get(
+  "/:applicationId",
+  verifyToken,
+  getApplicationById
 );
 
 module.exports = router;

@@ -1,8 +1,5 @@
-const {
-  db,
-} = require(
-  "../config/firebase"
-);
+const { db } = require("../config/firebase");
+const { calculateMatchScore } = require("../services/matchService");
 
 const applyToJob =
   async (req, res) => {
@@ -260,8 +257,12 @@ const getApplicantsForJob =
         if (
           workerDoc.exists
         ) {
-          const workerData =
-            workerDoc.data();
+          const workerData = workerDoc.data();
+          
+          let matchResult = null;
+          if (workerData.profile) {
+            matchResult = calculateMatchScore(workerData.profile, [jobData])[0];
+          }
 
           applicants.push({
             applicationId:
@@ -272,6 +273,15 @@ const getApplicantsForJob =
 
             matchScore:
               application.matchScore,
+
+            aiSummary:
+              application.aiSummary || "",
+
+            strengths:
+              matchResult?.analysis?.matchedSkills || [],
+
+            weaknesses:
+              matchResult?.analysis?.missingSkills || [],
 
             appliedAt:
               application.appliedAt,
@@ -323,8 +333,52 @@ const updateApplicationStatus = async (req, res) => {
   }
 };
 
+const getApplicationById = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const recruiterId = req.user.uid;
+
+    const applicationRef = db.collection("applications").doc(applicationId);
+    const applicationDoc = await applicationRef.get();
+
+    if (!applicationDoc.exists) return res.status(404).json({ error: "Application not found" });
+    
+    const application = applicationDoc.data();
+    if (application.recruiterId !== recruiterId) return res.status(403).json({ error: "Unauthorized" });
+
+    // Fetch Job
+    const jobDoc = await db.collection("jobs").doc(application.jobId).get();
+    const jobData = jobDoc.data();
+
+    // Fetch Worker
+    const workerDoc = await db.collection("users").doc(application.workerId).get();
+    const workerData = workerDoc.data();
+    
+    let matchResult = null;
+    if (workerData.profile) {
+      matchResult = calculateMatchScore(workerData.profile, [jobData])[0];
+    }
+
+    res.status(200).json({
+      ...application,
+      strengths: matchResult?.analysis?.matchedSkills || [],
+      weaknesses: matchResult?.analysis?.missingSkills || [],
+      worker: {
+        workerId: workerData.uid,
+        workerType: workerData.workerType,
+        profile: workerData.profile,
+      }
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Failed to fetch application" });
+  }
+};
+
 module.exports = {
   applyToJob,
   getApplicantsForJob,
   updateApplicationStatus,
+  getApplicationById,
 };
