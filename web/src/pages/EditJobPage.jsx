@@ -49,13 +49,6 @@ export default function EditJobPage() {
       description: "",
     });
 
-  /*
-    FETCH JOB
-  */
-  useEffect(() => {
-    fetchJob();
-  }, [jobId]);
-
   const fetchJob =
     async () => {
       try {
@@ -101,6 +94,13 @@ export default function EditJobPage() {
         setLoading(false);
       }
     };
+
+  /*
+    FETCH JOB
+  */
+  useEffect(() => {
+    fetchJob();
+  }, [jobId]);
 
   /*
     INPUT CHANGE

@@ -19,10 +19,6 @@ export default function ApplicantsPage() {
   
   const [activeFilter, setActiveFilter] = useState("All");
 
-  useEffect(() => {
-    fetchApplicants();
-  }, [jobId]);
-
   const fetchApplicants = async () => {
     try {
       setLoading(true);
@@ -34,6 +30,10 @@ export default function ApplicantsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchApplicants();
+  }, [jobId]);
 
   const updateStatus = async (applicationId, status) => {
     try {

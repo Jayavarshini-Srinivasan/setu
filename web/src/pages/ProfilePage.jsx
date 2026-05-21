@@ -36,13 +36,6 @@ export default function ProfilePage() {
       email: "",
     });
 
-  /*
-    FETCH PROFILE
-  */
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
 const fetchProfile =
   async () => {
     try {
@@ -78,6 +71,13 @@ const fetchProfile =
       setLoading(false);
     }
   };
+
+  /*
+    FETCH PROFILE
+  */
+  useEffect(() => {
+    fetchProfile();
+  }, []);
   /*
     INPUT CHANGE
   */

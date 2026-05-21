@@ -21,13 +21,6 @@ export default function MyJobsPage() {
     setLoading] =
     useState(true);
 
-  /*
-    FETCH JOBS
-  */
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
   const fetchJobs =
     async () => {
       try {
@@ -49,6 +42,13 @@ export default function MyJobsPage() {
         setLoading(false);
       }
     };
+
+  /*
+    FETCH JOBS
+  */
+  useEffect(() => {
+    fetchJobs();
+  }, []);
 
   /*
     TOGGLE ACTIVE STATUS

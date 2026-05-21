@@ -135,29 +135,61 @@ Job Required Skills: ${(job.requiredSkills || []).join(", ")}
 
 const generateInsightsRecommendations = async (stats) => {
   const prompt = `
-You are an expert HR Data Analyst. 
-Analyze the following recruiter pipeline stats and provide exactly 3 actionable insights or recommendations in a JSON array format (e.g. ["insight 1", "insight 2", "insight 3"]).
-Keep each insight under 15 words. Keep it professional.
-Stats:
-Total Pipeline: ${stats.totalApplicants}
-Professionals: ${stats.workerTypeCounts?.professional || 0}
-Blue Collar: ${stats.workerTypeCounts?.labour || 0}
-Top 3 Skills in Pipeline: ${stats.topSkills?.slice(0,3).map(s => s.skill).join(", ") || "None"}
+You are an expert HR Data Analyst and AI Recruiter. 
+Analyze the following recruiter pipeline stats and provide exactly 3 actionable hiring recommendations or insights for this specific recruiter.
+For each recommendation, provide:
+1. An icon (a single emoji suitable for the recommendation, e.g., 📉, 🌐, ⏰, 💼, 💡, 📊, 🚀).
+2. A short title (2-4 words, e.g., "Shortlist now", "Skills gap in Python", "Attract blue collar").
+3. A description (1-2 sentences, detailing the recommendation and referencing the actual stats if relevant).
+
+Provide the output STRICTLY in a JSON array format where each element is an object having keys "icon", "title", and "desc".
+Example:
+[
+  {
+    "icon": "📉",
+    "title": "Lower experience bar",
+    "desc": "Consider lowering experience requirements to attract more of the \${stats.totalApplicants || 0} candidates in the pipeline."
+  }
+]
+
+Stats for this Recruiter:
+Total Pipeline Applicants: \${stats.totalApplicants || 0}
+Professional Candidates: \${stats.workerTypeCounts?.professional || 0}
+Blue Collar/Labour Candidates: \${stats.workerTypeCounts?.labour || 0}
+Top Skills Present in Pipeline: \${stats.topSkills?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
+Top Skill Gaps (missing from applicants): \${stats.topSkillGaps?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
 `;
   const fallback = JSON.stringify([
-    "Review your job postings to attract more candidates.",
-    "Consider adjusting salary ranges if pipeline is slow.",
-    "Engage with top candidates quickly."
+    {
+      icon: "💼",
+      title: "Engage Top Candidates",
+      desc: `You have ${stats.totalApplicants || 0} candidates in your pipeline. Reach out to the highest-scoring candidates within 48 hours to secure them.`
+    },
+    {
+      icon: "📊",
+      title: "Address Skill Gaps",
+      desc: stats.topSkillGaps && stats.topSkillGaps.length > 0 
+        ? `A significant portion of your applicants lack "${stats.topSkillGaps[0].skill}". Consider providing training or modifying job descriptions.`
+        : "Ensure your active jobs clearly specify required skills to attract the most compatible talent."
+    },
+    {
+      icon: "🚀",
+      title: "Pipeline Composition",
+      desc: `Your talent pool consists of ${stats.workerTypeCounts?.professional || 0} professional and ${stats.workerTypeCounts?.labour || 0} blue-collar candidates. Optimize your posting channels accordingly.`
+    }
   ]);
   
   try {
     let result = await safeGenerate(prompt, fallback);
     // Strip markdown formatting if Gemini returns ```json ... ```
-    if (result.startsWith("\`\`\`json")) {
-      result = result.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    if (result.includes("```")) {
+      result = result.replace(/```json/g, "").replace(/```/g, "").trim();
     }
     const parsed = JSON.parse(result);
-    return Array.isArray(parsed) ? parsed : JSON.parse(fallback);
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title && parsed[0].desc) {
+      return parsed;
+    }
+    return JSON.parse(fallback);
   } catch(e) {
     console.error("[aiService] Error parsing insights recommendations", e);
     return JSON.parse(fallback);

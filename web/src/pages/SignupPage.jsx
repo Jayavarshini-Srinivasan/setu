@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import API from "../services/api";
 
 export default function SignupPage() {
-  const navigate = useNavigate();
   
   const [contactName, setContactName] = useState("");
   const [companyName, setCompanyName] = useState("");

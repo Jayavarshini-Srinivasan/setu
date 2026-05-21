@@ -16,10 +16,6 @@ export default function CandidateDetailPage() {
   const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
-  useEffect(() => {
-    fetchApplication();
-  }, [applicationId]);
-
   const fetchApplication = async () => {
     try {
       setLoading(true);
@@ -31,6 +27,10 @@ export default function CandidateDetailPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchApplication();
+  }, [applicationId]);
 
   const updateStatus = async (status) => {
     try {

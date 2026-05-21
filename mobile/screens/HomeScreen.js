@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -8,8 +9,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
+import API from "../services/api";
 import { useI18n } from "../context/I18nContext";
 
 export default function HomeScreen({ navigation }) {
@@ -21,38 +23,37 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     fetchProfile();
-
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const notifQuery = query(
-      collection(db, "users", user.uid, "notifications"),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsubscribe = onSnapshot(notifQuery, (snapshot) => {
-      const list = [];
-      snapshot.forEach((docSnap) => {
-        list.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      setNotifications(list);
-    }, (error) => {
-      if (error?.code === "permission-denied") {
-        console.log("Notification Sync: Local profile sync completed");
-      } else {
-        console.log("NOTIF LISTEN ERROR:", error);
-      }
-    });
-
-    return () => unsubscribe();
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const token = await user.getIdToken();
+      const res = await API.get("/notifications", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(res.data);
+    } catch (err) {
+      console.log("NOTIF FETCH ERROR:", err);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotifications();
+    }, [])
+  );
 
   const handleMarkAsRead = async (notifId) => {
     try {
       const user = auth.currentUser;
       if (!user) return;
-      const notifRef = doc(db, "users", user.uid, "notifications", notifId);
-      await updateDoc(notifRef, { status: "read" });
+      const token = await user.getIdToken();
+      await API.put(`/notifications/${notifId}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, status: "read" } : n));
     } catch (err) {
       console.log("MARK READ ERROR:", err);
     }
