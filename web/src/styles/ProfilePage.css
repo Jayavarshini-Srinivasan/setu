@@ -1,63 +1,80 @@
 .profile-page {
-  max-width: 600px;
-
+  max-width: 640px;
   margin: 0 auto;
 }
 
 .profile-heading {
-  margin-bottom: 30px;
-
-  color: #2c3e50;
+  margin-bottom: 24px;
+  color: var(--text-h);
+  font-size: 24px;
+  font-weight: 700;
 }
 
 .profile-form {
   display: flex;
-
   flex-direction: column;
-
   gap: 20px;
+  background: var(--bg-card);
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .form-group {
   display: flex;
-
   flex-direction: column;
-
   gap: 8px;
 }
 
 .form-group label {
-  font-weight: bold;
-
-  color: #34495e;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 2px;
 }
 
 .form-group input {
-  padding: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: #ffffff;
+  color: var(--text-h);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
 
-  border: 1px solid #ccc;
+.form-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
 
-  border-radius: 4px;
-
-  font-size: 1rem;
+.form-group input:disabled {
+  background: var(--bg);
+  color: var(--text);
+  cursor: not-allowed;
 }
 
 .save-button {
   padding: 12px;
-
-  background-color: #3498db;
-
+  background-color: var(--accent);
   color: white;
-
   border: none;
-
-  border-radius: 4px;
-
-  font-weight: bold;
-
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px 0 rgba(232, 93, 4, 0.15);
+  margin-top: 8px;
 }
 
 .save-button:hover {
-  background-color: #2980b9;
+  background-color: var(--accent-hover);
+}
+
+.save-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }

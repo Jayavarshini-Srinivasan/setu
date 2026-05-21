@@ -40,7 +40,7 @@ export default function Layout() {
         top: 0
       }}>
         <div style={{ marginBottom: '40px', padding: '0 12px' }}>
-          <h2 style={{ color: '#fff', fontSize: '20px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ color: 'var(--text-h)', fontSize: '20px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: 'var(--accent)' }}>✦</span> Setu ATS
           </h2>
         </div>
@@ -72,7 +72,7 @@ export default function Layout() {
           })}
         </nav>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', paddingLeft: '12px' }}>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px', paddingLeft: '12px' }}>
           <div style={{ fontSize: '13px', color: 'var(--sidebar-text)', marginBottom: '16px' }}>
             {user?.email}
           </div>

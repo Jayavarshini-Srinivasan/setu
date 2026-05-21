@@ -2,18 +2,18 @@
 
 :root {
   /* LIGHT ENTERPRISE THEME */
-  --bg: #F3F4F6;
+  --bg: #FAF9F6;
   --bg-card: #FFFFFF;
-  --border: #E5E7EB;
-  --text: #4B5563;
+  --border: #EBECE9;
+  --text: #374151;
   --text-h: #111827;
   
-  --sidebar-bg: #111827;
-  --sidebar-text: #9CA3AF;
-  --sidebar-text-active: #FFFFFF;
-  --sidebar-hover: #1F2937;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-text: #4B5563;
+  --sidebar-text-active: #E85D04;
+  --sidebar-hover: #FFEDD5;
   
-  --accent: #F97316;
+  --accent: #E85D04;
   --accent-hover: #EA580C;
   --accent-bg: #FFEDD5;
   --accent-border: #FDBA74;
@@ -30,9 +30,9 @@
   --info: #3B82F6;
   --info-bg: #DBEAFE;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px 0 rgba(0, 0, 0, 0.01);
+  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 10px 25px -3px rgba(0, 0, 0, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.02);
 
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -131,9 +131,14 @@ label {
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: var(--shadow-sm);
   padding: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 .badge {
@@ -153,4 +158,12 @@ code {
   background: var(--bg);
   border-radius: 4px;
   color: var(--text-h);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  padding: 32px;
 }

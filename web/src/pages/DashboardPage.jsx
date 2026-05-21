@@ -24,20 +24,20 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <div style={{ padding: '0 20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
         <div>
-          <h1 style={{ marginBottom: '8px' }}>Welcome back, {user.contactName?.split(' ')[0] || "Recruiter"}</h1>
-          <p style={{ color: 'var(--text)', margin: 0, fontSize: '16px' }}>Here is what's happening at {user.companyName || "your company"}.</p>
+          <h1 style={{ marginBottom: '8px', fontSize: '28px', fontWeight: '700' }}>Welcome back, {user.contactName?.split(' ')[0] || "Recruiter"}</h1>
+          <p style={{ color: 'var(--text)', margin: 0, fontSize: '15px' }}>Here is what's happening at {user.companyName || "your company"}.</p>
         </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '12px' }}>
           <Link to="/insights">
-            <button style={{ background: 'var(--glass-bg)', color: 'var(--text-h)', border: '1px solid var(--border)' }}>
+            <button className="secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}>
               🧠 AI Insights
             </button>
           </Link>
           <Link to="/jobs/create">
-            <button style={{ background: 'var(--accent)', color: '#fff' }}>
+            <button className="primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}>
               + Post New Job
             </button>
           </Link>
@@ -52,20 +52,20 @@ export default function DashboardPage() {
         marginBottom: '32px' 
       }}>
         
-        <div className="glass-card">
-          <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px' }}>Total Applicants</p>
-          <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--text-h)' }}>{stats.totalApplicants}</h2>
+        <div className="glass-card" style={{ padding: '24px' }}>
+          <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px', fontWeight: '500' }}>Total Applicants</p>
+          <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--text-h)', fontWeight: '700' }}>{stats.totalApplicants}</h2>
         </div>
 
-        <div className="glass-card">
-          <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px' }}>Active Jobs</p>
-          <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--text-h)' }}>{stats.activeJobs} <span style={{fontSize: '16px', color: 'var(--text)'}}>/ {stats.totalJobs}</span></h2>
+        <div className="glass-card" style={{ padding: '24px' }}>
+          <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px', fontWeight: '500' }}>Active Jobs</p>
+          <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--text-h)', fontWeight: '700' }}>{stats.activeJobs} <span style={{fontSize: '16px', color: 'var(--text)', fontWeight: '400'}}>/ {stats.totalJobs}</span></h2>
         </div>
 
-        <div className="glass-card" style={{ position: 'relative', overflow: 'hidden' }}>
+        <div className="glass-card" style={{ position: 'relative', overflow: 'hidden', padding: '24px' }}>
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px' }}>Avg Match Score</p>
-            <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--accent)' }}>{stats.averageMatchScore}%</h2>
+            <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px', fontWeight: '500' }}>Avg Match Score</p>
+            <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--accent)', fontWeight: '700' }}>{stats.averageMatchScore}%</h2>
           </div>
           <div style={{
             position: 'absolute', right: '-20px', bottom: '-20px', 
@@ -75,17 +75,17 @@ export default function DashboardPage() {
           }} />
         </div>
 
-        <div className="glass-card">
-          <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px' }}>Shortlisted</p>
-          <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--success)' }}>{stats.hiringFunnel.shortlisted}</h2>
+        <div className="glass-card" style={{ padding: '24px' }}>
+          <p style={{ color: 'var(--text)', fontSize: '14px', marginBottom: '8px', fontWeight: '500' }}>Shortlisted</p>
+          <h2 style={{ fontSize: '36px', margin: 0, color: 'var(--success)', fontWeight: '700' }}>{stats.hiringFunnel.shortlisted}</h2>
         </div>
 
       </div>
 
       {/* HIRING FUNNEL SECTION */}
-      <h3 style={{ marginTop: '40px', marginBottom: '20px' }}>Hiring Funnel</h3>
-      <div className="glass-card" style={{ padding: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+      <h3 style={{ marginTop: '40px', marginBottom: '20px', fontSize: '20px', fontWeight: '600' }}>Hiring Funnel</h3>
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
           <FunnelStage title="Pending" count={stats.hiringFunnel.pending} color="var(--text-h)" />
           <FunnelStage title="Reviewed" count={stats.hiringFunnel.reviewed} color="var(--info)" />
           <FunnelStage title="Shortlisted" count={stats.hiringFunnel.shortlisted} color="var(--success)" />
@@ -99,9 +99,9 @@ export default function DashboardPage() {
 
 function FunnelStage({ title, count, color }) {
   return (
-    <div style={{ flex: 1, textAlign: 'center', padding: '24px 16px', background: 'var(--bg-card)', borderRadius: '12px', border: `1px solid var(--border)` }}>
-      <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</h4>
-      <div style={{ fontSize: '32px', fontWeight: '600', color: color }}>{count}</div>
+    <div className="card" style={{ flex: 1, minWidth: '180px', textAlign: 'center', padding: '24px 16px', borderRadius: '16px' }}>
+      <h4 style={{ margin: '0 0 16px 0', fontSize: '12px', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>{title}</h4>
+      <div style={{ fontSize: '32px', fontWeight: '700', color: color }}>{count}</div>
     </div>
   );
 }

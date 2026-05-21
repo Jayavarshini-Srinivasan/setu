@@ -22,6 +22,7 @@ import API from "../../services/api";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useI18n } from "../../context/I18nContext";
+import { COLORS } from "../../constants/theme";
 
 export default function ResumePreviewScreen() {
 
@@ -102,6 +103,7 @@ export default function ResumePreviewScreen() {
 
         <ActivityIndicator
           size="large"
+          color={COLORS.primary}
         />
 
       </View>
@@ -521,7 +523,7 @@ const styles =
       padding: 24,
 
       backgroundColor:
-        "#fff",
+        COLORS.background,
     },
 
     center: {
@@ -574,17 +576,19 @@ const styles =
 
     skillChip: {
       backgroundColor:
-        "#000",
+        COLORS.primaryLight,
 
       paddingVertical: 10,
 
       paddingHorizontal: 16,
 
       borderRadius: 30,
+      borderWidth: 1,
+      borderColor: "rgba(232, 93, 4, 0.15)",
     },
 
     skillText: {
-      color: "#fff",
+      color: COLORS.primary,
 
       fontWeight: "600",
     },
@@ -617,14 +621,14 @@ const styles =
     link: {
       fontSize: 15,
 
-      color: "#2563EB",
+      color: COLORS.primary,
 
       marginBottom: 8,
     },
 
     button: {
       backgroundColor:
-        "#000",
+        COLORS.primary,
 
       padding: 20,
 

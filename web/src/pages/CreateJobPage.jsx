@@ -187,226 +187,134 @@ alert(
     };
 
   return (
-    <div className="create-job-page">
-      <h2 className="create-job-heading">
+    <div className="create-job-page" style={{ maxWidth: '640px', margin: '0 auto' }}>
+      <h2 className="create-job-heading" style={{ marginBottom: '24px', fontSize: '24px', fontWeight: '700', color: 'var(--text-h)' }}>
         Create a New Job
       </h2>
 
       <form
-
-      className="create-job-form"
-        onSubmit={
-          handleSubmit
-        }
+        className="create-job-form card"
+        onSubmit={handleSubmit}
         style={{
           display: "flex",
-
-          flexDirection:
-            "column",
-
-          gap: "15px",
+          flexDirection: "column",
+          gap: "20px",
+          background: "var(--bg-card)",
+          padding: "32px",
+          borderRadius: "16px",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow)"
         }}
       >
-        <input
-          type="text"
-          name="title"
-          placeholder="Job Title"
-          value={
-            formData.title
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-h)' }}>Job Title</label>
+          <input
+            type="text"
+            name="title"
+            placeholder="e.g. Senior Warehouse Operator"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            style={{ width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
 
-            borderRadius:
-              "4px",
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-h)' }}>Category</label>
+          <select
+            name="workerCategory"
+            value={formData.workerCategory}
+            onChange={handleChange}
+            style={{ width: '100%', boxSizing: 'border-box' }}
+          >
+            <option value="labour">Labour</option>
+            <option value="professional">Professional</option>
+          </select>
+        </div>
 
-            border:
-              "1px solid #ccc",
-          }}
-        />
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-h)' }}>Required Skills</label>
+          <input
+            type="text"
+            name="requiredSkills"
+            placeholder="e.g. Forklift Driving, Inventory Management (comma separated)"
+            value={formData.requiredSkills}
+            onChange={handleChange}
+            required
+            style={{ width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
 
-        <select
-          name="workerCategory"
-          value={
-            formData.workerCategory
-          }
-          onChange={
-            handleChange
-          }
-          style={{
-            padding:
-              "10px",
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-h)' }}>Location</label>
+          <input
+            type="text"
+            name="location"
+            placeholder="e.g. Sector 62, Noida"
+            value={formData.location}
+            onChange={handleChange}
+            required
+            style={{ width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
 
-            borderRadius:
-              "4px",
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-h)' }}>Salary (Monthly, ₹)</label>
+            <input
+              type="number"
+              name="salary"
+              placeholder="e.g. 18000"
+              value={formData.salary}
+              onChange={handleChange}
+              required
+              style={{ width: '100%', boxSizing: 'border-box' }}
+            />
+          </div>
 
-            border:
-              "1px solid #ccc",
-          }}
-        >
-          <option value="labour">
-            Labour
-          </option>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-h)' }}>Experience Required (Years)</label>
+            <input
+              type="number"
+              name="experienceRequired"
+              placeholder="e.g. 2"
+              value={formData.experienceRequired}
+              onChange={handleChange}
+              required
+              style={{ width: '100%', boxSizing: 'border-box' }}
+            />
+          </div>
+        </div>
 
-          <option value="professional">
-            Professional
-          </option>
-        </select>
-
-        <input
-          type="text"
-          name="requiredSkills"
-          placeholder="Required Skills (comma separated)"
-          value={
-            formData.requiredSkills
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          value={
-            formData.location
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <input
-          type="number"
-          name="salary"
-          placeholder="Salary (Example: 15000)"
-          value={
-            formData.salary
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <input
-          type="number"
-          name="experienceRequired"
-          placeholder="Experience Required (Example: 2)"
-          value={
-            formData
-              .experienceRequired
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <textarea
-          name="description"
-          placeholder="Job Description"
-          value={
-            formData.description
-          }
-          onChange={
-            handleChange
-          }
-          required
-          rows={5}
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-h)' }}>Job Description</label>
+          <textarea
+            name="description"
+            placeholder="Describe job responsibilities, shift details, benefits, etc."
+            value={formData.description}
+            onChange={handleChange}
+            required
+            rows={5}
+            style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
+          />
+        </div>
 
         <button
           type="submit"
-          disabled={
-            loading
-          }
+          disabled={loading}
+          className="primary"
           style={{
-            padding:
-              "12px",
-
-            backgroundColor:
-              "#2ecc71",
-
-            color:
-              "white",
-
-            border:
-              "none",
-
-            borderRadius:
-              "4px",
-
-            cursor:
-              "pointer",
-
-            fontWeight:
-              "bold",
+            padding: "12px",
+            fontSize: "14px",
+            fontWeight: "600",
+            marginTop: "8px",
+            boxShadow: "0 4px 12px 0 rgba(232, 93, 4, 0.15)"
           }}
         >
-          {loading
-            ? "Creating..."
-            : "Create Job"}
+          {loading ? "Creating..." : "Create Job Posting"}
         </button>
       </form>
     </div>
   );
 }
+

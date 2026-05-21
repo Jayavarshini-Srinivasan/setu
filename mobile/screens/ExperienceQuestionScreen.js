@@ -13,6 +13,7 @@ import VoiceButton from "../components/VoiceButton";
 import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
+import { COLORS } from "../constants/theme";
 
 const EXPERIENCE_OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"];
 
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
   recordedBadgeText: { color: "#15803D", fontWeight: "700", fontSize: 14 },
   actionRow: { flexDirection: "row", gap: 10 },
   actionBtn: { paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, alignItems: "center" },
-  playBtn:   { backgroundColor: "#2563EB" },
+  playBtn:   { backgroundColor: COLORS.primary },
   retakeBtn: { backgroundColor: "#6B7280" },
   submitBtn: { backgroundColor: "#16A34A" },
   actionBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },

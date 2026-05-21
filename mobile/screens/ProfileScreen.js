@@ -14,6 +14,7 @@ import { auth, db } from "../services/firebase";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
 import API from "../services/api";
+import { COLORS } from "../constants/theme";
 
 
 
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
 
   container: {
     padding: 20,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.background,
     paddingBottom: 50,
   },
 
@@ -400,7 +401,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
   },
-  proBadge:    { backgroundColor: "#1D4ED8" },
+  proBadge:    { backgroundColor: COLORS.primary },
   labourBadge: { backgroundColor: "#E85D04" },
   typeBadgeText: { color: "#FFFFFF", fontWeight: "700", fontSize: 12 },
 
@@ -460,14 +461,14 @@ const styles = StyleSheet.create({
   /* ── Chips ── */
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   skillChip: {
-    backgroundColor: "#EFF6FF",
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: "rgba(232, 93, 4, 0.15)",
   },
-  skillChipText: { color: "#1D4ED8", fontWeight: "600", fontSize: 13 },
+  skillChipText: { color: COLORS.primary, fontWeight: "600", fontSize: 13 },
   gapChip: {
     backgroundColor: "#FEF2F2",
     borderRadius: 20,
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
   expMeta: { fontSize: 13, color: "#6B7280" },
 
   /* ── Links ── */
-  linkText: { fontSize: 13, color: "#2563EB", marginBottom: 6 },
+  linkText: { fontSize: 13, color: COLORS.primary, marginBottom: 6 },
 
   /* ── Buttons ── */
   editButton: {

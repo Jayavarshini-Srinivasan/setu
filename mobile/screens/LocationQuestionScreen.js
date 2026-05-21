@@ -15,6 +15,7 @@ import VoiceButton from "../components/VoiceButton";
 import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
+import { COLORS } from "../constants/theme";
 
 const LOCATION_OPTIONS = [
   "Chennai",
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
   },
   actionRow:  { flexDirection: "row", gap: 10 },
   actionBtn:  { paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, alignItems: "center" },
-  playBtn:    { backgroundColor: "#2563EB" },
+  playBtn:    { backgroundColor: COLORS.primary },
   retakeBtn:  { backgroundColor: "#6B7280" },
   submitBtn:  { backgroundColor: "#16A34A" },
   actionBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },

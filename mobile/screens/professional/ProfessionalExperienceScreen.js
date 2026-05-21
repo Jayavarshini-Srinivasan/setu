@@ -16,6 +16,7 @@ import {
   useOnboarding,
 } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
+import { COLORS } from "../../constants/theme";
 
 export default function ProfessionalExperienceScreen({
   navigation,
@@ -286,7 +287,7 @@ const styles =
       flexGrow: 1,
 
       backgroundColor:
-        "#fff",
+        COLORS.background,
 
       padding: 24,
     },
@@ -333,7 +334,7 @@ const styles =
 
     addButton: {
       backgroundColor:
-        "#2563EB",
+        COLORS.primary,
 
       padding: 18,
 
@@ -347,7 +348,7 @@ const styles =
 
     continueButton: {
       backgroundColor:
-        "#000",
+        COLORS.primary,
 
       padding: 20,
 
