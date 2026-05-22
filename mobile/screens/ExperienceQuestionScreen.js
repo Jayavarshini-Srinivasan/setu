@@ -73,7 +73,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
     if (voiceState === VOICE_STATE.PROCESSING) {
       return (
         <View style={styles.voiceCenter}>
-          <ActivityIndicator size="large" color="#E85D04" style={{ marginBottom: 10 }} />
+          <ActivityIndicator size="large" color="#E85D26" style={{ marginBottom: 10 }} />
           <Text style={styles.processingLabel}>{t("analyzingResponse") || "Analysing your response…"}</Text>
         </View>
       );
@@ -194,35 +194,35 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     paddingTop: 40,
-    backgroundColor: "#FAF9F6",
+    backgroundColor: "#F7F5F2",
   },
 
   progressContainer: { flexDirection: "row", gap: 8, marginBottom: 30 },
   progressSegment:  { flex: 1, height: 4, borderRadius: 2 },
-  progressActive:   { backgroundColor: "#E85D04" },
-  progressInactive: { backgroundColor: "#E5E7EB" },
+  progressActive:   { backgroundColor: "#E85D26" },
+  progressInactive: { backgroundColor: "rgba(26,26,46,0.12)" },
 
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 15,
-    color: "#6B7280",
+    color: "#6B6B80",
     marginBottom: 22,
   },
 
   input: {
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     borderRadius: 14,
     padding: 16,
     fontSize: 22,
     marginBottom: 18,
     backgroundColor: "#fff",
-    color: "#111827",
+    color: "#1A1A2E",
     textAlign: "center",
     fontWeight: "bold",
   },
@@ -236,29 +236,29 @@ const styles = StyleSheet.create({
   },
   chip: {
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     borderRadius: 30,
     paddingVertical: 8,
     paddingHorizontal: 16,
     backgroundColor: "#fff",
   },
   chipSelected: {
-    backgroundColor: "#FFF4ED",
-    borderColor: "#E85D04",
+    backgroundColor: "#FDF0EB",
+    borderColor: "#E85D26",
   },
-  chipText: { fontSize: 14, color: "#4B5563", fontWeight: "600" },
-  chipTextSelected: { color: "#E85D04", fontWeight: "bold" },
+  chipText: { fontSize: 14, color: "#6B6B80", fontWeight: "600" },
+  chipTextSelected: { color: "#E85D26", fontWeight: "bold" },
 
   /* VOICE */
   voiceCenter: { alignItems: "center", marginBottom: 20 },
   holdLabel: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 12,
   },
-  hintText: { color: "#9CA3AF", fontSize: 13, marginTop: 8 },
-  processingLabel: { color: "#E85D04", fontWeight: "700", fontSize: 15 },
+  hintText: { color: "#6B6B80", fontSize: 13, marginTop: 8 },
+  processingLabel: { color: "#E85D26", fontWeight: "700", fontSize: 15 },
   recordedBadge: {
     backgroundColor: "#F0FDF4",
     borderRadius: 20,
@@ -271,8 +271,8 @@ const styles = StyleSheet.create({
   recordedBadgeText: { color: "#15803D", fontWeight: "700", fontSize: 14 },
   actionRow: { flexDirection: "row", gap: 10 },
   actionBtn: { paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, alignItems: "center" },
-  playBtn:   { backgroundColor: "#2563EB" },
-  retakeBtn: { backgroundColor: "#6B7280" },
+  playBtn:   { backgroundColor: "#E85D26" },
+  retakeBtn: { backgroundColor: "#6B6B80" },
   submitBtn: { backgroundColor: "#16A34A" },
   actionBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -283,11 +283,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 18,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
   },
   transcriptLabel: {
     fontWeight: "bold",
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontSize: 11,
     textTransform: "uppercase",
     marginBottom: 6,
@@ -300,15 +300,15 @@ const styles = StyleSheet.create({
 
   /* CONTINUE */
   continueButton: {
-    backgroundColor: "#E85D04",
+    backgroundColor: "#E85D26",
     padding: 18,
     borderRadius: 14,
     alignItems: "center",
-    shadowColor: "#E85D04",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
     marginTop: 4,
   },
   continueText: { color: "#fff", fontSize: 17, fontWeight: "bold" },

@@ -16,7 +16,7 @@ import { useI18n } from "../../context/I18nContext";
 const fmt = (n) => n?.toLocaleString("en-IN") ?? "–";
 
 const PHASE_COLORS = {
-  Foundation:   { bg: "#EFF6FF", text: "#1D4ED8", badge: "#BFDBFE" },
+  Foundation:   { bg: "#EFF6FF", text: "#1D4ED8", badge: "#FDF0EB" },
   "Core Growth":{ bg: "#F0FDF4", text: "#15803D", badge: "#BBF7D0" },
   Advanced:     { bg: "#FFF7ED", text: "#C2410C", badge: "#FED7AA" },
 };
@@ -30,7 +30,7 @@ function PhaseChip({ phase, t }) {
   );
 }
 
-function ScoreBar({ value, max = 100, color = "#E85D04" }) {
+function ScoreBar({ value, max = 100, color = "#E85D26" }) {
   const pct = Math.min(100, Math.max(0, (value / max) * 100));
   return (
     <View style={styles.barTrack}>
@@ -72,7 +72,7 @@ export default function LearningPathScreen({ route }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#E85D04" />
+        <ActivityIndicator size="large" color="#E85D26" />
         <Text style={styles.loadingLabel}>{t("buildingRoadmap") || "Building your career roadmap…"}</Text>
       </View>
     );
@@ -176,7 +176,7 @@ export default function LearningPathScreen({ route }) {
             </Text>
           </View>
           <View style={styles.barTrack}>
-            <View style={[styles.barFill, { width: `${currentMatchScore}%`, backgroundColor: "#9CA3AF" }]} />
+            <View style={[styles.barFill, { width: `${currentMatchScore}%`, backgroundColor: "#6B6B80" }]} />
           </View>
           <View style={[styles.barTrack, { marginTop: 6 }]}>
             <View style={[styles.barFill, { width: `${projectedMatchScore}%`, backgroundColor: "#16A34A" }]} />
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     paddingBottom: 48,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F5F2",
   },
 
   center: {
@@ -303,12 +303,12 @@ const styles = StyleSheet.create({
 
   loadingLabel: {
     marginTop: 16,
-    color: "#6B7280",
+    color: "#6B6B80",
     fontSize: 15,
   },
 
   emptyText: {
-    color: "#6B7280",
+    color: "#6B6B80",
     fontSize: 16,
   },
 
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   headerLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#E85D04",
+    color: "#E85D26",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 4,
@@ -328,12 +328,12 @@ const styles = StyleSheet.create({
   headerRole: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 4,
   },
   headerTarget: {
     fontSize: 15,
-    color: "#6B7280",
+    color: "#6B6B80",
   },
 
   /* ── Section ── */
@@ -343,12 +343,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: "#6B7280",
+    color: "#6B6B80",
     marginBottom: 14,
   },
 
@@ -365,16 +365,16 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
   },
   assessmentValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
   },
   assessmentLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#6B6B80",
     marginTop: 4,
   },
 
@@ -383,12 +383,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
   },
   topJobLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#E85D04",
+    color: "#E85D26",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -396,23 +396,23 @@ const styles = StyleSheet.create({
   topJobTitle: {
     fontSize: 17,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 4,
   },
   topJobMeta: {
     fontSize: 13,
-    color: "#6B7280",
+    color: "#6B6B80",
   },
 
   /* ── Projection card ── */
   projectionCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1A1A2E",
     borderRadius: 20,
     padding: 22,
     marginBottom: 28,
   },
   projectionTitle: {
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontSize: 13,
     fontWeight: "600",
     textTransform: "uppercase",
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   },
   projectionItemLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#6B6B80",
   },
   projectionDivider: {
     width: 1,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 6,
   },
-  barLabelText: { fontSize: 12, color: "#9CA3AF" },
+  barLabelText: { fontSize: 12, color: "#6B6B80" },
   barTrack: {
     height: 6,
     backgroundColor: "#374151",
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     bottom: -14,
     width: 2,
     height: 14,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "rgba(26,26,46,0.12)",
     zIndex: 1,
   },
   roadmapHeader: {
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#111827",
+    backgroundColor: "#1A1A2E",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 2,
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   roadmapTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     flexShrink: 1,
   },
   priorityBadge: {
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   },
   roadmapMetaText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontWeight: "600",
   },
 
@@ -579,13 +579,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     marginBottom: 8,
   },
   salaryTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 16,
   },
   salaryRow: {
@@ -597,16 +597,16 @@ const styles = StyleSheet.create({
   salaryValue: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 4,
   },
   salaryLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#6B6B80",
   },
   salaryArrow: {
     fontSize: 22,
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontWeight: "bold",
   },
 });

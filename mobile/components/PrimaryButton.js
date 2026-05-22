@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 
 export default function PrimaryButton({
   title,
@@ -19,10 +19,10 @@ export default function PrimaryButton({
       ]}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={COLORS.surface} size="small" />
+        <ActivityIndicator color="#FFFFFF" size="small" />
       ) : (
         <Text style={[styles.text, disabled && styles.textDisabled, textStyle]}>
           {title}
@@ -35,21 +35,23 @@ export default function PrimaryButton({
 const styles = StyleSheet.create({
   button: {
     backgroundColor: COLORS.primary,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    ...SHADOWS.sm,
+    width: "100%",
   },
   disabled: {
     backgroundColor: COLORS.border,
-    ...SHADOWS.sm,
   },
   text: {
-    ...TYPOGRAPHY.button,
-    color: COLORS.surface,
+    fontFamily: "DM Sans",
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: -0.01 * 15,
+    color: "#FFFFFF",
   },
   textDisabled: {
     color: COLORS.textMuted,

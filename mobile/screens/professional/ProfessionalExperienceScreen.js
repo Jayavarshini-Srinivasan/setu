@@ -333,7 +333,7 @@ const styles =
 
     addButton: {
       backgroundColor:
-        "#2563EB",
+        "#E85D26",
 
       padding: 18,
 
@@ -371,7 +371,7 @@ const styles =
 
     experienceCard: {
       backgroundColor:
-        "#F8FAFC",
+        "#F7F5F2",
 
       padding: 18,
 

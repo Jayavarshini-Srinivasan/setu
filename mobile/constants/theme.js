@@ -1,104 +1,103 @@
+// setu-tokens.js — Setu Design System v1.0
+export const setuTokens = {
+  // Brand
+  primary:       '#E85D26',
+  primaryDark:   '#C44A18',
+  primaryLight:  '#FDF0EB',
+
+  // Dark
+  secondary:     '#1A1A2E',
+
+  // Semantic
+  success:       '#1D9E75',
+  danger:        '#E24B4A',
+  info:          '#185FA5',
+  accent:        '#F5A623',
+
+  // Neutrals
+  bg:            '#F7F5F2',
+  bgCard:        '#FFFFFF',
+  text:          '#1A1A2E',
+  textMuted:     '#6B6B80',
+  border:        'rgba(26,26,46,0.12)',
+
+  // Surface tints
+  infoBg:        '#E6F1FB',
+  successBg:     '#E1F5EE',
+  warningBg:     '#FDF0EB',
+  dangerBg:      '#FCEBEB',
+
+  // Fonts
+  fontDisplay:   "'Playfair Display', Georgia, serif",
+  fontBody:      "'DM Sans', system-ui, sans-serif",
+  fontMono:      "'DM Mono', monospace",
+
+  // Radius
+  radiusCard:    18,
+  radiusInput:   12,
+  radiusButton:  12,
+  radiusSmall:   10,
+  radiusPill:    99,
+  radiusIcon:    14,
+};
+
+// Worker context accent lookup
+export const workerAccent = {
+  labour:       '#E85D26',
+  professional: '#185FA5',
+};
+
+// Maintain legacy names mapped to new Setu tokens for minimal breakage, but switch values to Setu colors
 export const COLORS = {
-
-  primary:
-    "#2563EB",
-
-  primaryLight:
-    "#BFDBFE",
-
-  secondary:
-    "#10B981",
-
-  background:
-    "#F8FAFC",
-
-  surface:
-    "#FFFFFF",
-
-  text:
-    "#111827",
-
-  textSecondary:
-    "#6B7280",
-
-  textLight:
-    "#9CA3AF",
-
-  border:
-    "#E5E7EB",
-
-  success:
-    "#22C55E",
-
-  danger:
-    "#EF4444",
-
-  error:
-    "#EF4444",
-
-  warning:
-    "#F59E0B",
-
-  accent:
-    "#E85D04",
+  primary: setuTokens.primary,
+  primaryLight: setuTokens.primaryLight,
+  secondary: setuTokens.secondary,
+  background: setuTokens.bg,
+  surface: setuTokens.bgCard,
+  text: setuTokens.text,
+  textSecondary: setuTokens.textMuted,
+  textLight: setuTokens.textMuted,
+  border: setuTokens.border,
+  success: setuTokens.success,
+  danger: setuTokens.danger,
+  error: setuTokens.danger,
+  warning: setuTokens.accent,
+  accent: setuTokens.primary,
 };
 
 export const SPACING = {
-
   xs: 4,
-
   sm: 8,
-
   md: 16,
-
   lg: 24,
-
   xl: 32,
-
   xxl: 40,
 };
 
 export const TYPOGRAPHY = {
-
-  h1: 32,
-
+  h1: 36,
   h2: 26,
-
-  h3: 22,
-
-  body: 16,
-
-  small: 14,
-
-  caption: 12,
+  h3: 20,
+  body: 14,
+  small: 12,
+  caption: 11,
 };
 
 export const BORDER_RADIUS = {
-
-  sm: 8,
-
-  md: 14,
-
-  lg: 20,
-
-  xl: 28,
+  sm: setuTokens.radiusSmall,
+  md: setuTokens.radiusInput,
+  lg: setuTokens.radiusCard,
+  xl: setuTokens.radiusCard,
+  pill: setuTokens.radiusPill,
 };
 
 export const SHADOWS = {
-
   card: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    elevation: 0,
+    shadowOpacity: 0,
   },
-
   lg: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    elevation: 0,
+    shadowOpacity: 0,
   },
-};
+};

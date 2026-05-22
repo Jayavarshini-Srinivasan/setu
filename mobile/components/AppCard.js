@@ -1,14 +1,10 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "../constants/theme";
+import { setuTokens } from "../constants/theme";
 
-export default function AppCard({ children, style, variant = "elevated" }) {
+export default function AppCard({ children, style }) {
   return (
-    <View style={[
-      styles.card, 
-      variant === "elevated" ? styles.elevated : styles.outlined,
-      style
-    ]}>
+    <View style={[styles.card, style]}>
       {children}
     </View>
   );
@@ -16,16 +12,12 @@ export default function AppCard({ children, style, variant = "elevated" }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    marginVertical: SPACING.sm,
-  },
-  elevated: {
-    ...SHADOWS.md,
-  },
-  outlined: {
+    backgroundColor: setuTokens.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: setuTokens.border,
+    borderRadius: setuTokens.radiusCard,
+    padding: 16,
+    elevation: 0,
+    shadowOpacity: 0,
   },
 });

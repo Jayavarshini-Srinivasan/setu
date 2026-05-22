@@ -1,4 +1,4 @@
-const { db } = require("../config/firebase");
+const { admin, db } = require("../config/firebase");
 const { calculateMatchScore } = require("../services/matchService");
 const { generateApplicantSummary } = require("../services/aiService");
 
@@ -342,8 +342,8 @@ const updateApplicationStatus = async (req, res) => {
 
     await applicationRef.update({ status, updatedAt: new Date() });
 
-    // Send localized notification to candidate upon shortlisting (accepting)
-    if (status === "shortlisted") {
+    // Send localized notification to candidate upon status change
+    if (status === "shortlisted" || status === "rejected") {
       try {
         const appData = applicationDoc.data();
         const workerId = appData.workerId;
@@ -358,31 +358,59 @@ const updateApplicationStatus = async (req, res) => {
           const lang = workerData.profile?.language || workerData.language || "en";
           const jobTitle = jobData.title || "Job";
 
-          let notifTitle = "Application Shortlisted! 🎉";
-          let notifMessage = `Congratulations! Your application for "${jobTitle}" has been shortlisted. The recruiter will contact you soon.`;
+          let notifTitle = "";
+          let notifMessage = "";
 
-          if (lang === "hi") {
-            notifTitle = "आवेदन शॉर्टलिस्ट किया गया! 🎉";
-            notifMessage = `बधाई हो! "${jobTitle}" के लिए आपके आवेदन को शॉर्टलिस्ट किया गया है। भर्तीकर्ता जल्द ही आपसे संपर्क करेगा।`;
-          } else if (lang === "ta") {
-            notifTitle = "விண்ணப்பம் தேர்ந்தெடுக்கப்பட்டது! 🎉";
-            notifMessage = `வாழ்த்துகள்! "${jobTitle}" க்கான உங்கள் விண்ணப்பம் தேர்ந்தெடுக்கப்பட்டுள்ளது. பணியமர்த்துபவர் விரைவில் உங்களைத் தொடர்புகொள்வார்.`;
-          } else if (lang === "mr") {
-            notifTitle = "अर्ज शॉर्टलिस्ट केला! 🎉";
-            notifMessage = `अभिनंदन! "${jobTitle}" साठी तुमचा अर्ज शॉर्टलिस्ट करण्यात आला आहे. रिक्रूटर्स लवकरच तुमच्याशी संपर्क साधतील.`;
+          if (status === "shortlisted") {
+            notifTitle = "Application Shortlisted! 🎉";
+            notifMessage = `Congratulations! Your application for "${jobTitle}" has been shortlisted. The recruiter will contact you soon.`;
+
+            if (lang === "hi") {
+              notifTitle = "आवेदन शॉर्टलिस्ट किया गया! 🎉";
+              notifMessage = `बधाई हो! "${jobTitle}" के लिए आपके आवेदन को शॉर्टलिस्ट किया गया है। भर्तीकर्ता जल्द ही आपसे संपर्क करेगा।`;
+            } else if (lang === "ta") {
+              notifTitle = "விண்ணப்பம் தேர்ந்தெடுக்கப்பட்டது! 🎉";
+              notifMessage = `வாழ்த்துகள்! "${jobTitle}" க்கான உங்கள் விண்ணப்பம் தேர்ந்தெடுக்கப்பட்டுள்ளது. பணியமர்த்துபவர் விரைவில் உங்களைத் தொடர்புகொள்வார்.`;
+            } else if (lang === "mr") {
+              notifTitle = "अर्ज शॉर्टलिस्ट केला! 🎉";
+              notifMessage = `अभिनंदन! "${jobTitle}" साठी तुमचा अर्ज शॉर्टलिस्ट करण्यात आला आहे. रिक्रूटर्स लवकरच तुमच्याशी संपर्क साधतील.`;
+            }
+          } else if (status === "rejected") {
+            notifTitle = "Application Update";
+            notifMessage = `Your application for "${jobTitle}" was not selected at this time. Keep applying!`;
+
+            if (lang === "hi") {
+              notifTitle = "आवेदन अद्यतन";
+              notifMessage = `"${jobTitle}" के लिए आपका आवेदन इस बार नहीं चुना गया। आवेदन करते रहें!`;
+            } else if (lang === "ta") {
+              notifTitle = "விண்ணப்பம் புதுப்பிப்பு";
+              notifMessage = `இந்த முறை "${jobTitle}" க்கான உங்கள் விண்ணப்பம் தேர்ந்தெடுக்கப்படவில்லை. தொடர்ந்து விண்ணப்பிக்கவும்!`;
+            } else if (lang === "mr") {
+              notifTitle = "अर्ज अद्यतन";
+              notifMessage = `यावेळी "${jobTitle}" साठी तुमचा अर्ज निवडला गेला नाही. अर्ज करत रहा!`;
+            }
           }
+
+          console.log("=== NOTIFICATION DEBUG ===");
+          console.log(`Sending notification to Worker ID: ${workerId}`);
+          console.log(`Triggered by Recruiter ID: ${req.user.uid}`);
+          console.log(`Application ID: ${applicationId}`);
+          console.log(`Status: ${status}`);
 
           await db
             .collection("users")
             .doc(workerId)
             .collection("notifications")
             .add({
+              type: status,
               title: notifTitle,
               message: notifMessage,
               jobId,
               status: "unread",
-              createdAt: new Date(),
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+        } else {
+          console.log("NOTIFICATION ERROR: Worker or Job not found", { workerId, jobId });
         }
       } catch (err) {
         console.log("NOTIFICATION ERROR:", err.message);

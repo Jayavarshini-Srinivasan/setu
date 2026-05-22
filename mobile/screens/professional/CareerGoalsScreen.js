@@ -271,10 +271,10 @@ const styles =
 
     selectedChip: {
       backgroundColor:
-        "#2563EB",
+        "#E85D26",
 
       borderColor:
-        "#2563EB",
+        "#E85D26",
     },
 
     goalText: {

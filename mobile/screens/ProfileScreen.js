@@ -187,7 +187,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#E85D04" />
+        <ActivityIndicator size="large" color="#E85D26" />
         <Text style={styles.loadingText}>{t("loadingProfile") || "Loading profile…"}</Text>
       </View>
     );
@@ -232,7 +232,7 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>🤖  {t("aiSummary") || "AI Summary"}</Text>
         {matchLoading ? (
-          <ActivityIndicator size="small" color="#E85D04" style={{ marginTop: 8 }} />
+          <ActivityIndicator size="small" color="#E85D26" style={{ marginTop: 8 }} />
         ) : (
           <Text style={styles.summaryText}>{aiSummary}</Text>
         )}
@@ -250,7 +250,7 @@ export default function ProfileScreen() {
         </View>
 
         {matchLoading ? (
-          <ActivityIndicator size="small" color="#E85D04" style={{ marginTop: 8 }} />
+          <ActivityIndicator size="small" color="#E85D26" style={{ marginTop: 8 }} />
         ) : (
           <>
             <Text style={[styles.readinessScore, { color: scoreColor(readiness) }]}>
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
 
   container: {
     padding: 20,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F5F2",
     paddingBottom: 50,
   },
 
@@ -376,11 +376,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  loadingText: { color: "#6B7280", fontSize: 14 },
+  loadingText: { color: "#6B6B80", fontSize: 14 },
 
   /* ── Header ── */
   headerCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1A1A2E",
     padding: 24,
     borderRadius: 20,
     marginBottom: 16,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
     marginBottom: 6,
   },
-  email: { color: "#9CA3AF", fontSize: 14, marginBottom: 10 },
+  email: { color: "#6B6B80", fontSize: 14, marginBottom: 10 },
   locationText: { color: "#FFFFFF", fontSize: 14, marginBottom: 14 },
   typeBadge: {
     alignSelf: "flex-start",
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   proBadge:    { backgroundColor: "#1D4ED8" },
-  labourBadge: { backgroundColor: "#E85D04" },
+  labourBadge: { backgroundColor: "#E85D26" },
   typeBadgeText: { color: "#FFFFFF", fontWeight: "700", fontSize: 12 },
 
   /* ── Cards ── */
@@ -416,16 +416,16 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 10,
   },
   cardSubtitle: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#6B6B80",
     marginBottom: 10,
   },
   cardValue: { fontSize: 16, color: "#374151" },
-  emptyText: { fontSize: 13, color: "#9CA3AF" },
+  emptyText: { fontSize: 13, color: "#6B6B80" },
 
   /* ── AI Summary ── */
   summaryText: {
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 6,
   },
-  topJobLabel: { fontSize: 11, color: "#6B7280" },
+  topJobLabel: { fontSize: 11, color: "#6B6B80" },
   readinessScore: {
     fontSize: 42,
     fontWeight: "bold",
@@ -449,13 +449,13 @@ const styles = StyleSheet.create({
   },
   barTrack: {
     height: 8,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "rgba(26,26,46,0.12)",
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 8,
   },
   barFill: { height: "100%", borderRadius: 4 },
-  readinessHint: { fontSize: 13, color: "#6B7280" },
+  readinessHint: { fontSize: 13, color: "#6B6B80" },
 
   /* ── Chips ── */
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: "#FDF0EB",
   },
   skillChipText: { color: "#1D4ED8", fontWeight: "600", fontSize: 13 },
   gapChip: {
@@ -480,15 +480,15 @@ const styles = StyleSheet.create({
 
   /* ── Experience ── */
   expItem: { marginBottom: 12 },
-  expRole: { fontSize: 15, fontWeight: "bold", color: "#111827", marginBottom: 2 },
-  expMeta: { fontSize: 13, color: "#6B7280" },
+  expRole: { fontSize: 15, fontWeight: "bold", color: "#1A1A2E", marginBottom: 2 },
+  expMeta: { fontSize: 13, color: "#6B6B80" },
 
   /* ── Links ── */
-  linkText: { fontSize: 13, color: "#2563EB", marginBottom: 6 },
+  linkText: { fontSize: 13, color: "#E85D26", marginBottom: 6 },
 
   /* ── Buttons ── */
   editButton: {
-    backgroundColor: "#E85D04",
+    backgroundColor: "#E85D26",
     padding: 16,
     borderRadius: 14,
     alignItems: "center",

@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 
 export default function SecondaryButton({
   title,
@@ -19,7 +19,7 @@ export default function SecondaryButton({
       ]}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       {loading ? (
         <ActivityIndicator color={COLORS.primary} size="small" />
@@ -35,20 +35,24 @@ export default function SecondaryButton({
 const styles = StyleSheet.create({
   button: {
     backgroundColor: "transparent",
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: COLORS.primary,
+    width: "100%",
   },
   disabled: {
     borderColor: COLORS.border,
   },
   text: {
-    ...TYPOGRAPHY.button,
+    fontFamily: "DM Sans",
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: -0.01 * 15,
     color: COLORS.primary,
   },
   textDisabled: {

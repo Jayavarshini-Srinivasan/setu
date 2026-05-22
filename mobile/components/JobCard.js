@@ -12,8 +12,8 @@ import { useI18n } from "../context/I18nContext";
 
 const RECOMMENDATION_LABELS = {
   best_pick:   { labelKey: "bestPick", color: "#16A34A", bg: "#F0FDF4" },
-  good_fit:    { labelKey: "goodFit", color: "#2563EB", bg: "#EFF6FF" },
-  average_fit: { labelKey: "averageFit", color: "#9CA3AF", bg: "#F9FAFB" },
+  good_fit:    { labelKey: "goodFit", color: "#E85D26", bg: "#EFF6FF" },
+  average_fit: { labelKey: "averageFit", color: "#6B6B80", bg: "#F7F5F2" },
 };
 
 function scoreColor(score) {
@@ -141,11 +141,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 18,
     marginBottom: 18,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
+    elevation: 0,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
     borderWidth: 1,
     borderColor: "#F3F4F6",
   },
@@ -180,11 +180,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 6,
   },
   meta: {
-    color: "#6B7280",
+    color: "#6B6B80",
     fontSize: 13,
     marginBottom: 3,
   },
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   summary: {
     fontSize: 14,
     lineHeight: 21,
-    color: "#4B5563",
+    color: "#6B6B80",
     marginBottom: 14,
     fontStyle: "italic",
   },
@@ -279,13 +279,13 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#6B6B80",
     width: 70,
   },
   metricBarTrack: {
     flex: 1,
     height: 6,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "rgba(26,26,46,0.12)",
     borderRadius: 3,
     overflow: "hidden",
   },

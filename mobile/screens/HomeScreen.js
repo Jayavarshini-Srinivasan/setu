@@ -83,7 +83,7 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#E85D04" />
+        <ActivityIndicator size="large" color="#E85D26" />
       </View>
     );
   }
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 48,
     paddingBottom: 40,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F5F2",
   },
 
   center: {
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  emptyText: { color: "#6B7280", fontSize: 15 },
+  emptyText: { color: "#6B6B80", fontSize: 15 },
 
   /* ── Greeting ── */
   greetingContainer: {
@@ -292,15 +292,15 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   bellIcon: {
     fontSize: 22,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -2,
-    backgroundColor: "#E85D04",
+    backgroundColor: "#E85D26",
     borderRadius: 9,
     width: 18,
     height: 18,
@@ -325,24 +325,24 @@ const styles = StyleSheet.create({
   },
   greetingHi: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#6B6B80",
     fontWeight: "600",
     marginBottom: 4,
   },
   greetingRole: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 4,
   },
   greetingLocation: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: "#6B6B80",
   },
 
   /* ── Profile Card ── */
   profileCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1A1A2E",
     borderRadius: 20,
     padding: 20,
     marginBottom: 28,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   },
   profileStatLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#6B6B80",
   },
   profileStatDivider: {
     width: 1,
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: "#6B6B80",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 14,
@@ -408,17 +408,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryAction: {
-    backgroundColor: "#E85D04",
-    shadowColor: "#E85D04",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    backgroundColor: "#E85D26",
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   secondaryAction: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
   },
 
   actionCardIcon: { fontSize: 28 },
@@ -436,12 +436,12 @@ const styles = StyleSheet.create({
   actionCardTitleDark: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 2,
   },
   actionCardSubtitleDark: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: "#6B6B80",
   },
 
   /* ── Notifications ── */
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   notificationsHeader: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#E85D04",
+    color: "#E85D26",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 12,
@@ -466,11 +466,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
-    shadowColor: "#E85D04",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   notificationHeaderRow: {
     flexDirection: "row",
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   notificationTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     flex: 1,
     paddingRight: 8,
   },
@@ -490,12 +490,12 @@ const styles = StyleSheet.create({
   },
   dismissBtnText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontWeight: "600",
   },
   notificationMessage: {
     fontSize: 14,
-    color: "#4B5563",
+    color: "#6B6B80",
     lineHeight: 20,
   },
 

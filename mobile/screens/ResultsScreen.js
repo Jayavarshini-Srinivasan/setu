@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
+    color: "#6B6B80",
     marginBottom: 12,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -210,15 +210,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    backgroundColor: "#111827",
+    backgroundColor: "#1A1A2E",
     padding: 20,
     borderRadius: 18,
     marginTop: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
 
   careerPathIcon: {
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
 
   careerPathSubtitle: {
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontSize: 13,
   },
 });

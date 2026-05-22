@@ -88,7 +88,7 @@ export default function LocationQuestionScreen({ navigation }) {
     if (voiceState === VOICE_STATE.PROCESSING) {
       return (
         <View style={styles.voiceCenter}>
-          <ActivityIndicator size="large" color="#E85D04" style={{ marginBottom: 10 }} />
+          <ActivityIndicator size="large" color="#E85D26" style={{ marginBottom: 10 }} />
           <Text style={styles.processingLabel}>{t("analyzingResponse") || "Analysing your response…"}</Text>
         </View>
       );
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 40,
     justifyContent: "flex-start",
-    backgroundColor: "#FAF9F6",
+    backgroundColor: "#F7F5F2",
   },
 
   progressContainer: {
@@ -215,30 +215,30 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   progressSegment: { flex: 1, height: 4, borderRadius: 2 },
-  progressActive:  { backgroundColor: "#E85D04" },
-  progressInactive:{ backgroundColor: "#E5E7EB" },
+  progressActive:  { backgroundColor: "#E85D26" },
+  progressInactive:{ backgroundColor: "rgba(26,26,46,0.12)" },
 
   title: {
     fontSize: 30,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 15,
-    color: "#6B7280",
+    color: "#6B6B80",
     marginBottom: 24,
   },
 
   input: {
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     borderRadius: 14,
     padding: 16,
     fontSize: 17,
     marginBottom: 20,
     backgroundColor: "#fff",
-    color: "#111827",
+    color: "#1A1A2E",
   },
 
   /* VOICE */
@@ -249,16 +249,16 @@ const styles = StyleSheet.create({
   holdLabel: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 12,
   },
   hintText: {
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontSize: 13,
     marginTop: 8,
   },
   processingLabel: {
-    color: "#E85D04",
+    color: "#E85D26",
     fontWeight: "700",
     fontSize: 15,
   },
@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
   },
   actionRow:  { flexDirection: "row", gap: 10 },
   actionBtn:  { paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, alignItems: "center" },
-  playBtn:    { backgroundColor: "#2563EB" },
-  retakeBtn:  { backgroundColor: "#6B7280" },
+  playBtn:    { backgroundColor: "#E85D26" },
+  retakeBtn:  { backgroundColor: "#6B6B80" },
   submitBtn:  { backgroundColor: "#16A34A" },
   actionBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -290,11 +290,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 18,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
   },
   transcriptLabel: {
     fontWeight: "bold",
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontSize: 11,
     textTransform: "uppercase",
     marginBottom: 6,
@@ -314,30 +314,30 @@ const styles = StyleSheet.create({
   },
   optionChip: {
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     borderRadius: 30,
     paddingVertical: 10,
     paddingHorizontal: 16,
     backgroundColor: "#fff",
   },
   selectedChip: {
-    backgroundColor: "#FFF4ED",
-    borderColor: "#E85D04",
+    backgroundColor: "#FDF0EB",
+    borderColor: "#E85D26",
   },
-  optionText: { fontSize: 15, color: "#4B5563", fontWeight: "600" },
-  selectedText: { color: "#E85D04", fontWeight: "bold" },
+  optionText: { fontSize: 15, color: "#6B6B80", fontWeight: "600" },
+  selectedText: { color: "#E85D26", fontWeight: "bold" },
 
   /* CONTINUE */
   continueButton: {
-    backgroundColor: "#E85D04",
+    backgroundColor: "#E85D26",
     padding: 18,
     borderRadius: 14,
     alignItems: "center",
-    shadowColor: "#E85D04",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   continueText: { color: "#fff", fontSize: 17, fontWeight: "bold" },
 });

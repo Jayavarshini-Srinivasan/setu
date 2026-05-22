@@ -83,7 +83,7 @@ export default function ContactQuestionScreen({ navigation }) {
             ? (t("emailPlaceholder") || "e.g., candidate@example.com")
             : (t("phonePlaceholder") || "e.g., 9876543210")
         }
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor="#6B6B80"
         value={contactVal}
         onChangeText={setContactVal}
         keyboardType={isProfessional ? "email-address" : "phone-pad"}
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
-    color: "#E85D04",
+    color: "#E85D26",
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   prompt: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 12,
   },
   subtitle: {
@@ -127,13 +127,13 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     borderRadius: 16,
     padding: 18,
     fontSize: 18,
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 40,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F5F2",
   },
   button: {
     backgroundColor: "#000",

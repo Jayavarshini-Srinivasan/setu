@@ -305,7 +305,7 @@ const styles =
       padding: 24,
       paddingTop: 40,
       justifyContent: "flex-start",
-      backgroundColor: "#FAF9F6",
+      backgroundColor: "#F7F5F2",
     },
 
     progressContainer: {
@@ -321,11 +321,11 @@ const styles =
     },
 
     progressActive: {
-      backgroundColor: "#E85D04",
+      backgroundColor: "#E85D26",
     },
 
     progressInactive: {
-      backgroundColor: "#E5E7EB",
+      backgroundColor: "rgba(26,26,46,0.12)",
     },
 
     title: {

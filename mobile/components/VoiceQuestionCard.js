@@ -77,7 +77,7 @@ export default function VoiceQuestionCard({
     <View style={styles.voiceCenter}>
       <ActivityIndicator
         size="large"
-        color="#E85D04"
+        color="#E85D26"
         style={{ marginBottom: 14 }}
       />
       <Text style={styles.processingLabel}>
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 40,
     justifyContent: "flex-start",
-    backgroundColor: "#FAF9F6",
+    backgroundColor: "#F7F5F2",
   },
 
   progressContainer: {
@@ -299,18 +299,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   progressSegment: { flex: 1, height: 4, borderRadius: 2 },
-  progressActive:  { backgroundColor: "#E85D04" },
-  progressInactive:{ backgroundColor: "#E5E7EB" },
+  progressActive:  { backgroundColor: "#E85D26" },
+  progressInactive:{ backgroundColor: "rgba(26,26,46,0.12)" },
 
   title: {
     fontSize: 30,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 15,
-    color: "#6B7280",
+    color: "#6B6B80",
     marginBottom: 26,
     lineHeight: 22,
   },
@@ -322,11 +322,11 @@ const styles = StyleSheet.create({
   holdLabel: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 14,
   },
-  hintText: { color: "#9CA3AF", fontSize: 13, marginTop: 10 },
-  processingLabel: { color: "#E85D04", fontWeight: "700", fontSize: 15 },
+  hintText: { color: "#6B6B80", fontSize: 13, marginTop: 10 },
+  processingLabel: { color: "#E85D26", fontWeight: "700", fontSize: 15 },
 
   recordedBadge: {
     backgroundColor: "#F0FDF4",
@@ -346,8 +346,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     minWidth: 80,
   },
-  playBtn:    { backgroundColor: "#2563EB" },
-  retakeBtn:  { backgroundColor: "#6B7280" },
+  playBtn:    { backgroundColor: "#E85D26" },
+  retakeBtn:  { backgroundColor: "#6B6B80" },
   submitBtn:  { backgroundColor: "#16A34A" },
   actionIcon: { fontSize: 18, marginBottom: 3 },
   actionBtnText: { color: "#fff", fontWeight: "700", fontSize: 12 },
@@ -358,12 +358,12 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderWidth: 1.5,
-    borderColor: "#E85D04",
-    shadowColor: "#E85D04",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    borderColor: "#E85D26",
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   confirmedHeader: {
     flexDirection: "row",
@@ -375,19 +375,19 @@ const styles = StyleSheet.create({
   confirmedTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: "#6B6B80",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   confirmedValue: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 8,
   },
   confirmedTranscript: {
     fontSize: 13,
-    color: "#6B7280",
+    color: "#6B6B80",
     fontStyle: "italic",
     marginBottom: 16,
     lineHeight: 20,
@@ -408,8 +408,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  rejectBtn:  { backgroundColor: "#6B7280" },
-  acceptBtn:  { backgroundColor: "#E85D04" },
+  rejectBtn:  { backgroundColor: "#6B6B80" },
+  acceptBtn:  { backgroundColor: "#E85D26" },
   confirmedBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
   /* ── Options ── */
@@ -422,31 +422,31 @@ const styles = StyleSheet.create({
   optionChip: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 18,
-    elevation: 1,
+    elevation: 0,
   },
   selectedChip: {
-    backgroundColor: "#FFF4ED",
-    borderColor: "#E85D04",
+    backgroundColor: "#FDF0EB",
+    borderColor: "#E85D26",
   },
-  optionText: { fontSize: 15, color: "#4B5563", fontWeight: "600" },
-  selectedText: { color: "#E85D04", fontWeight: "bold" },
+  optionText: { fontSize: 15, color: "#6B6B80", fontWeight: "600" },
+  selectedText: { color: "#E85D26", fontWeight: "bold" },
 
   continueButton: {
-    backgroundColor: "#E85D04",
+    backgroundColor: "#E85D26",
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 4,
-    shadowColor: "#E85D04",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   continueText: { color: "#FFFFFF", fontSize: 17, fontWeight: "bold" },
 });

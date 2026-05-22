@@ -591,7 +591,7 @@ const styles =
 
     card: {
       backgroundColor:
-        "#F8FAFC",
+        "#F7F5F2",
 
       padding: 18,
 
@@ -617,7 +617,7 @@ const styles =
     link: {
       fontSize: 15,
 
-      color: "#2563EB",
+      color: "#E85D26",
 
       marginBottom: 8,
     },

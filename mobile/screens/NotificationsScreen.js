@@ -45,6 +45,13 @@ export default function NotificationsScreen({ navigation }) {
         snapshot.forEach((docSnap) => {
           list.push({ id: docSnap.id, ...docSnap.data() });
         });
+        
+        console.log("=== MOBILE NOTIFICATIONS DEBUG ===");
+        console.log(`Fetched ${list.length} notifications`);
+        if (list.length > 0) {
+          console.log("Latest notification:", JSON.stringify(list[0], null, 2));
+        }
+        
         setNotifications(list);
         setLoading(false);
       },
@@ -195,8 +202,8 @@ export default function NotificationsScreen({ navigation }) {
 
     // Dynamic Category Icons and Styles
     let icon = "🔔";
-    let iconBg = "#E5E7EB";
-    let iconColor = "#4B5563";
+    let iconBg = "rgba(26,26,46,0.12)";
+    let iconColor = "#6B6B80";
 
     switch (category) {
       case "shortlisted":
@@ -297,7 +304,7 @@ export default function NotificationsScreen({ navigation }) {
       {/* ── LIST OR STATES ── */}
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#E85D04" />
+          <ActivityIndicator size="large" color="#E85D26" />
         </View>
       ) : notifications.length === 0 ? (
         <View style={styles.centerContainer}>
@@ -325,7 +332,7 @@ export default function NotificationsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F5F2",
   },
   header: {
     flexDirection: "row",
@@ -335,17 +342,17 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: "rgba(26,26,46,0.12)",
     backgroundColor: "#FFFFFF",
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
   },
   headerSubtitle: {
     fontSize: 13,
-    color: "#E85D04",
+    color: "#E85D26",
     fontWeight: "600",
     marginTop: 2,
   },
@@ -359,7 +366,7 @@ const styles = StyleSheet.create({
   },
   markAllText: {
     fontSize: 12,
-    color: "#E85D04",
+    color: "#E85D26",
     fontWeight: "600",
   },
   listContainer: {
@@ -370,22 +377,22 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
     borderWidth: 1,
   },
   cardUnread: {
     backgroundColor: "#FFFFFF",
     borderColor: "#FFE5D9",
     borderLeftWidth: 4,
-    borderLeftColor: "#E85D04",
+    borderLeftColor: "#E85D26",
   },
   cardRead: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(26,26,46,0.12)",
   },
   iconContainer: {
     width: 46,
@@ -411,29 +418,29 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#4B5563",
+    color: "#6B6B80",
     flex: 1,
   },
   cardTitleUnread: {
     fontWeight: "700",
-    color: "#111827",
+    color: "#1A1A2E",
   },
   unreadBadgeDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#E85D04",
+    backgroundColor: "#E85D26",
     marginLeft: 6,
   },
   cardMessage: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#6B6B80",
     lineHeight: 18,
     marginBottom: 6,
   },
   cardTime: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: "#6B6B80",
     fontWeight: "500",
   },
   centerContainer: {
@@ -449,12 +456,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1A1A2E",
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#6B6B80",
     textAlign: "center",
     lineHeight: 20,
   },

@@ -382,7 +382,7 @@ const styles =
 
     card: {
       backgroundColor:
-        "#F8FAFC",
+        "#F7F5F2",
 
       padding: 18,
 
