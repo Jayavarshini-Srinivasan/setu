@@ -119,7 +119,54 @@ Requirements:
   const fallback = `Professional with ${totalYears} year${totalYears !== 1 ? "s" : ""} of experience in ${role} and skills in ${skills.slice(0, 4).join(", ")}.`;
   return safeGenerate(prompt, fallback);
 };
+const generateApplicantSummary = async (workerProfile, job) => {
+  const prompt = `
+You are an expert technical recruiter AI.
+Write ONE concise, professional sentence (max 15 words) summarizing why this candidate is a fit for this job based on their skills and experience. Do not mention missing skills.
+Candidate Role: ${workerProfile.role || workerProfile.jobRole || "Professional"}
+Candidate Skills: ${(workerProfile.skills || []).join(", ")}
+Candidate Experience: ${workerProfile.experience || 0} years
+Job Title: ${job.title}
+Job Required Skills: ${(job.requiredSkills || []).join(", ")}
+`;
+  const fallback = `A candidate with ${workerProfile.experience || 0} years of experience matching some required skills.`;
+  return safeGenerate(prompt, fallback);
+};
+
+const generateInsightsRecommendations = async (stats) => {
+  const prompt = `
+You are an expert HR Data Analyst. 
+Analyze the following recruiter pipeline stats and provide exactly 3 actionable insights or recommendations in a JSON array format (e.g. ["insight 1", "insight 2", "insight 3"]).
+Keep each insight under 15 words. Keep it professional.
+Stats:
+Total Pipeline: ${stats.totalApplicants}
+Professionals: ${stats.workerTypeCounts?.professional || 0}
+Blue Collar: ${stats.workerTypeCounts?.labour || 0}
+Top 3 Skills in Pipeline: ${stats.topSkills?.slice(0,3).map(s => s.skill).join(", ") || "None"}
+`;
+  const fallback = JSON.stringify([
+    "Review your job postings to attract more candidates.",
+    "Consider adjusting salary ranges if pipeline is slow.",
+    "Engage with top candidates quickly."
+  ]);
+  
+  try {
+    let result = await safeGenerate(prompt, fallback);
+    // Strip markdown formatting if Gemini returns ```json ... ```
+    if (result.startsWith("\`\`\`json")) {
+      result = result.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    }
+    const parsed = JSON.parse(result);
+    return Array.isArray(parsed) ? parsed : JSON.parse(fallback);
+  } catch(e) {
+    console.error("[aiService] Error parsing insights recommendations", e);
+    return JSON.parse(fallback);
+  }
+};
+
 module.exports = {
   generateMatchExplanation,
   generateProfessionalSummary,
+  generateApplicantSummary,
+  generateInsightsRecommendations,
 };

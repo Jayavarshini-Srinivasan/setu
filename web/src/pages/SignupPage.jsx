@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
+import API from "../services/api";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -18,26 +18,24 @@ export default function SignupPage() {
     try {
       setLoading(true);
       
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
+      // 1. Create User in Firebase Auth
+      await createUserWithEmailAndPassword(auth, email, password);
       
+      // 2. Call backend to create profile using Admin SDK (bypasses rules)
       const recruiterData = {
-        uid,
         role: "recruiter",
         companyName,
         contactName,
         email,
-        createdAt: new Date(),
-        updatedAt: new Date()
       };
       
-      await setDoc(doc(db, "users", uid), recruiterData);
-      await setDoc(doc(db, "recruiters", uid), recruiterData);
+      await API.post("/auth/onboard-recruiter", recruiterData);
       
-      navigate("/dashboard");
+      // Force a full reload to reset AuthContext state and cleanly load the dashboard
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("SIGNUP ERROR:", error);
-      alert(error.message || "Signup failed");
+      alert(error.response?.data?.error || error.message || "Signup failed");
     } finally {
       setLoading(false);
     }

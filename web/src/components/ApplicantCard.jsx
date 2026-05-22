@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
-import { formatStatus } from "../utils/formatters";
+import { formatStatus, formatExperience, formatSkills } from "../utils/formatters";
 import { APPLICATION_STATUS } from "../constants/applicationStatus";
 
 export default function ApplicantCard({ app, jobId, updatingId, updateStatus, formatDate }) {
