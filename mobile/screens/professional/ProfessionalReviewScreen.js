@@ -9,7 +9,7 @@ import {
 
 import {
   doc,
-  updateDoc,
+  setDoc,
 } from "firebase/firestore";
 
 import {
@@ -61,7 +61,7 @@ export default function ProfessionalReviewScreen({
         /*
           SAVE PROFILE
         */
-        await updateDoc(
+        await setDoc(
           userRef,
           {
 
@@ -110,7 +110,8 @@ export default function ProfessionalReviewScreen({
               transcriptHistory:
                 onboardingData.transcriptHistory,
             },
-          }
+          },
+          { merge: true }
         );
 
         /*

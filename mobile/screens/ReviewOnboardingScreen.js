@@ -11,7 +11,7 @@ import {
 
 import {
   doc,
-  updateDoc,
+  setDoc,
 } from "firebase/firestore";
 
 import {
@@ -56,7 +56,7 @@ export default function ReviewOnboardingScreen({
             uid
           );
 
-        await updateDoc(
+        await setDoc(
           userRef,
           {
 
@@ -105,7 +105,8 @@ export default function ReviewOnboardingScreen({
                 onboardingData
                   .transcriptHistory,
             },
-          }
+          },
+          { merge: true }
         );
 
         /*

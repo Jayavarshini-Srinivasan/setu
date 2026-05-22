@@ -1,6 +1,6 @@
 import {
   doc,
-  updateDoc,
+  setDoc,
 } from "firebase/firestore";
 
 import {
@@ -16,11 +16,11 @@ export const updateUserProfile =
         uid
       );
 
-      await updateDoc(userRef, {
+      await setDoc(userRef, {
         ...profileData,
 
         updatedAt: new Date(),
-      });
+      }, { merge: true });
 
       return true;
     } catch (error) {
