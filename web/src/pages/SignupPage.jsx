@@ -4,33 +4,24 @@ import { auth } from "../firebase";
 import { Link } from "react-router-dom";
 import API from "../services/api";
 
+const DOTS = 6;
+
 export default function SignupPage() {
-  
   const [contactName, setContactName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail]             = useState("");
+  const [phone, setPhone]             = useState("");
+  const [companyType, setCompanyType] = useState("Startup");
+  const [password, setPassword]       = useState("");
+  const [loading, setLoading]         = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      
-      // 1. Create User in Firebase Auth
       await createUserWithEmailAndPassword(auth, email, password);
-      
-      // 2. Call backend to create profile using Admin SDK (bypasses rules)
-      const recruiterData = {
-        role: "recruiter",
-        companyName,
-        contactName,
-        email,
-      };
-      
+      const recruiterData = { role: "recruiter", companyName, contactName, email };
       await API.post("/auth/onboard-recruiter", recruiterData);
-      
-      // Force a full reload to reset AuthContext state and cleanly load the dashboard
       window.location.href = "/dashboard";
     } catch (error) {
       console.error("SIGNUP ERROR:", error);
@@ -41,97 +32,103 @@ export default function SignupPage() {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 20 }}>
-      <div className="glass-card" style={{ width: '100%', maxWidth: 400, textAlign: 'left', borderTop: '4px solid var(--accent)', position: 'relative' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            width: '48px', 
-            height: '48px', 
-            borderRadius: '12px', 
-            background: 'var(--accent-bg)', 
-            border: '1px solid var(--accent-border)',
-            fontSize: '24px',
-            color: 'var(--accent)'
-          }}>
-            ✦
+    <div className="auth-shell">
+      {/* Top title */}
+      <div className="auth-top">
+        <h2>Recruiter Signup</h2>
+        <p>Auth · Web Dashboard</p>
+      </div>
+
+      {/* Split card */}
+      <div className="auth-card">
+        {/* Left dark panel */}
+        <div className="auth-left">
+          <div className="auth-left-icon">🧱</div>
+          <h2>Hire smarter with <span>AI-powered matching</span></h2>
+          <p>Access thousands of verified workers. Let AI find your perfect candidates.</p>
+          <div className="auth-features">
+            <div className="auth-feature">
+              <div className="auth-feature-dot">✓</div>
+              AI match explanations
+            </div>
+            <div className="auth-feature">
+              <div className="auth-feature-dot">✓</div>
+              Skill gap analytics
+            </div>
+            <div className="auth-feature">
+              <div className="auth-feature-dot">✓</div>
+              Multilingual candidates
+            </div>
           </div>
         </div>
 
-        <h1 style={{ fontSize: 24, fontWeight: 700, textAlign: 'center', marginBottom: 8 }}>Create Account</h1>
-        <p style={{ textAlign: 'center', color: 'var(--text)', fontSize: 14, marginBottom: 32 }}>Join as a Setu Recruiter</p>
-        
-        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-h)' }}>Full Name</label>
-            <input 
-              type="text" 
-              placeholder="Jaya Sharma" 
-              value={contactName} 
-              onChange={(e) => setContactName(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </div>
-          
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-h)' }}>Company Name</label>
-            <input 
-              type="text" 
-              placeholder="Acme Logistics" 
-              value={companyName} 
-              onChange={(e) => setCompanyName(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </div>
+        {/* Right form */}
+        <div className="auth-right">
+          <h1>Create recruiter account</h1>
+          <form onSubmit={handleSignup}>
+            <div className="auth-row">
+              <div className="auth-field">
+                <label>Full Name</label>
+                <input type="text" placeholder="Full name" value={contactName}
+                  onChange={e => setContactName(e.target.value)} required />
+              </div>
+              <div className="auth-field">
+                <label>Company Name</label>
+                <input type="text" placeholder="Company name" value={companyName}
+                  onChange={e => setCompanyName(e.target.value)} required />
+              </div>
+            </div>
+            <div className="auth-row">
+              <div className="auth-field">
+                <label>Business Email</label>
+                <input type="email" placeholder="Business email" value={email}
+                  onChange={e => setEmail(e.target.value)} required />
+              </div>
+              <div className="auth-field">
+                <label>Phone Number</label>
+                <input type="tel" placeholder="Phone number" value={phone}
+                  onChange={e => setPhone(e.target.value)} />
+              </div>
+            </div>
+            <div className="auth-field">
+              <label>Company Type</label>
+              <select value={companyType} onChange={e => setCompanyType(e.target.value)}>
+                <option>Startup</option>
+                <option>SME</option>
+                <option>Enterprise</option>
+                <option>MNC</option>
+              </select>
+            </div>
+            <div className="auth-field">
+              <label>Password</label>
+              <input type="password" placeholder="Minimum 8 characters" value={password}
+                onChange={e => setPassword(e.target.value)} required minLength={8} />
+            </div>
+            <button type="submit" disabled={loading} className="primary"
+              style={{ width:"100%", padding:"12px", fontSize:14, marginTop:8 }}>
+              {loading ? "Creating account..." : "Create Recruiter Account →"}
+            </button>
+            <p style={{ textAlign:"center", marginTop:16, fontSize:13, color:"#6B7280" }}>
+              Already have an account?{" "}
+              <Link to="/login" style={{ fontWeight:700, color:"#E85D04" }}>Sign in</Link>
+            </p>
+          </form>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-h)' }}>Work Email</label>
-            <input 
-              type="email" 
-              placeholder="jaya@acme.com" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
+          {/* Bottom pagination — inside auth-right, pinned to bottom */}
+          <div className="auth-bottom" style={{ marginTop:"auto", paddingTop:24 }}>
+            <div className="auth-dots">
+              {Array.from({ length: DOTS }).map((_, i) => (
+                <div key={i} className={`auth-dot${i === 0 ? " active" : ""}`} />
+              ))}
+            </div>
+            <div className="auth-nav">
+              <button className="secondary" style={{ padding:"8px 20px" }} disabled>← Prev</button>
+              <Link to="/login">
+                <button className="primary" style={{ padding:"8px 20px" }}>Next →</button>
+              </Link>
+            </div>
           </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-h)' }}>Password</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="primary"
-            style={{ 
-              width: '100%',
-              padding: '12px', 
-              fontSize: 14, 
-              fontWeight: 600,
-              marginTop: 8,
-              boxShadow: '0 4px 12px 0 rgba(232, 93, 4, 0.15)'
-            }}
-          >
-            {loading ? "Creating account..." : "Sign Up"}
-          </button>
-        </form>
-        
-        <p style={{ textAlign: 'center', marginTop: 32, fontSize: 13, color: 'var(--text)' }}>
-          Already have an account? <Link to="/login" style={{ fontWeight: 600 }}>Log in</Link>
-        </p>
+        </div>
       </div>
     </div>
   );

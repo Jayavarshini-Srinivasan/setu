@@ -1,13 +1,12 @@
 .loading-container {
   display: flex;
-
   flex-direction: column;
-
   justify-content: center;
-
   align-items: center;
-
   padding: 40px;
+  min-height: 400px;
+  height: 100%;
+  flex: 1;
 }
 
 .spinner {

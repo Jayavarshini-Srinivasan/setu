@@ -27,49 +27,64 @@ const createJob =
         salary,
         experienceRequired,
         description,
+        isDraft,
+        isActive,
       } = req.body;
+
+      const isDraftVal = isDraft === true;
 
       /*
         VALIDATION
       */
-      if (
-        !title ||
-        !workerCategory ||
-        !requiredSkills ||
-        !location ||
-        !salary ||
-        experienceRequired ===
-          undefined ||
-        !description
-      ) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Missing required fields",
-          });
-      }
+      if (isDraftVal) {
+        if (!title) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "Job title is required to save a draft",
+            });
+        }
+      } else {
+        if (
+          !title ||
+          !workerCategory ||
+          !requiredSkills ||
+          !location ||
+          !salary ||
+          experienceRequired ===
+            undefined ||
+          !description
+        ) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "Missing required fields",
+            });
+        }
 
-      /*
-        VALID CATEGORY
-      */
-      const validCategories =
-        [
-          "labour",
-          "professional",
-        ];
+        /*
+          VALID CATEGORY
+        */
+        const validCategories =
+          [
+            "labour",
+            "professional",
+          ];
 
-      if (
-        !validCategories.includes(
-          workerCategory
-        )
-      ) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Invalid worker category",
-          });
+        if (
+          !validCategories.includes(
+            workerCategory
+          )
+        ) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "Invalid worker category",
+            });
+        }
       }
 
       /*
@@ -95,16 +110,18 @@ const createJob =
           title:
             title.trim(),
 
-          workerCategory,
+          workerCategory: workerCategory || "professional",
 
           requiredSkills:
-            requiredSkills.map(
-              (skill) =>
-                skill.trim()
-            ),
+            Array.isArray(requiredSkills)
+              ? requiredSkills.map(
+                  (skill) =>
+                    skill.trim()
+                )
+              : [],
 
           location:
-            location.trim(),
+            (location || "").trim(),
 
           /*
             NUMERIC
@@ -112,18 +129,25 @@ const createJob =
           */
           salary:
             Number(
-              salary
+              salary || 0
             ),
 
           experienceRequired:
-            Number(
-              experienceRequired
-            ),
+            experienceRequired !== undefined
+              ? (isNaN(Number(experienceRequired))
+                  ? 0
+                  : Number(experienceRequired))
+              : 0,
 
           description:
-            description.trim(),
+            (description || "").trim(),
 
-          isActive: true,
+          isActive:
+            isActive !== undefined
+              ? isActive
+              : !isDraftVal,
+
+          isDraft: isDraftVal,
 
           createdAt:
             new Date(),
@@ -194,13 +218,26 @@ const getRecruiterJobs =
       /*
         FORMAT JOBS
       */
+      const appsSnapshot = await db
+        .collection("applications")
+        .where("recruiterId", "==", recruiterId)
+        .get();
+
+      const appCounts = {};
+      appsSnapshot.forEach(doc => {
+        const app = doc.data();
+        if (app.jobId) {
+          appCounts[app.jobId] = (appCounts[app.jobId] || 0) + 1;
+        }
+      });
+
       const jobs = [];
 
       snapshot.forEach(
         (doc) => {
-          jobs.push(
-            doc.data()
-          );
+          const job = doc.data();
+          job.applicantCount = appCounts[job.jobId] || 0;
+          jobs.push(job);
         }
       );
 
@@ -402,6 +439,8 @@ const updateJob =
         salary,
         experienceRequired,
         description,
+        isDraft,
+        isActive,
       } = req.body;
 
       /*
@@ -448,31 +487,27 @@ const updateJob =
       /*
         UPDATE DATA
       */
-      await jobRef.update({
-        title:
-          title.trim(),
+      const updateData = {};
+      if (title !== undefined) updateData.title = title.trim();
+      if (workerCategory !== undefined) updateData.workerCategory = workerCategory;
+      if (requiredSkills !== undefined) {
+        updateData.requiredSkills = Array.isArray(requiredSkills)
+          ? requiredSkills.map((s) => s.trim())
+          : [];
+      }
+      if (location !== undefined) updateData.location = location.trim();
+      if (salary !== undefined) updateData.salary = Number(salary || 0);
+      if (experienceRequired !== undefined) {
+        updateData.experienceRequired = isNaN(Number(experienceRequired))
+          ? 0
+          : Number(experienceRequired);
+      }
+      if (description !== undefined) updateData.description = description.trim();
+      if (isDraft !== undefined) updateData.isDraft = isDraft;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      updateData.updatedAt = new Date();
 
-        workerCategory,
-
-        requiredSkills,
-
-        location:
-          location.trim(),
-
-        salary:
-          Number(salary),
-
-        experienceRequired:
-          Number(
-            experienceRequired
-          ),
-
-        description:
-          description.trim(),
-
-        updatedAt:
-          new Date(),
-      });
+      await jobRef.update(updateData);
 
       res.status(200).json({
         message:
@@ -488,10 +523,53 @@ const updateJob =
     }
   };
 
+/*
+  DELETE JOB
+*/
+const deleteJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const recruiterId = req.user.uid;
+
+    const jobRef = db.collection("jobs").doc(jobId);
+    const jobDoc = await jobRef.get();
+
+    if (!jobDoc.exists) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const jobData = jobDoc.data();
+    if (jobData.recruiterId !== recruiterId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Delete job
+    await jobRef.delete();
+
+    // Delete all associated applications for this job
+    const appsSnapshot = await db
+      .collection("applications")
+      .where("jobId", "==", jobId)
+      .get();
+    
+    const batch = db.batch();
+    appsSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    res.status(200).json({ message: "Job and its applications deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Failed to delete job" });
+  }
+};
+
 module.exports = {
   createJob,
   getRecruiterJobs,
   toggleJobStatus,
   getSingleJob,
   updateJob,
+  deleteJob,
 };
