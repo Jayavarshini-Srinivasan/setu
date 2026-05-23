@@ -1,315 +1,139 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 
-import VoiceButton from "../components/VoiceButton";
-import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
+import OnboardingStepLayout, { onboardingStyles as os } from "../components/OnboardingStepLayout";
+import { COLORS } from "../constants/theme";
 
-const EXPERIENCE_OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"];
+const EXP_OPTIONS = [
+  { label: "No exp", value: 0 },
+  { label: "1-2 yr", value: 2 },
+  { label: "3-5 yr", value: 4 },
+  { label: "5+ yr", value: 6 },
+];
+
+const AVAILABILITY_OPTIONS = [
+  { label: "Full time", value: "full-time" },
+  { label: "Part time", value: "part-time" },
+  { label: "Contract", value: "contract" },
+];
+
+const WAGE_OPTIONS = [
+  { label: "< 300", value: "<300" },
+  { label: "300-600", value: "300-600" },
+  { label: "600-1000", value: "600-1000" },
+  { label: "1000+", value: "1000+" },
+];
 
 export default function ExperienceQuestionScreen({ navigation }) {
-
-  const {
-    onboardingData,
-    updateField,
-    addTranscript,
-  } = useOnboarding();
-  
+  const { onboardingData, updateField } = useOnboarding();
   const { t } = useI18n();
 
-  const [experience, setExperience] = useState(
-    onboardingData.experience?.toString() || ""
+  const [expBand, setExpBand] = useState(
+    EXP_OPTIONS.find((o) => o.value === Number(onboardingData.experience))?.label || "1-2 yr"
   );
+  const [availability, setAvailability] = useState(onboardingData.availability || "full-time");
+  const [wage, setWage] = useState(onboardingData.expectedWage || "300-600");
+  const [previousWork, setPreviousWork] = useState(onboardingData.previousWorkType || "");
 
-  /*
-    VOICE RECORDER
-  */
-  const {
-    voiceState,
-    transcript,
-    startRecording,
-    stopRecording,
-    playRecording,
-    retakeRecording,
-    submitRecording,
-  } = useVoiceRecorder({
-    onResult: ({ transcript: tx, extractedProfile }) => {
-      if (tx) addTranscript(tx);
-
-      const exp = extractedProfile?.experience;
-      if (exp !== undefined && exp !== null) {
-        setExperience(exp.toString());
-        updateField("experience", Number(exp));
-      }
-    },
-  });
-
-  /*
-    CONTINUE
-  */
   const handleContinue = () => {
-    if (!experience) {
-      Alert.alert("Required", "Please enter your years of experience.");
+    const expVal = EXP_OPTIONS.find((o) => o.label === expBand)?.value ?? 0;
+    if (!availability) {
+      Alert.alert("Required", "Please select your availability.");
       return;
     }
-    updateField("experience", Number(experience));
+
+    updateField("experience", expVal);
+    updateField("availability", availability);
+    updateField("expectedWage", wage);
+    if (previousWork.trim()) {
+      updateField("previousWorkType", previousWork.trim());
+    }
     navigation.navigate("LocationQuestion");
   };
 
-  /*
-    INLINE VOICE SECTION
-  */
-  const renderVoice = () => {
-
-    if (voiceState === VOICE_STATE.PROCESSING) {
-      return (
-        <View style={styles.voiceCenter}>
-          <ActivityIndicator size="large" color="#E85D04" style={{ marginBottom: 10 }} />
-          <Text style={styles.processingLabel}>{t("analyzingResponse") || "Analysing your response…"}</Text>
-        </View>
-      );
-    }
-
-    if (voiceState === VOICE_STATE.RECORDED) {
-      return (
-        <View style={styles.voiceCenter}>
-          <View style={styles.recordedBadge}>
-            <Text style={styles.recordedBadgeText}>🎙️  {t("recordingReady") || "Recording ready"}</Text>
-          </View>
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.actionBtn, styles.playBtn]} onPress={playRecording}>
-              <Text style={styles.actionBtnText}>▶  {t("play") || "Play"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.retakeBtn]} onPress={retakeRecording}>
-              <Text style={styles.actionBtnText}>🔄  {t("retake") || "Retake"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.submitBtn]} onPress={submitRecording}>
-              <Text style={styles.actionBtnText}>✅  {t("submit") || "Submit"}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.voiceCenter}>
-        <Text style={styles.holdLabel}>
-          {voiceState === VOICE_STATE.RECORDING
-            ? "🔴  " + (t("recordingReleaseToStop") || "Recording… release to stop")
-            : t("holdToSpeak") || "Hold to speak"}
-        </Text>
-        <VoiceButton
-          isRecording={voiceState === VOICE_STATE.RECORDING}
-          onPressIn={startRecording}
-          onPressOut={stopRecording}
-        />
-        {voiceState === VOICE_STATE.IDLE && (
-          <Text style={styles.hintText}>{t("pressAndHoldHint") || "Press and hold the button while talking"}</Text>
-        )}
-      </View>
-    );
-  };
-
   return (
-    <View style={styles.container}>
-
-      {/* PROGRESS BAR */}
-      <View style={styles.progressContainer}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.progressSegment,
-              i + 1 <= 3 ? styles.progressActive : styles.progressInactive,
-            ]}
-          />
+    <OnboardingStepLayout
+      navigation={navigation}
+      screenTitle="Experience (3/4)"
+      step={3}
+      title="Experience & Availability"
+      subtitle={t("experienceSubtitle") || "Tell us about your work history and preferences."}
+      onContinue={handleContinue}
+      variant="labour"
+    >
+      <Text style={os.label}>YEARS OF EXPERIENCE</Text>
+      <View style={os.chipRow}>
+        {EXP_OPTIONS.map((opt) => (
+          <TouchableOpacity
+            key={opt.label}
+            style={[os.chip, expBand === opt.label && os.chipSelectedLabour]}
+            onPress={() => {
+              setExpBand(opt.label);
+              updateField("experience", opt.value);
+            }}
+          >
+            <Text style={[os.chipText, expBand === opt.label && os.chipTextSelected]}>
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.title}>{t("howManyYears") || "How many years of experience do you have?"}</Text>
-      <Text style={styles.subtitle}>{t("experienceSubtitle") || "Type a number, tap a chip, or speak naturally."}</Text>
-
-      {/* TEXT INPUT */}
-      <TextInput
-        style={styles.input}
-        placeholder={t("experiencePlaceholder") || "e.g. 3"}
-        keyboardType="numeric"
-        value={experience}
-        onChangeText={setExperience}
-      />
-
-      {/* QUICK CHIPS */}
-      <View style={styles.chipsRow}>
-        {EXPERIENCE_OPTIONS.map((opt) => {
-          const isSelected = experience === opt;
-          return (
-            <TouchableOpacity
-              key={opt}
-              style={[styles.chip, isSelected && styles.chipSelected]}
-              onPress={() => {
-                setExperience(opt);
-                updateField("experience", Number(opt));
-              }}
-            >
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                {opt}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+      <Text style={os.label}>AVAILABILITY</Text>
+      <View style={os.chipRow}>
+        {AVAILABILITY_OPTIONS.map((opt) => (
+          <TouchableOpacity
+            key={opt.value}
+            style={[os.chip, availability === opt.value && os.chipSelectedLabour]}
+            onPress={() => setAvailability(opt.value)}
+          >
+            <Text style={[os.chipText, availability === opt.value && os.chipTextSelected]}>
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* VOICE */}
-      {renderVoice()}
+      <Text style={os.label}>EXPECTED DAILY WAGE (₹)</Text>
+      <View style={os.chipRow}>
+        {WAGE_OPTIONS.map((opt) => (
+          <TouchableOpacity
+            key={opt.value}
+            style={[os.chip, wage === opt.value && os.chipSelectedLabour]}
+            onPress={() => setWage(opt.value)}
+          >
+            <Text style={[os.chipText, wage === opt.value && os.chipTextSelected]}>
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      {/* TRANSCRIPT */}
-      {transcript ? (
-        <View style={styles.transcriptBox}>
-          <Text style={styles.transcriptLabel}>{t("transcript") || "Transcript"}</Text>
-          <Text style={styles.transcriptText}>{transcript}</Text>
-        </View>
-      ) : null}
-
-      {/* CONTINUE */}
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueText}>{t("continue") || "Continue"}</Text>
-      </TouchableOpacity>
-
-    </View>
+      <Text style={os.label}>PREVIOUS WORK TYPE</Text>
+      <TextInput
+        style={styles.textArea}
+        placeholder="e.g. Construction, domestic, factory..."
+        placeholderTextColor={COLORS.textLight}
+        value={previousWork}
+        onChangeText={setPreviousWork}
+        multiline
+      />
+    </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-
-  container: {
-    flex: 1,
-    padding: 24,
-    paddingTop: 40,
-    backgroundColor: "#FAF9F6",
-  },
-
-  progressContainer: { flexDirection: "row", gap: 8, marginBottom: 30 },
-  progressSegment:  { flex: 1, height: 4, borderRadius: 2 },
-  progressActive:   { backgroundColor: "#E85D04" },
-  progressInactive: { backgroundColor: "#E5E7EB" },
-
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: "#6B7280",
-    marginBottom: 22,
-  },
-
-  input: {
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+  textArea: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: 14,
     padding: 16,
-    fontSize: 22,
-    marginBottom: 18,
-    backgroundColor: "#fff",
-    color: "#111827",
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-
-  /* QUICK CHIPS */
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 22,
-  },
-  chip: {
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    borderRadius: 30,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: "#fff",
-  },
-  chipSelected: {
-    backgroundColor: "#FFF4ED",
-    borderColor: "#E85D04",
-  },
-  chipText: { fontSize: 14, color: "#4B5563", fontWeight: "600" },
-  chipTextSelected: { color: "#E85D04", fontWeight: "bold" },
-
-  /* VOICE */
-  voiceCenter: { alignItems: "center", marginBottom: 20 },
-  holdLabel: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 12,
+    color: COLORS.text,
+    minHeight: 80,
+    textAlignVertical: "top",
   },
-  hintText: { color: "#9CA3AF", fontSize: 13, marginTop: 8 },
-  processingLabel: { color: "#E85D04", fontWeight: "700", fontSize: 15 },
-  recordedBadge: {
-    backgroundColor: "#F0FDF4",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-  },
-  recordedBadgeText: { color: "#15803D", fontWeight: "700", fontSize: 14 },
-  actionRow: { flexDirection: "row", gap: 10 },
-  actionBtn: { paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, alignItems: "center" },
-  playBtn:   { backgroundColor: "#2563EB" },
-  retakeBtn: { backgroundColor: "#6B7280" },
-  submitBtn: { backgroundColor: "#16A34A" },
-  actionBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
-
-  /* TRANSCRIPT */
-  transcriptBox: {
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  transcriptLabel: {
-    fontWeight: "bold",
-    color: "#9CA3AF",
-    fontSize: 11,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-  transcriptText: {
-    fontSize: 15,
-    color: "#1F2937",
-    fontStyle: "italic",
-  },
-
-  /* CONTINUE */
-  continueButton: {
-    backgroundColor: "#E85D04",
-    padding: 18,
-    borderRadius: 14,
-    alignItems: "center",
-    shadowColor: "#E85D04",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-    marginTop: 4,
-  },
-  continueText: { color: "#fff", fontSize: 17, fontWeight: "bold" },
 });

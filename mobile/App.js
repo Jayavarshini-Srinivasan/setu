@@ -9,7 +9,7 @@ import {createBottomTabNavigator,} from "@react-navigation/bottom-tabs";
 
 import {useEffect,useState,} from "react";
 
-import {ActivityIndicator,View,} from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 
 import {doc,getDoc,} from "firebase/firestore";
 
@@ -24,6 +24,8 @@ import { I18nProvider } from "./context/I18nContext";
 import LanguageSelectionScreen from "./screens/LanguageSelectionScreen";
 
 import ResumePreviewScreen from "./screens/professional/ResumePreviewScreen";
+
+import { Ionicons } from "@expo/vector-icons";
 
 /*
   AUTH
@@ -74,6 +76,14 @@ import NotificationsScreen from "./screens/NotificationsScreen";
 import LearningPathScreen from "./screens/professional/LearningPathScreen";
 import SplashScreen from "./screens/SplashScreen";
 import ContactQuestionScreen from "./screens/ContactQuestionScreen";
+
+/*
+  NEW CUSTOM UI SCREENS
+*/
+import AppliedScreen from "./screens/AppliedScreen";
+import AIAnalysisScreen from "./screens/AIAnalysisScreen";
+import ApplySuccessScreen from "./screens/ApplySuccessScreen";
+
 /*
   MAIN APP
 */
@@ -90,33 +100,79 @@ const Tab =
   createBottomTabNavigator();
 
 /*
+  TAB STYLING FUNCTION
+*/
+const TAB_EMOJI = {
+  Home: "🏠",
+  Jobs: "🔍",
+  Applied: "📋",
+  Profile: "👤",
+};
+
+const getTabScreenOptions = ({ route }) => ({
+  tabBarIcon: ({ focused }) => (
+    <View style={{ alignItems: "center", justifyContent: "center", minWidth: 48 }}>
+      <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.55 }}>
+        {TAB_EMOJI[route.name] || "•"}
+      </Text>
+      {focused && (
+        <View
+          style={{
+            width: 28,
+            height: 3,
+            backgroundColor: "#E86332",
+            borderRadius: 2,
+            marginTop: 4,
+          }}
+        />
+      )}
+    </View>
+  ),
+  tabBarActiveTintColor: "#E86332",
+  tabBarInactiveTintColor: "#757E91",
+  tabBarLabelStyle: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  tabBarStyle: {
+    height: 64,
+    paddingBottom: 6,
+    paddingTop: 6,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E8E6E1",
+  },
+  headerShown: false,
+});
+
+/*
   APP TABS
 */
 function LabourTabs() {
 
   return (
 
-    <Tab.Navigator>
+    <Tab.Navigator screenOptions={getTabScreenOptions}>
 
       <Tab.Screen
         name="Home"
-        component={
-          HomeScreen
-        }
+        component={HomeScreen}
       />
 
       <Tab.Screen
-        name="Results"
-        component={
-          ResultsScreen
-        }
+        name="Jobs"
+        component={ResultsScreen}
+      />
+
+      <Tab.Screen
+        name="Applied"
+        component={AppliedScreen}
       />
 
       <Tab.Screen
         name="Profile"
-        component={
-          ProfileScreen
-        }
+        component={ProfileScreen}
       />
 
     </Tab.Navigator>
@@ -127,7 +183,7 @@ function ProfessionalTabs() {
 
   return (
 
-    <Tab.Navigator>
+    <Tab.Navigator screenOptions={getTabScreenOptions}>
 
       <Tab.Screen
         name="Home"
@@ -135,18 +191,13 @@ function ProfessionalTabs() {
       />
 
       <Tab.Screen
-        name="Results"
+        name="Jobs"
         component={ResultsScreen}
       />
 
       <Tab.Screen
-        name="Resume"
-        component={ResumePreviewScreen}
-      />
-
-      <Tab.Screen
-        name="Learning Path"
-        component={LearningPathScreen}
+        name="Applied"
+        component={AppliedScreen}
       />
 
       <Tab.Screen
@@ -174,6 +225,14 @@ function LabourApp() {
         component={NotificationsScreen}
         options={{ headerShown: true, title: "" }}
       />
+      <Stack.Screen
+        name="AIAnalysis"
+        component={AIAnalysisScreen}
+      />
+      <Stack.Screen
+        name="ApplySuccess"
+        component={ApplySuccessScreen}
+      />
     </Stack.Navigator>
   );
 }
@@ -196,13 +255,29 @@ function ProfessionalApp() {
       <Stack.Screen
         name="LearningPath"
         component={LearningPathScreen}
-        options={{ headerShown: true, title: "Career Intelligence" }}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Resume"
+        component={ResumePreviewScreen}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="Notifications"
         component={NotificationsScreen}
         options={{ headerShown: true, title: "" }}
+      />
+
+      <Stack.Screen
+        name="AIAnalysis"
+        component={AIAnalysisScreen}
+      />
+
+      <Stack.Screen
+        name="ApplySuccess"
+        component={ApplySuccessScreen}
       />
 
     </Stack.Navigator>

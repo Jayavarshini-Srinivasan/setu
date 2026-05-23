@@ -1,76 +1,74 @@
-import React from "react";
+import { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useI18n } from "../context/I18nContext";
 import { SUPPORTED_LANGUAGES } from "../constants/translations";
+import { COLORS, BORDER_RADIUS } from "../constants/theme";
 
-const FLAG_MAP = {
-  en: "🇬🇧",
-  hi: "🇮🇳",
-  ta: "🇮🇳",
-  mr: "🇮🇳",
-};
+const SUBTITLE =
+  "अपनी भाषा चुनें · உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்";
 
 export default function LanguageSelectionScreen({ navigation }) {
-
   const { language, changeLanguage, t } = useI18n();
+  const [selected, setSelected] = useState(language || "en");
 
-  const handleSelect = async (code) => {
+  const goToLogin = async (code) => {
+    setSelected(code);
     await changeLanguage(code);
     navigation.navigate("Login");
   };
 
+  const handleContinue = () => goToLogin(selected);
+
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-
-        {/* LOGO AREA */}
-        <View style={styles.logoArea}>
-          <Text style={styles.logo}>सेतु</Text>
-          <Text style={styles.logoEn}>SETU</Text>
-          <Text style={styles.tagline}>Your bridge to work</Text>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.iconBox}>
+          <Text style={styles.globeIcon}>🌐</Text>
         </View>
 
-        {/* HEADING */}
-        <Text style={styles.heading}>{t("chooseLanguage")}</Text>
-        <Text style={styles.subheading}>
-          {"Choose / चुनें / தேர்ந்தெடு / निवडा"}
-        </Text>
+        <Text style={styles.heading}>{t("chooseLanguage") || "Choose your language"}</Text>
+        <Text style={styles.subheading}>{SUBTITLE}</Text>
 
-        {/* LANGUAGE CARDS */}
-        <View style={styles.grid}>
+        <View style={styles.list}>
           {SUPPORTED_LANGUAGES.map((lang) => {
-            const isSelected = language === lang.code;
+            const isSelected = selected === lang.code;
             return (
               <TouchableOpacity
                 key={lang.code}
-                style={[styles.card, isSelected && styles.cardSelected]}
-                onPress={() => handleSelect(lang.code)}
-                activeOpacity={0.8}
+                style={[styles.langRow, isSelected && styles.langRowSelected]}
+                onPress={() => goToLogin(lang.code)}
+                activeOpacity={0.85}
               >
-                <Text style={styles.flag}>{FLAG_MAP[lang.code]}</Text>
-                <Text style={[styles.nativeLabel, isSelected && styles.nativeLabelSelected]}>
+                <Text style={[styles.langLabel, isSelected && styles.langLabelSelected]}>
                   {lang.nativeLabel}
                 </Text>
-                <Text style={[styles.label, isSelected && styles.labelSelected]}>
-                  {lang.label}
-                </Text>
                 {isSelected && (
-                  <View style={styles.checkBadge}>
-                    <Text style={styles.checkMark}>✓</Text>
-                  </View>
+                  <Ionicons name="checkmark-circle" size={22} color={COLORS.accent} />
                 )}
               </TouchableOpacity>
             );
           })}
         </View>
 
-      </View>
+        <TouchableOpacity
+          style={styles.continueBtn}
+          onPress={handleContinue}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.continueBtnText}>{t("continue") || "Continue"}</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -78,112 +76,81 @@ export default function LanguageSelectionScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#FAF9F6",
+    backgroundColor: COLORS.background,
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 24,
-    paddingTop: 40,
-    alignItems: "center",
+    paddingTop: 48,
+    paddingBottom: 32,
+    alignItems: "stretch",
+  },
+  iconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: "#F5E6E0",
     justifyContent: "center",
-  },
-  logoArea: {
     alignItems: "center",
-    marginBottom: 40,
+    alignSelf: "center",
+    marginBottom: 24,
   },
-  logo: {
-    fontSize: 48,
-    fontWeight: "bold",
-    color: "#E85D04",
-    letterSpacing: 2,
-  },
-  logoEn: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-    letterSpacing: 8,
-    marginTop: -4,
-  },
-  tagline: {
-    fontSize: 14,
-    color: "#9CA3AF",
-    marginTop: 6,
-    letterSpacing: 1,
+  globeIcon: {
+    fontSize: 28,
   },
   heading: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 8,
+    fontSize: 30,
+    fontWeight: "700",
+    color: COLORS.navy,
     textAlign: "center",
+    marginBottom: 10,
+    letterSpacing: -0.5,
   },
   subheading: {
     fontSize: 14,
-    color: "#9CA3AF",
-    marginBottom: 36,
+    color: COLORS.textSecondary,
     textAlign: "center",
+    marginBottom: 28,
+    lineHeight: 22,
+    paddingHorizontal: 8,
   },
-  grid: {
+  list: {
+    gap: 10,
+    marginBottom: 28,
+  },
+  langRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
-    justifyContent: "center",
-    width: "100%",
-  },
-  card: {
-    width: "44%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-    position: "relative",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
   },
-  cardSelected: {
-    borderColor: "#E85D04",
+  langRowSelected: {
     backgroundColor: "#FFF4ED",
+    borderColor: COLORS.accent,
+    borderWidth: 1.5,
   },
-  flag: {
-    fontSize: 36,
-    marginBottom: 8,
+  langLabel: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: COLORS.text,
   },
-  nativeLabel: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 4,
+  langLabelSelected: {
+    color: COLORS.accent,
   },
-  nativeLabelSelected: {
-    color: "#E85D04",
-  },
-  label: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    fontWeight: "500",
-  },
-  labelSelected: {
-    color: "#E85D04",
-  },
-  checkBadge: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "#E85D04",
+  continueBtn: {
+    backgroundColor: COLORS.accent,
+    paddingVertical: 18,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: "center",
-    justifyContent: "center",
   },
-  checkMark: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
+  continueBtnText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });
