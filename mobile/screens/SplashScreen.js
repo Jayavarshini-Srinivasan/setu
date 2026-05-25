@@ -6,10 +6,12 @@ import {
   Easing,
 } from "react-native";
 import { useEffect, useRef } from "react";
-import { setuTokens } from "../constants/theme";
+import { useI18n } from "../context/I18nContext";
 
 export default function SplashScreen() {
-  const scale = useRef(new Animated.Value(0.8)).current;
+  const { t } = useI18n();
+
+  const scale   = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -50,6 +52,11 @@ export default function SplashScreen() {
           <Text style={styles.loadingText}>Loading your experience...</Text>
         </View>
       </Animated.View>
+
+      <Animated.Text style={[styles.tagline, { opacity }]}>
+        {t("tagline") || "Your bridge to better employment"}
+      </Animated.Text>
+
     </View>
   );
 }

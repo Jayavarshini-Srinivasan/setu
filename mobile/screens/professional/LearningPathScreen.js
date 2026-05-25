@@ -6,48 +6,41 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 import API from "../../services/api";
 import { auth } from "../../services/firebase";
 import { useI18n } from "../../context/I18nContext";
+import { COLORS, BORDER_RADIUS, SHADOWS } from "../../constants/theme";
 
-
-const fmt = (n) => n?.toLocaleString("en-IN") ?? "–";
-
-const PHASE_COLORS = {
-  Foundation:   { bg: "#EFF6FF", text: "#1D4ED8", badge: "#FDF0EB" },
-  "Core Growth":{ bg: "#F0FDF4", text: "#15803D", badge: "#BBF7D0" },
-  Advanced:     { bg: "#FFF7ED", text: "#C2410C", badge: "#FED7AA" },
+const PRIORITY_STYLES = {
+  high: { label: "HIGH", bg: "#FCE7F3", text: "#9D174D" },
+  medium: { label: "MEDIUM", bg: "#FFEDD5", text: "#C2410C" },
+  low: { label: "LOW", bg: "#F3F4F6", text: "#4B5563" },
 };
 
-function PhaseChip({ phase, t }) {
-  const colors = PHASE_COLORS[phase] || PHASE_COLORS.Foundation;
-  return (
-    <View style={[styles.phaseChip, { backgroundColor: colors.badge }]}>
-      <Text style={[styles.phaseChipText, { color: colors.text }]}>{t(phase) || phase}</Text>
-    </View>
-  );
-}
-
-function ScoreBar({ value, max = 100, color = "#E85D26" }) {
-  const pct = Math.min(100, Math.max(0, (value / max) * 100));
-  return (
-    <View style={styles.barTrack}>
-      <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: color }]} />
-    </View>
-  );
+function getPriorityStyle(priority, index) {
+  if (priority === "high") return PRIORITY_STYLES.high;
+  if (priority === "medium") return PRIORITY_STYLES.medium;
+  if (index === 0) return PRIORITY_STYLES.high;
+  if (index === 1) return PRIORITY_STYLES.medium;
+  return PRIORITY_STYLES.low;
 }
 
 export default function LearningPathScreen({ route }) {
-
+  const navigation = useNavigation();
   const { matchContext } = route?.params || {};
   const { t, language } = useI18n();
 
-  const [loading, setLoading]   = useState(true);
-  const [plan,    setPlan]      = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState(null);
 
-  useEffect(() => { fetchPlan(); }, []);
+  useEffect(() => {
+    fetchPlan();
+  }, []);
 
   const fetchPlan = async () => {
     try {
@@ -63,7 +56,7 @@ export default function LearningPathScreen({ route }) {
       setPlan(response.data);
     } catch (err) {
       console.error("[LearningPathScreen]", err);
-      Alert.alert("Error", "Could not generate your career path. Please try again.");
+      Alert.alert(t("error") || "Error", t("couldNotGeneratePath") || "Could not generate your career path. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -72,7 +65,7 @@ export default function LearningPathScreen({ route }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#E85D26" />
+        <ActivityIndicator size="large" color={COLORS.accent} />
         <Text style={styles.loadingLabel}>{t("buildingRoadmap") || "Building your career roadmap…"}</Text>
       </View>
     );
@@ -81,7 +74,7 @@ export default function LearningPathScreen({ route }) {
   if (!plan) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>No career path data available.</Text>
+        <Text style={styles.emptyText}>{t("noCareerPathData") || "No career path data available."}</Text>
       </View>
     );
   }
@@ -100,492 +93,482 @@ export default function LearningPathScreen({ route }) {
     topJob,
   } = plan;
 
+  const boostPerGap = skillGaps?.length
+    ? Math.round(matchImprovementDelta / skillGaps.length)
+    : 5;
+
+  const getRoadmapStatus = (index) => {
+    if (index < 2) return "completed";
+    if (index === 2) return "current";
+    return "upcoming";
+  };
+
+  const formatCourseMeta = (item) => {
+    const weeks = item.estimatedWeeks || 1;
+    const hours = weeks * 4;
+    if (hours >= 4) return `Course · ${hours} hrs`;
+    return `Video · ${weeks * 45} min`;
+  };
+
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-
-      {/* ── HEADER ── */}
-      <View style={styles.headerBlock}>
-        <Text style={styles.headerLabel}>{t("careerIntelligenceTitle") || "Career Intelligence"}</Text>
-        <Text style={styles.headerRole}>{t(`roles.${role}`) || role}</Text>
-        <Text style={styles.headerTarget}>↗ Target: {t(`roles.${targetRole}`) || targetRole}</Text>
+    <View style={styles.root}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
+          <Ionicons name="arrow-back-outline" size={20} color={COLORS.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Learning Path</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      {/* ── CURRENT ASSESSMENT ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Current Assessment</Text>
-
-        <View style={styles.assessmentRow}>
-          <View style={styles.assessmentItem}>
-            <Text style={styles.assessmentValue}>{currentMatchScore}%</Text>
-            <Text style={styles.assessmentLabel}>Best Match</Text>
-          </View>
-          <View style={styles.assessmentItem}>
-            <Text style={styles.assessmentValue}>{currentAssessment?.skillCount || 0}</Text>
-            <Text style={styles.assessmentLabel}>Skills</Text>
-          </View>
-          <View style={styles.assessmentItem}>
-            <Text style={styles.assessmentValue}>{skillGaps?.length || 0}</Text>
-            <Text style={styles.assessmentLabel}>Skill Gaps</Text>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.roadmapBanner}>
+          <Text style={styles.roadmapBannerIcon}>🤖</Text>
+          <View style={styles.roadmapBannerText}>
+            <Text style={styles.roadmapBannerTitle}>Personalised roadmap</Text>
+            <Text style={styles.roadmapBannerSub}>
+              Complete these to boost your match score by +{matchImprovementDelta}%
+            </Text>
           </View>
         </View>
 
-        {topJob && (
-          <View style={styles.topJobCard}>
-            <Text style={styles.topJobLabel}>🏆  Top Matched Job</Text>
-            <Text style={styles.topJobTitle}>{topJob.title}</Text>
-            <Text style={styles.topJobMeta}>
-              {topJob.location} · ₹{fmt(topJob.salary)}/yr · {topJob.matchScore}% match
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* ── PROJECTIONS ── */}
-      <View style={styles.projectionCard}>
-
-        <Text style={styles.projectionTitle}>After completing this path</Text>
-
-        <View style={styles.projectionRow}>
-          <View style={styles.projectionItem}>
-            <Text style={styles.projectionValue}>+{matchImprovementDelta}%</Text>
-            <Text style={styles.projectionItemLabel}>Match Score</Text>
-          </View>
-          <View style={styles.projectionDivider} />
-          <View style={styles.projectionItem}>
-            <Text style={styles.projectionValue}>~{totalWeeks}w</Text>
-            <Text style={styles.projectionItemLabel}>Timeline</Text>
-          </View>
-          <View style={styles.projectionDivider} />
-          <View style={styles.projectionItem}>
-            <Text style={styles.projectionValue}>
-              ₹{fmt(Math.round((salary?.projectedEstimate || 0) / 100000))}L
-            </Text>
-            <Text style={styles.projectionItemLabel}>Est. CTC</Text>
-          </View>
-        </View>
-
-        {/* Match score bar */}
-        <View style={{ marginTop: 16 }}>
-          <View style={styles.barLabelRow}>
-            <Text style={styles.barLabelText}>Current  {currentMatchScore}%</Text>
-            <Text style={[styles.barLabelText, { color: "#16A34A" }]}>
-              Projected  {projectedMatchScore}%
-            </Text>
-          </View>
-          <View style={styles.barTrack}>
-            <View style={[styles.barFill, { width: `${currentMatchScore}%`, backgroundColor: "#6B6B80" }]} />
-          </View>
-          <View style={[styles.barTrack, { marginTop: 6 }]}>
-            <View style={[styles.barFill, { width: `${projectedMatchScore}%`, backgroundColor: "#16A34A" }]} />
-          </View>
-        </View>
-
-      </View>
-
-      {/* ── SKILL GAP ANALYSIS ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Skill Gap Analysis</Text>
-        <Text style={styles.sectionSubtitle}>
-          Derived from your real job match failures — not generic advice.
-        </Text>
-
-        <View style={styles.gapChips}>
-          {(skillGaps || []).map((skill, i) => (
-            <View key={i} style={styles.gapChip}>
-              <Text style={styles.gapChipText}>{t(`skills.${skill}`) || skill}</Text>
+        <View style={styles.assessmentCard}>
+          <Text style={styles.assessmentRole}>{t(`roles.${role}`) || role}</Text>
+          <Text style={styles.assessmentTarget}>↗ Target: {t(`roles.${targetRole}`) || targetRole}</Text>
+          <View style={styles.assessmentRow}>
+            <View style={styles.assessmentItem}>
+              <Text style={styles.assessmentValue}>{currentMatchScore}%</Text>
+              <Text style={styles.assessmentLabel}>Best Match</Text>
             </View>
-          ))}
+            <View style={styles.assessmentItem}>
+              <Text style={styles.assessmentValue}>{currentAssessment?.skillCount || 0}</Text>
+              <Text style={styles.assessmentLabel}>Skills</Text>
+            </View>
+            <View style={styles.assessmentItem}>
+              <Text style={styles.assessmentValue}>{skillGaps?.length || 0}</Text>
+              <Text style={styles.assessmentLabel}>Skill Gaps</Text>
+            </View>
+          </View>
+          {topJob && (
+            <Text style={styles.topJobMeta}>
+              🏆 {topJob.title} · {topJob.matchScore}% match
+            </Text>
+          )}
         </View>
-      </View>
 
-      {/* ── ROADMAP ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Career Roadmap</Text>
-        <Text style={styles.sectionSubtitle}>
-          {roadmap?.length || 0} steps · ~{totalWeeks} weeks total
-        </Text>
+        <View style={styles.projectionCard}>
+          <Text style={styles.projectionTitle}>After completing this path</Text>
+          <View style={styles.projectionRow}>
+            <Text style={styles.projectionValue}>+{matchImprovementDelta}%</Text>
+            <Text style={styles.projectionDivider}>·</Text>
+            <Text style={styles.projectionValue}>~{totalWeeks}w</Text>
+            <Text style={styles.projectionDivider}>·</Text>
+            <Text style={styles.projectionValue}>{projectedMatchScore}%</Text>
+          </View>
+          <Text style={styles.projectionSub}>
+            Projected match · {currentMatchScore}% → {projectedMatchScore}%
+          </Text>
+        </View>
 
-        {(roadmap || []).map((item, i) => {
-          const phaseColors =
-            PHASE_COLORS[item.phase] || PHASE_COLORS.Foundation;
-
+        <Text style={styles.sectionTitle}>Skill Gaps</Text>
+        {(skillGaps || []).map((skill, i) => {
+          const pStyle = getPriorityStyle(
+            roadmap?.[i]?.priority,
+            i
+          );
+          const boost = boostPerGap + (skillGaps.length - i - 1);
           return (
-            <View
-              key={i}
-              style={[
-                styles.roadmapCard,
-                { backgroundColor: phaseColors.bg, borderColor: phaseColors.badge },
-              ]}
-            >
-              {/* Timeline connector */}
-              {i < roadmap.length - 1 && <View style={styles.connector} />}
-
-              <View style={styles.roadmapHeader}>
-                <View style={styles.stepCircle}>
-                  <Text style={styles.stepNumber}>{item.step}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.roadmapTitleRow}>
-                    <Text style={styles.roadmapTitle}>
-                      {t("build") || "Build"} {t(`skills.${item.skill}`) || item.skill} {t("proficiency") || "Proficiency"}
-                    </Text>
-                    {item.priority === "high" && (
-                      <View style={styles.priorityBadge}>
-                        <Text style={styles.priorityBadgeText}>{t("critical") || "Critical"}</Text>
-                      </View>
-                    )}
-                  </View>
-                  <PhaseChip phase={item.phase} t={t} />
+            <View key={i} style={styles.gapCard}>
+              <View style={styles.gapCardLeft}>
+                <Text style={styles.gapSkillName}>{t(`skills.${skill}`) || skill}</Text>
+                <View style={[styles.priorityPill, { backgroundColor: pStyle.bg }]}>
+                  <Text style={[styles.priorityPillText, { color: pStyle.text }]}>
+                    {pStyle.label}
+                  </Text>
                 </View>
               </View>
-
-              <Text style={styles.roadmapDescription}>
-                {item.priority === "high" 
-                  ? t("learningPathDescHigh") || "Required by your top matched job — closing this gap directly improves your match score."
-                  : t("learningPathDescMedium") || "Present across multiple matched roles — adding this skill broadens your opportunities."}
-              </Text>
-
-              <View style={styles.roadmapMeta}>
-                <Text style={styles.roadmapMetaText}>
-                  ⏱  {item.estimatedWeeks} week{item.estimatedWeeks !== 1 ? "s" : ""}
-                </Text>
-                <Text style={styles.roadmapMetaText}>
-                  Total by end: {item.cumulativeWeeks}w
-                </Text>
-              </View>
-
+              <Text style={styles.gapBoost}>+{boost}%</Text>
             </View>
           );
         })}
-      </View>
 
-      {/* ── SALARY PROJECTION ── */}
-      <View style={styles.salaryCard}>
-        <Text style={styles.salaryTitle}>💰  Salary Projection (INR)</Text>
-        <View style={styles.salaryRow}>
-          <View style={styles.salaryItem}>
-            <Text style={styles.salaryValue}>
-              ₹{fmt(Math.round((salary?.currentEstimate || 0) / 100000))}L
-            </Text>
-            <Text style={styles.salaryLabel}>Current Est.</Text>
-          </View>
-          <Text style={styles.salaryArrow}>→</Text>
-          <View style={styles.salaryItem}>
-            <Text style={[styles.salaryValue, { color: "#16A34A" }]}>
-              ₹{fmt(Math.round((salary?.projectedEstimate || 0) / 100000))}L
-            </Text>
-            <Text style={styles.salaryLabel}>After Path</Text>
+        <Text style={styles.sectionTitle}>🗺️ Your Learning Roadmap</Text>
+
+        <View style={styles.timeline}>
+          {(roadmap || []).map((item, i) => {
+            const status = getRoadmapStatus(i);
+            const isLast = i === roadmap.length - 1;
+
+            return (
+              <View key={i} style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  {status === "completed" && (
+                    <View style={[styles.timelineNode, styles.nodeCompleted]}>
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                    </View>
+                  )}
+                  {status === "current" && (
+                    <View style={[styles.timelineNode, styles.nodeCurrent]}>
+                      <Text style={styles.nodeNumber}>{item.step}</Text>
+                    </View>
+                  )}
+                  {status === "upcoming" && (
+                    <View style={[styles.timelineNode, styles.nodeUpcoming]}>
+                      <Text style={styles.nodeNumberUpcoming}>{item.step}</Text>
+                    </View>
+                  )}
+                  {!isLast && (
+                    <View
+                      style={[
+                        styles.timelineLine,
+                        status === "completed" ? styles.lineCompleted : styles.lineDefault,
+                      ]}
+                    />
+                  )}
+                </View>
+
+                <View
+                  style={[
+                    styles.roadmapItemCard,
+                    status === "current" && styles.roadmapItemCardActive,
+                  ]}
+                >
+                  {status === "current" && (
+                    <View style={styles.nowBadge}>
+                      <Text style={styles.nowBadgeText}>NOW</Text>
+                    </View>
+                  )}
+                  <Text style={styles.roadmapItemTitle}>
+                    {item.title || `${t(`skills.${item.skill}`) || item.skill} Fundamentals`}
+                  </Text>
+                  <Text style={styles.roadmapItemMeta}>{formatCourseMeta(item)}</Text>
+                  <Text style={styles.roadmapItemDesc} numberOfLines={2}>
+                    {item.description}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={styles.salaryCard}>
+          <Text style={styles.salaryTitle}>💰  Salary Projection (INR)</Text>
+          <View style={styles.salaryRow}>
+            <View style={styles.salaryItem}>
+              <Text style={styles.salaryValue}>
+                ₹{Math.round((plan.salary?.currentEstimate || 0) / 100000)}L
+              </Text>
+              <Text style={styles.salaryLabel}>Current Est.</Text>
+            </View>
+            <Text style={styles.salaryArrow}>→</Text>
+            <View style={styles.salaryItem}>
+              <Text style={[styles.salaryValue, { color: COLORS.success }]}>
+                ₹{Math.round((plan.salary?.projectedEstimate || 0) / 100000)}L
+              </Text>
+              <Text style={styles.salaryLabel}>After Path</Text>
+            </View>
           </View>
         </View>
-      </View>
-
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-
+  root: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    backgroundColor: COLORS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BORDER_RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+  headerSpacer: { width: 40 },
   container: {
     padding: 20,
     paddingBottom: 48,
-    backgroundColor: "#F7F5F2",
   },
-
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
+    backgroundColor: COLORS.background,
   },
-
   loadingLabel: {
     marginTop: 16,
-    color: "#6B6B80",
+    color: COLORS.textSecondary,
     fontSize: 15,
   },
-
   emptyText: {
-    color: "#6B6B80",
+    color: COLORS.textSecondary,
     fontSize: 16,
   },
-
-  /* ── Header ── */
-  headerBlock: {
+  roadmapBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: BORDER_RADIUS.md,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
     marginBottom: 24,
-    paddingTop: 8,
+    gap: 12,
   },
-  headerLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#E85D26",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  headerRole: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1A1A2E",
-    marginBottom: 4,
-  },
-  headerTarget: {
+  roadmapBannerIcon: { fontSize: 20 },
+  roadmapBannerText: { flex: 1 },
+  roadmapBannerTitle: {
     fontSize: 15,
-    color: "#6B6B80",
-  },
-
-  /* ── Section ── */
-  section: {
-    marginBottom: 28,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1A1A2E",
+    fontWeight: "700",
+    color: COLORS.primary,
     marginBottom: 4,
   },
-  sectionSubtitle: {
-    fontSize: 13,
-    color: "#6B6B80",
+  roadmapBannerSub: {
+    fontSize: 14,
+    color: "#3B82F6",
+    lineHeight: 20,
+  },
+  assessmentCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  assessmentRole: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  assessmentTarget: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
     marginBottom: 14,
   },
-
-  /* ── Assessment ── */
   assessmentRow: {
     flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
+    gap: 8,
   },
   assessmentItem: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 16,
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(26,26,46,0.12)",
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    padding: 12,
   },
   assessmentValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1A1A2E",
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.text,
   },
   assessmentLabel: {
-    fontSize: 12,
-    color: "#6B6B80",
+    fontSize: 11,
+    color: COLORS.textSecondary,
     marginTop: 4,
-  },
-
-  topJobCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "rgba(26,26,46,0.12)",
-  },
-  topJobLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#E85D26",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  topJobTitle: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#1A1A2E",
-    marginBottom: 4,
   },
   topJobMeta: {
     fontSize: 13,
-    color: "#6B6B80",
+    color: COLORS.textSecondary,
+    marginTop: 12,
   },
-
-  /* ── Projection card ── */
   projectionCard: {
-    backgroundColor: "#1A1A2E",
-    borderRadius: 20,
-    padding: 22,
-    marginBottom: 28,
+    backgroundColor: COLORS.primaryDark,
+    borderRadius: BORDER_RADIUS.md,
+    padding: 16,
+    marginBottom: 24,
   },
   projectionTitle: {
-    color: "#6B6B80",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
+    color: "rgba(255,255,255,0.6)",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: 18,
+    marginBottom: 10,
   },
   projectionRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  projectionItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  projectionValue: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 4,
-  },
-  projectionItemLabel: {
-    fontSize: 12,
-    color: "#6B6B80",
-  },
-  projectionDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: "#374151",
-    marginHorizontal: 8,
-  },
-
-  /* Bar */
-  barLabelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  barLabelText: { fontSize: 12, color: "#6B6B80" },
-  barTrack: {
-    height: 6,
-    backgroundColor: "#374151",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-
-  /* ── Gap chips ── */
-  gapChips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    justifyContent: "center",
     gap: 10,
   },
-  gapChip: {
-    backgroundColor: "#FEF2F2",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: "#FECACA",
-  },
-  gapChipText: {
-    color: "#DC2626",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-
-  /* ── Roadmap ── */
-  roadmapCard: {
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    position: "relative",
-    overflow: "visible",
-  },
-  connector: {
-    position: "absolute",
-    left: 30,
-    bottom: -14,
-    width: 2,
-    height: 14,
-    backgroundColor: "rgba(26,26,46,0.12)",
-    zIndex: 1,
-  },
-  roadmapHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    marginBottom: 10,
-  },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#1A1A2E",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
-  },
-  stepNumber: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 13,
-  },
-  roadmapTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexWrap: "wrap",
-    marginBottom: 6,
-  },
-  roadmapTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1A1A2E",
-    flexShrink: 1,
-  },
-  priorityBadge: {
-    backgroundColor: "#DC2626",
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  priorityBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 10,
+  projectionValue: {
+    fontSize: 22,
     fontWeight: "700",
-    textTransform: "uppercase",
+    color: "#FFFFFF",
   },
-  phaseChip: {
+  projectionDivider: {
+    color: "rgba(255,255,255,0.4)",
+    fontSize: 18,
+  },
+  projectionSub: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.55)",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginBottom: 14,
+  },
+  gapCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
+  },
+  gapCardLeft: { flex: 1 },
+  gapSkillName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  priorityPill: {
     alignSelf: "flex-start",
-    borderRadius: 6,
-    paddingHorizontal: 8,
     paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 6,
   },
-  phaseChipText: {
+  priorityPillText: {
     fontSize: 11,
     fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
-  roadmapDescription: {
-    fontSize: 14,
-    color: "#374151",
-    lineHeight: 21,
-    marginBottom: 12,
+  gapBoost: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.success,
   },
-  roadmapMeta: {
+  timeline: { marginBottom: 24 },
+  timelineRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    marginBottom: 4,
   },
-  roadmapMetaText: {
+  timelineLeft: {
+    width: 36,
+    alignItems: "center",
+    marginRight: 12,
+  },
+  timelineNode: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  nodeCompleted: { backgroundColor: COLORS.success },
+  nodeCurrent: { backgroundColor: COLORS.primaryDark },
+  nodeUpcoming: { backgroundColor: "#D1D5DB" },
+  nodeNumber: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  nodeNumberUpcoming: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    minHeight: 40,
+    marginTop: 4,
+  },
+  lineCompleted: { backgroundColor: COLORS.success },
+  lineDefault: { backgroundColor: "#E5E7EB" },
+  roadmapItemCard: {
+    flex: 1,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    position: "relative",
+  },
+  roadmapItemCardActive: {
+    borderColor: COLORS.primaryDark,
+    borderWidth: 2,
+  },
+  nowBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: COLORS.primaryLight,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+  },
+  nowBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: COLORS.primary,
+  },
+  roadmapItemTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginBottom: 4,
+    paddingRight: 48,
+  },
+  roadmapItemMeta: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginBottom: 6,
+  },
+  roadmapItemDesc: {
     fontSize: 12,
-    color: "#6B6B80",
-    fontWeight: "600",
+    color: COLORS.textLight,
+    lineHeight: 17,
   },
-
-  /* ── Salary ── */
   salaryCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(26,26,46,0.12)",
-    marginBottom: 8,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   salaryTitle: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#1A1A2E",
+    fontWeight: "700",
+    color: COLORS.text,
     marginBottom: 16,
   },
   salaryRow: {
@@ -596,17 +579,17 @@ const styles = StyleSheet.create({
   salaryItem: { alignItems: "center" },
   salaryValue: {
     fontSize: 26,
-    fontWeight: "bold",
-    color: "#1A1A2E",
+    fontWeight: "700",
+    color: COLORS.text,
     marginBottom: 4,
   },
   salaryLabel: {
     fontSize: 12,
-    color: "#6B6B80",
+    color: COLORS.textSecondary,
   },
   salaryArrow: {
     fontSize: 22,
-    color: "#6B6B80",
+    color: COLORS.textLight,
     fontWeight: "bold",
   },
 });

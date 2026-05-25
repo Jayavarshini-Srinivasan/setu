@@ -1,16 +1,25 @@
+import { useState, useEffect } from "react";
+import { useRoute } from "@react-navigation/native";
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
+import { COLORS, BORDER_RADIUS } from "../constants/theme";
 
 import API from "../services/api";
 
 import { doc, getDoc } from "firebase/firestore";
+import { useAppliedJobs } from "../context/AppliedJobsContext";
+import { getJobId } from "../utils/jobId";
+import { submitJobApplication, ApplyJobError } from "../utils/applyToJob";
 import { auth, db } from "../services/firebase";
 import { useI18n } from "../context/I18nContext";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
@@ -22,6 +31,10 @@ import useAsync from "../hooks/useAsync";
 
 export default function ResultsScreen({ navigation }) {
   const { t, language } = useI18n();
+  const route = useRoute();
+  const insets = useSafeAreaInsets();
+  const topInset = insets.top + 12;
+  const { appliedCount, markApplied, isApplied } = useAppliedJobs();
 
   const loadMatches = async () => {
 
@@ -85,21 +98,34 @@ export default function ResultsScreen({ navigation }) {
   const isProfessional = data?.isProfessional || false;
   const workerProfile  = data?.workerProfile || {};
 
+  useEffect(() => {
+    const justApplied = route.params?.justAppliedJobId;
+    if (justApplied) {
+      markApplied(justApplied);
+      navigation.setParams({ justAppliedJobId: undefined });
+    }
+  }, [route.params?.justAppliedJobId, markApplied, navigation]);
+
   /* ── Apply to job ── */
   const handleApply = async (job) => {
+    const jobId = getJobId(job);
     try {
-      const token    = await auth.currentUser.getIdToken();
-      const workerId = auth.currentUser.uid;
-
-      await API.post(
-        "/apply",
-        { workerId, jobId: job.jobId, matchScore: job.matchScore },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      alert("Application submitted successfully");
+      const result = await submitJobApplication(job);
+      markApplied(result.jobId);
+      if (result.alreadyApplied) {
+        return;
+      }
+      navigation.navigate("ApplySuccess", {
+        jobTitle: job.title,
+        company: job.company,
+        jobId: result.jobId,
+      });
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      if (error instanceof ApplyJobError) {
+        alert(error.message);
+      } else {
+        alert(error?.message || "Could not apply to this job.");
+      }
     }
   };
 
@@ -130,38 +156,122 @@ export default function ResultsScreen({ navigation }) {
     navigation.navigate("LearningPath", { matchContext });
   };
 
+  /* ── State for local filter ── */
+  const [filterTab, setFilterTab] = useState("all");
+
+  const getFilteredJobs = () => {
+    if (filterTab === "best") {
+      return jobs.filter(j => j.matchScore >= 80);
+    }
+    if (filterTab === "near") {
+      // Sort jobs by proximity or mock distance
+      return [...jobs].sort((a, b) => {
+        const distA = a.distance || (((a.title || "").charCodeAt(0) || 5) % 10) + 2.5;
+        const distB = b.distance || (((b.title || "").charCodeAt(0) || 5) % 10) + 2.5;
+        return distA - distB;
+      });
+    }
+    return jobs;
+  };
+
+  const filteredJobs = getFilteredJobs();
+
   /* ── Render states ── */
-  if (loading) return <LoadingSpinner text={t("loadingJobs") || "Finding your matches…"} />;
-  if (error)   return <ErrorState message={getErrorMessage(error)} />;
+  if (loading) {
+    return (
+      <View style={[styles.container, { paddingTop: topInset }]}>
+        <LoadingSpinner text={t("loadingJobs") || "Finding your matches…"} />
+      </View>
+    );
+  }
+  if (error) {
+    return (
+      <View style={[styles.container, { paddingTop: topInset }]}>
+        <ErrorState message={getErrorMessage(error)} />
+      </View>
+    );
+  }
 
   if (jobs.length === 0) {
     return (
-      <EmptyState
-        title={t("noMatches") || "No Matches Found"}
-        description={t("noMatchesDesc") || "No matching jobs are available right now. Try updating your profile."}
-      />
+      <View style={[styles.container, { paddingTop: topInset }]}>
+        <EmptyState
+          title={t("noMatches") || "No Matches Found"}
+          description={t("noMatchesDesc") || "No matching jobs are available right now. Try updating your profile."}
+        />
+      </View>
     );
   }
 
   const renderItem = ({ item }) => (
-    <JobCard job={item} onApply={handleApply} />
+    <JobCard
+      job={item}
+      isApplied={isApplied(item)}
+      onAnalyze={(job) => {
+        navigation.navigate("AIAnalysis", {
+          selectedJobId: getJobId(job),
+          jobs,
+        });
+      }}
+    />
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: topInset }]}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate("Home")}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="arrow-back-outline" size={20} color={COLORS.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t("jobMatches") || "Job Matches"}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterTabsContainer}
+        style={styles.filterTabsScrollView}
+      >
+        <TouchableOpacity
+          style={[styles.filterTab, filterTab === "all" && styles.filterTabActive]}
+          onPress={() => setFilterTab("all")}
+        >
+          <Text style={[styles.filterTabText, filterTab === "all" && styles.filterTabTextActive]}>
+            {t("filterAll") || "All"} ({jobs.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterTab, filterTab === "best" && styles.filterTabActive]}
+          onPress={() => setFilterTab("best")}
+        >
+          <Text style={[styles.filterTabText, filterTab === "best" && styles.filterTabTextActive]}>
+            {t("filterBestMatch") || "Best Match"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterTab, filterTab === "near" && styles.filterTabActive]}
+          onPress={() => setFilterTab("near")}
+        >
+          <Text style={[styles.filterTabText, filterTab === "near" && styles.filterTabTextActive]}>
+            {t("filterNearMe") || "Near Me"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       <FlatList
-        data={jobs}
-        keyExtractor={(item, index) => `${item.jobId || item.id}-${index}`}
+        data={filteredJobs}
+        keyExtractor={(item, index) => `${getJobId(item)}-${index}`}
         renderItem={renderItem}
+        extraData={appliedCount}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <Text style={styles.header}>
-            {jobs.length} {t("matchesFound") || (jobs.length !== 1 ? "matches found" : "match found")}
-          </Text>
-        }
+        showsVerticalScrollIndicator={false}
         ListFooterComponent={
-
           /* ── Career Path CTA (professionals only) ── */
           isProfessional && jobs.length > 0 ? (
             <TouchableOpacity
@@ -180,60 +290,96 @@ export default function ResultsScreen({ navigation }) {
           ) : null
         }
       />
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: "#F4F6F8",
+    backgroundColor: COLORS.background,
   },
-
-  list: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-
   header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.background,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+  headerSpacer: { width: 40 },
+  filterTabsScrollView: {
+    flexGrow: 0,
+  },
+  filterTabsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  filterTab: {
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+  },
+  filterTabActive: {
+    backgroundColor: COLORS.accent,
+    borderColor: COLORS.accent,
+  },
+  filterTabText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B6B80",
-    marginBottom: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: COLORS.textSecondary,
   },
-
+  filterTabTextActive: {
+    color: "#FFFFFF",
+  },
+  list: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
   careerPathButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    backgroundColor: "#1A1A2E",
+    backgroundColor: COLORS.primaryDark,
     padding: 20,
-    borderRadius: 18,
+    borderRadius: BORDER_RADIUS.lg,
     marginTop: 12,
-    shadowColor: "transparent",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
   },
-
-  careerPathIcon: {
-    fontSize: 32,
-  },
-
+  careerPathIcon: { fontSize: 32 },
   careerPathTitle: {
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "bold",
     marginBottom: 3,
   },
-
   careerPathSubtitle: {
-    color: "#6B6B80",
+    color: "rgba(255,255,255,0.6)",
     fontSize: 13,
   },
 });

@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   segment: {
     flex: 1,
     height: 6,
-    borderRadius: BORDER_RADIUS.round,
+    borderRadius: 3,
     marginHorizontal: 2,
   },
   segmentActive: {

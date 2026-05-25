@@ -9,21 +9,25 @@ import {createBottomTabNavigator,} from "@react-navigation/bottom-tabs";
 
 import {useEffect,useState,} from "react";
 
-import {ActivityIndicator,View,} from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 
 import {doc,getDoc,} from "firebase/firestore";
 
 import {db,} from "./services/firebase";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AppliedJobsProvider } from "./context/AppliedJobsContext";
 
 import { OnboardingProvider, useOnboarding } from "./context/OnboardingContext";
 
-import { I18nProvider } from "./context/I18nContext";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { I18nProvider, useI18n } from "./context/I18nContext";
 
 import LanguageSelectionScreen from "./screens/LanguageSelectionScreen";
 
 import ResumePreviewScreen from "./screens/professional/ResumePreviewScreen";
+
+import { Ionicons } from "@expo/vector-icons";
 
 /*
   AUTH
@@ -74,6 +78,14 @@ import NotificationsScreen from "./screens/NotificationsScreen";
 import LearningPathScreen from "./screens/professional/LearningPathScreen";
 import SplashScreen from "./screens/SplashScreen";
 import ContactQuestionScreen from "./screens/ContactQuestionScreen";
+
+/*
+  NEW CUSTOM UI SCREENS
+*/
+import AppliedScreen from "./screens/AppliedScreen";
+import AIAnalysisScreen from "./screens/AIAnalysisScreen";
+import ApplySuccessScreen from "./screens/ApplySuccessScreen";
+
 /*
   MAIN APP
 */
@@ -90,70 +102,109 @@ const Tab =
   createBottomTabNavigator();
 
 /*
+  TAB STYLING FUNCTION
+*/
+const TAB_EMOJI = {
+  Home: "🏠",
+  Jobs: "🔍",
+  Applied: "📋",
+  Profile: "👤",
+};
+
+const getTabScreenOptions = ({ route }) => ({
+  tabBarIcon: ({ focused }) => (
+    <View style={{ alignItems: "center", justifyContent: "center", minWidth: 48 }}>
+      <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.55 }}>
+        {TAB_EMOJI[route.name] || "•"}
+      </Text>
+      {focused && (
+        <View
+          style={{
+            width: 28,
+            height: 3,
+            backgroundColor: "#E86332",
+            borderRadius: 2,
+            marginTop: 4,
+          }}
+        />
+      )}
+    </View>
+  ),
+  tabBarActiveTintColor: "#E86332",
+  tabBarInactiveTintColor: "#757E91",
+  tabBarLabelStyle: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  tabBarStyle: {
+    height: 64,
+    paddingBottom: 6,
+    paddingTop: 6,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E8E6E1",
+  },
+  headerShown: false,
+});
+
+/*
   APP TABS
 */
 function LabourTabs() {
+  const { t } = useI18n();
 
   return (
-
-    <Tab.Navigator>
-
+    <Tab.Navigator screenOptions={getTabScreenOptions}>
       <Tab.Screen
         name="Home"
-        component={
-          HomeScreen
-        }
+        component={HomeScreen}
+        options={{ tabBarLabel: t("tabs.home") || "Home" }}
       />
-
       <Tab.Screen
-        name="Results"
-        component={
-          ResultsScreen
-        }
+        name="Jobs"
+        component={ResultsScreen}
+        options={{ tabBarLabel: t("tabs.jobs") || "Jobs" }}
       />
-
+      <Tab.Screen
+        name="Applied"
+        component={AppliedScreen}
+        options={{ tabBarLabel: t("tabs.applied") || "Applied" }}
+      />
       <Tab.Screen
         name="Profile"
-        component={
-          ProfileScreen
-        }
+        component={ProfileScreen}
+        options={{ tabBarLabel: t("tabs.profile") || "Profile" }}
       />
-
     </Tab.Navigator>
   );
 }
 
 function ProfessionalTabs() {
+  const { t } = useI18n();
 
   return (
-
-    <Tab.Navigator>
-
+    <Tab.Navigator screenOptions={getTabScreenOptions}>
       <Tab.Screen
         name="Home"
         component={HomeScreen}
+        options={{ tabBarLabel: t("tabs.home") || "Home" }}
       />
-
       <Tab.Screen
-        name="Results"
+        name="Jobs"
         component={ResultsScreen}
+        options={{ tabBarLabel: t("tabs.jobs") || "Jobs" }}
       />
-
       <Tab.Screen
-        name="Resume"
-        component={ResumePreviewScreen}
+        name="Applied"
+        component={AppliedScreen}
+        options={{ tabBarLabel: t("tabs.applied") || "Applied" }}
       />
-
-      <Tab.Screen
-        name="Learning Path"
-        component={LearningPathScreen}
-      />
-
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
+        options={{ tabBarLabel: t("tabs.profile") || "Profile" }}
       />
-
     </Tab.Navigator>
   );
 }
@@ -173,6 +224,14 @@ function LabourApp() {
         name="Notifications"
         component={NotificationsScreen}
         options={{ headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="AIAnalysis"
+        component={AIAnalysisScreen}
+      />
+      <Stack.Screen
+        name="ApplySuccess"
+        component={ApplySuccessScreen}
       />
     </Stack.Navigator>
   );
@@ -196,13 +255,29 @@ function ProfessionalApp() {
       <Stack.Screen
         name="LearningPath"
         component={LearningPathScreen}
-        options={{ headerShown: true, title: "Career Intelligence" }}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Resume"
+        component={ResumePreviewScreen}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="Notifications"
         component={NotificationsScreen}
         options={{ headerShown: true, title: "" }}
+      />
+
+      <Stack.Screen
+        name="AIAnalysis"
+        component={AIAnalysisScreen}
+      />
+
+      <Stack.Screen
+        name="ApplySuccess"
+        component={ApplySuccessScreen}
       />
 
     </Stack.Navigator>
@@ -483,22 +558,18 @@ export default function App() {
 
   return (
 
-    <I18nProvider>
-
-      <AuthProvider>
-
-        <OnboardingProvider>
-
-          <NavigationContainer>
-
-            <AppNavigator />
-
-          </NavigationContainer>
-
-        </OnboardingProvider>
-
-      </AuthProvider>
-
-    </I18nProvider>
+    <SafeAreaProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <AppliedJobsProvider>
+            <OnboardingProvider>
+              <NavigationContainer>
+                <AppNavigator />
+              </NavigationContainer>
+            </OnboardingProvider>
+          </AppliedJobsProvider>
+        </AuthProvider>
+      </I18nProvider>
+    </SafeAreaProvider>
   );
 }

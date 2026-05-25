@@ -63,34 +63,47 @@ export const I18nProvider = ({ children }) => {
     TRANSLATE FUNCTION
     Usage: t("login") => "साइन इन करें" (in Hindi)
   */
-  const t = (key) => {
+  const applyVars = (text, vars) => {
+    if (typeof text !== "string" || !vars || typeof vars !== "object") return text;
+    return Object.entries(vars).reduce(
+      (acc, [varKey, varVal]) =>
+        acc.replace(new RegExp(`\\{${varKey}\\}`, "g"), String(varVal ?? "")),
+      text
+    );
+  };
+
+  const t = (key, vars) => {
     if (!key) return "";
-    
+
     const langStrings = translations[language] || translations.en;
-    
+
     // Support nested keys like "roles.auto_driver"
     if (key.includes(".")) {
       const keys = key.split(".");
-      
-      // Try finding in current language
+
       let result = langStrings;
       for (const k of keys) {
         result = getValueCaseInsensitive(result, k);
         if (result === undefined) break;
       }
-      if (result !== undefined) return result;
-      
-      // Fallback to English
+      if (result !== undefined) return applyVars(result, vars);
+
       let fallbackResult = translations.en;
       for (const k of keys) {
         fallbackResult = getValueCaseInsensitive(fallbackResult, k);
         if (fallbackResult === undefined) break;
       }
-      return fallbackResult !== undefined ? fallbackResult : undefined;
+      return applyVars(
+        fallbackResult !== undefined ? fallbackResult : undefined,
+        vars
+      );
     }
 
-    // Flat key fallback
-    return getValueCaseInsensitive(langStrings, key) || getValueCaseInsensitive(translations.en, key) || undefined;
+    const flat =
+      getValueCaseInsensitive(langStrings, key) ||
+      getValueCaseInsensitive(translations.en, key) ||
+      undefined;
+    return applyVars(flat, vars);
   };
 
   return (

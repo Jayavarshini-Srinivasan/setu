@@ -120,8 +120,8 @@ export default function ReviewOnboardingScreen({
         console.log(error);
 
         Alert.alert(
-          "Error",
-          "Failed to complete onboarding. Please try again."
+          t("error") || "Error",
+          t("failedOnboarding") || "Failed to complete onboarding. Please try again."
         );
       }
     };
