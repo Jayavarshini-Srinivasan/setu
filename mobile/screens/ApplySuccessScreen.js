@@ -10,73 +10,100 @@ import { useI18n } from "../context/I18nContext";
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
+function getTabsNavigatorName(navigation) {
+  let nav = navigation;
+  while (nav) {
+    const state = nav.getState?.();
+    if (state?.routeNames?.includes("ProfessionalTabs")) return "ProfessionalTabs";
+    if (state?.routeNames?.includes("LabourTabs")) return "LabourTabs";
+    const tabsRoute = state?.routes?.find(
+      (r) => r.name === "LabourTabs" || r.name === "ProfessionalTabs"
+    );
+    if (tabsRoute?.name) return tabsRoute.name;
+    nav = nav.getParent?.();
+  }
+  return "LabourTabs";
+}
+
 export default function ApplySuccessScreen({ route, navigation }) {
   const { t } = useI18n();
-  const { jobTitle = "Job Role", company = "Company" } = route.params || {};
+  const {
+    jobTitle = "Job Role",
+    company = "Company",
+    jobId = "",
+  } = route.params || {};
 
   const handleFindMoreJobs = () => {
-    // Navigates back to the main bottom tab 'Jobs'
-    navigation.navigate("Jobs");
+    const tabsName = getTabsNavigatorName(navigation);
+    navigation.navigate(tabsName, {
+      screen: "Jobs",
+      params: {
+        justAppliedJobId: jobId ? String(jobId) : undefined,
+      },
+    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="arrow-back-outline" size={20} color={COLORS.text} />
+        </TouchableOpacity>
+      </View>
       <View style={styles.content}>
-        {/* LARGE CIRCULAR CHECK ICON */}
         <View style={styles.outerCircle}>
           <View style={styles.innerBox}>
             <Ionicons name="checkmark" size={36} color="#FFFFFF" />
           </View>
         </View>
 
-        {/* TITLE */}
-        <Text style={styles.title}>Application Sent!</Text>
+        <Text style={styles.title}>{t("applySuccess.title") || "Application Sent!"}</Text>
 
-        {/* SUBTITLE */}
         <Text style={styles.subtitle}>
-          Your application for <Text style={styles.boldText}>{jobTitle}</Text> at{" "}
-          <Text style={styles.boldText}>{company}</Text> has been submitted.
+          {t("applySuccess.subtitle", { jobTitle, company }) ||
+            `Your application for ${jobTitle} at ${company} has been submitted.`}
         </Text>
 
-        {/* INFO CARD: WHAT HAPPENS NEXT */}
         <View style={styles.infoCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardHeaderIcon}>📋</Text>
-            <Text style={styles.cardTitle}>What happens next</Text>
+            <Text style={styles.cardTitle}>
+              {t("applySuccess.whatHappensNext") || "What happens next"}
+            </Text>
           </View>
 
-          {/* Step 1 */}
           <View style={styles.stepRow}>
             <View style={styles.numberCircle}>
               <Text style={styles.numberText}>1</Text>
             </View>
             <Text style={styles.stepText}>
-              Recruiter reviews your profile (1-3 days)
+              {t("applySuccess.step1") || "Recruiter reviews your profile (1-3 days)"}
             </Text>
           </View>
 
-          {/* Step 2 */}
           <View style={styles.stepRow}>
             <View style={styles.numberCircle}>
               <Text style={styles.numberText}>2</Text>
             </View>
             <Text style={styles.stepText}>
-              You'll get shortlisted / interviewed
+              {t("applySuccess.step2") || "You'll get shortlisted / interviewed"}
             </Text>
           </View>
 
-          {/* Step 3 */}
           <View style={styles.stepRow}>
             <View style={styles.numberCircle}>
               <Text style={styles.numberText}>3</Text>
             </View>
             <Text style={styles.stepText}>
-              Track status in 'Applied' tab
+              {t("applySuccess.step3") || "Track status in 'Applied' tab"}
             </Text>
           </View>
         </View>
 
-        {/* BUTTON: FIND MORE JOBS */}
         <TouchableOpacity
           style={styles.ctaButton}
           onPress={handleFindMoreJobs}
@@ -88,7 +115,25 @@ export default function ApplySuccessScreen({ route, navigation }) {
             color="#FFFFFF"
             style={{ marginRight: 8 }}
           />
-          <Text style={styles.ctaButtonText}>Find More Jobs</Text>
+          <Text style={styles.ctaButtonText}>
+            {t("applySuccess.findMoreJobs") || "Find More Jobs"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.85}
+        >
+          <Ionicons
+            name="arrow-back-sharp"
+            size={18}
+            color={COLORS.accent}
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.secondaryButtonText}>
+            {t("applySuccess.backToJobDetails") || "Back to Job Details"}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -119,10 +164,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 14,
-    backgroundColor: "#10B981", // Success green
+    backgroundColor: "#10B981",
     justifyContent: "center",
     alignItems: "center",
-    // Subtle shadow on check box
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -209,6 +253,40 @@ const styles = StyleSheet.create({
   },
   ctaButtonText: {
     color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: COLORS.background,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  secondaryButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: COLORS.accent,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.md,
+    width: "100%",
+    marginTop: 12,
+  },
+  secondaryButtonText: {
+    color: COLORS.accent,
     fontSize: 16,
     fontWeight: "700",
   },

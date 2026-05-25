@@ -7,45 +7,52 @@ import {
   ScrollView,
   FlatList,
   ActivityIndicator,
-  SafeAreaView,
 } from "react-native";
 import { collection, query, where, getDoc, doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
 import { useI18n } from "../context/I18nContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const STATUS_CONFIG = {
-  shortlisted: {
-    label: "SHORTLISTED",
-    color: "#137333",
-    bg: "#E6F4EA",
-  },
-  reviewed: {
-    label: "REVIEWED",
-    color: "#1A73E8",
-    bg: "#E8F0FE",
-  },
-  pending: {
-    label: "PENDING",
-    color: "#B06000",
-    bg: "#FEF7E0",
-  },
-  rejected: {
-    label: "REJECTED",
-    color: "#C5221F",
-    bg: "#FCE8E6",
-  },
+const STATUS_STYLES = {
+  shortlisted: { color: "#137333", bg: "#E6F4EA" },
+  reviewed: { color: "#1A73E8", bg: "#E8F0FE" },
+  pending: { color: "#B06000", bg: "#FEF7E0" },
+  rejected: { color: "#C5221F", bg: "#FCE8E6" },
 };
+
+const TAB_KEYS = ["all", "pending", "reviewed", "shortlisted", "rejected"];
 
 export default function AppliedScreen({ navigation }) {
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
+  const topInset = insets.top + 12;
   const [applications, setApplications] = useState([]);
   const [jobs, setJobs] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
-  const tabs = ["all", "pending", "reviewed", "shortlisted", "rejected"];
+  const getStatusLabel = (statusKey) => {
+    const map = {
+      shortlisted: t("applied.badgeShortlisted"),
+      reviewed: t("applied.badgeReviewed"),
+      pending: t("applied.badgePending"),
+      rejected: t("applied.badgeRejected"),
+    };
+    return map[statusKey] || statusKey.toUpperCase();
+  };
+
+  const getTabLabel = (tab) => {
+    const map = {
+      all: t("applied.statusAll"),
+      pending: t("applied.statusPending"),
+      reviewed: t("applied.statusReviewed"),
+      shortlisted: t("applied.statusShortlisted"),
+      rejected: t("applied.statusRejected"),
+    };
+    return map[tab] || tab;
+  };
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -117,15 +124,17 @@ export default function AppliedScreen({ navigation }) {
     const diffMs = new Date() - date;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Applied today";
-    if (diffDays === 1) return "Applied 1 day ago";
-    if (diffDays < 7) return `Applied ${diffDays} days ago`;
+    if (diffDays === 0) return t("applied.appliedToday") || "Applied today";
+    if (diffDays === 1) return t("applied.appliedYesterday") || "Applied 1 day ago";
+    if (diffDays < 7) {
+      return t("applied.appliedDaysAgo", { days: diffDays }) || `Applied ${diffDays} days ago`;
+    }
     if (diffDays < 30) {
       const weeks = Math.floor(diffDays / 7);
-      return `Applied ${weeks} week${weeks > 1 ? "s" : ""} ago`;
+      return t("applied.appliedWeeksAgo", { weeks }) || `Applied ${weeks} week(s) ago`;
     }
     const months = Math.floor(diffDays / 30);
-    return `Applied ${months} month${months > 1 ? "s" : ""} ago`;
+    return t("applied.appliedMonthsAgo", { months }) || `Applied ${months} month(s) ago`;
   };
 
   const filteredApps = applications.filter((app) => {
@@ -136,7 +145,7 @@ export default function AppliedScreen({ navigation }) {
   const renderApplicationItem = ({ item }) => {
     const job = jobs[item.jobId] || {};
     const statusKey = (item.status || "pending").toLowerCase();
-    const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending;
+    const config = STATUS_STYLES[statusKey] || STATUS_STYLES.pending;
 
     return (
       <View style={styles.card}>
@@ -147,7 +156,7 @@ export default function AppliedScreen({ navigation }) {
           </View>
           <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
             <Text style={[styles.statusText, { color: config.color }]}>
-              {config.label}
+              {getStatusLabel(statusKey)}
             </Text>
           </View>
         </View>
@@ -157,7 +166,9 @@ export default function AppliedScreen({ navigation }) {
         {statusKey === "shortlisted" && (
           <View style={styles.interviewAlert}>
             <Ionicons name="calendar-outline" size={16} color="#137333" style={{ marginRight: 6 }} />
-            <Text style={styles.interviewText}>Interview being scheduled</Text>
+            <Text style={styles.interviewText}>
+              {t("applied.interviewScheduling") || "Interview being scheduled"}
+            </Text>
           </View>
         )}
       </View>
@@ -166,19 +177,19 @@ export default function AppliedScreen({ navigation }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={[styles.container, { paddingTop: topInset }]}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={COLORS.accent} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: topInset }]}>
       {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Applications</Text>
+        <Text style={styles.headerTitle}>{t("applied.title") || "My Applications"}</Text>
       </View>
 
       {/* TABS CONTAINER */}
@@ -188,7 +199,7 @@ export default function AppliedScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsScroll}
         >
-          {tabs.map((tab) => (
+          {TAB_KEYS.map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[
@@ -204,7 +215,7 @@ export default function AppliedScreen({ navigation }) {
                   activeTab === tab && styles.tabTextActive,
                 ]}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {getTabLabel(tab)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -222,12 +233,13 @@ export default function AppliedScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Ionicons name="briefcase-outline" size={48} color={COLORS.textLight} />
             <Text style={styles.emptyText}>
-              No applications found for "{activeTab}"
+              {t("applied.emptyForTab", { tab: getTabLabel(activeTab) }) ||
+                `No applications found for "${getTabLabel(activeTab)}"`}
             </Text>
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -243,7 +255,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 4,
+    paddingBottom: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",

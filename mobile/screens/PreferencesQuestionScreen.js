@@ -18,7 +18,7 @@ export default function PreferencesQuestionScreen({ navigation }) {
 
   const handleContinue = () => {
     if (!preferredShift) {
-      Alert.alert("Required", "Please select your preferred shift.");
+      Alert.alert(t("required") || "Required", t("selectShiftError") || "Please select your preferred shift.");
       return;
     }
     updateField("preferredShift", preferredShift);

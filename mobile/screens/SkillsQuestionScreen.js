@@ -103,7 +103,7 @@ export default function SkillsQuestionScreen({ navigation }) {
 
   const handleContinue = () => {
     if (selectedSkills.length === 0) {
-      Alert.alert("Required", "Please select at least one skill.");
+      Alert.alert(t("required") || "Required", t("selectAtLeastOne") || "Please select at least one skill.");
       return;
     }
     navigation.navigate("ExperienceQuestion");

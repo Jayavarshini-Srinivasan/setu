@@ -63,9 +63,9 @@ export default function EducationScreen({ navigation }) {
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Education (3/4)"
+      screenTitle={t("educationOnboarding.title") || "Education"}
       step={3}
-      title="Education"
+      title={t("education") || "Education"}
       subtitle={
         t("educationOnboarding.subtitle") ||
         "Your educational background helps us match you better."

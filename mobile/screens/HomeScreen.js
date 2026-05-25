@@ -23,11 +23,11 @@ import API from "../services/api";
 import { useI18n } from "../context/I18nContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 
-function getGreeting() {
+function getGreeting(t) {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return t("greetingMorning") || "Good morning";
+  if (hour < 17) return t("greetingAfternoon") || "Good afternoon";
+  return t("greetingEvening") || "Good evening";
 }
 
 function getInitials(name) {
@@ -169,13 +169,7 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const getNotifTitle = () => {
-    const activeLang = profile?.profile?.language || profile?.language || "en";
-    if (activeLang === "hi") return "सूचनाएं";
-    if (activeLang === "ta") return "அறிவிப்புகள்";
-    if (activeLang === "mr") return "सूचना";
-    return "Notifications";
-  };
+  const getNotifTitle = () => t("notificationsTitle") || "Notifications";
 
   const fetchTopMatches = async (userData) => {
     try {
@@ -268,7 +262,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.proHeader}>
           <View style={styles.proHeaderTop}>
             <View style={styles.proHeaderLeft}>
-              <Text style={styles.proGreeting}>{getGreeting()}</Text>
+              <Text style={styles.proGreeting}>{getGreeting(t)}</Text>
               <Text style={styles.proName}>
                 {displayName} <Text style={styles.proEmoji}>💼</Text>
               </Text>
@@ -297,17 +291,17 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.statsCard}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{matchCount || topJobs.length}</Text>
-              <Text style={styles.statLabel}>Matches</Text>
+              <Text style={styles.statLabel}>{t("statMatches") || "Matches"}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{profilePct}%</Text>
-              <Text style={styles.statLabel}>Profile</Text>
+              <Text style={styles.statLabel}>{t("statProfile") || "Profile"}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{learningCount}</Text>
-              <Text style={styles.statLabel}>Learning</Text>
+              <Text style={styles.statLabel}>{t("statLearning") || "Learning"}</Text>
             </View>
           </View>
         </View>
@@ -338,14 +332,15 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.aiInsightBox}>
             <Text style={styles.aiInsightText}>
-              🤖 AI Insight: Add {topMissing} to boost match score by +{boostPct}%
+              {t("aiInsightTemplate", { skill: topMissing, pct: boostPct }) ||
+                `AI Insight: Add ${topMissing} to boost match score by +${boostPct}%`}
             </Text>
           </View>
 
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>🎯 Top Matches</Text>
+            <Text style={styles.sectionTitle}>🎯 {t("topMatches") || "Top Matches"}</Text>
             <TouchableOpacity onPress={() => navigation.navigate("Results")} activeOpacity={0.8}>
-              <Text style={styles.viewAllLink}>View all</Text>
+              <Text style={styles.viewAllLink}>{t("viewAll") || "View all"}</Text>
             </TouchableOpacity>
           </View>
 
@@ -427,7 +422,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.labourHeader}>
         <View style={styles.labourHeaderTop}>
           <View style={styles.labourHeaderLeft}>
-            <Text style={styles.labourGreeting}>{getGreeting()}</Text>
+            <Text style={styles.labourGreeting}>{getGreeting(t)}</Text>
             <Text style={styles.labourName}>
               {displayName} <Text style={styles.labourEmoji}>👷</Text>
             </Text>
@@ -451,7 +446,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.labourStatsCard}>
           <View style={styles.statItem}>
             <Text style={[styles.statValue, styles.labourStatValue]}>{matchCount || labourJobs.length}</Text>
-            <Text style={styles.labourStatLabel}>Matches</Text>
+            <Text style={styles.labourStatLabel}>{t("statMatches") || "Matches"}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
@@ -491,9 +486,9 @@ export default function HomeScreen({ navigation }) {
         )}
 
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>🎯 Jobs for you</Text>
+          <Text style={styles.sectionTitle}>🎯 {t("viewMatchedJobs") || "Jobs for you"}</Text>
           <TouchableOpacity onPress={() => navigation.navigate("Results")} activeOpacity={0.8}>
-            <Text style={styles.viewAllLink}>View all</Text>
+            <Text style={styles.viewAllLink}>{t("viewAll") || "View all"}</Text>
           </TouchableOpacity>
         </View>
 
@@ -536,7 +531,7 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.labourJobInfo}>
               <Text style={styles.labourJobTitle}>{t("viewMatchedJobs") || "View Matched Jobs"}</Text>
-              <Text style={styles.labourJobMeta}>{t("viewMatchedJobsSub") || "See opportunities near you"}</Text>
+              <Text style={styles.labourJobMeta}>{t("viewMatchedJobsSubLabour") || "See opportunities near you"}</Text>
             </View>
           </TouchableOpacity>
         )}

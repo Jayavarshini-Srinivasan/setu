@@ -56,7 +56,7 @@ export default function LearningPathScreen({ route }) {
       setPlan(response.data);
     } catch (err) {
       console.error("[LearningPathScreen]", err);
-      Alert.alert("Error", "Could not generate your career path. Please try again.");
+      Alert.alert(t("error") || "Error", t("couldNotGeneratePath") || "Could not generate your career path. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ export default function LearningPathScreen({ route }) {
   if (!plan) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>No career path data available.</Text>
+        <Text style={styles.emptyText}>{t("noCareerPathData") || "No career path data available."}</Text>
       </View>
     );
   }

@@ -57,16 +57,16 @@ export default function RoleQuestionScreen({ navigation }) {
 
   const handleContinue = () => {
     if (!fullName.trim() || !city.trim() || !phone.trim()) {
-      Alert.alert("Required", "Please fill in your name, city, and phone number.");
+      Alert.alert(t("required") || "Required", t("labourOnboarding.fillRequiredFields") || "Please fill in your name, city, and phone number.");
       return;
     }
     if (!selectedRole) {
-      Alert.alert("Required", "Please select or speak your role.");
+      Alert.alert(t("required") || "Required", t("labourOnboarding.selectRole") || "Please select or speak your role.");
       return;
     }
     const phoneDigits = phone.replace(/[^0-9]/g, "");
     if (phoneDigits.length < 10) {
-      Alert.alert("Required", "Please enter a valid 10-digit phone number.");
+      Alert.alert(t("required") || "Required", t("labourOnboarding.validPhone") || "Please enter a valid 10-digit phone number.");
       return;
     }
 

@@ -14,7 +14,6 @@ import { auth } from "../../services/firebase";
 import API from "../../services/api";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import { useI18n } from "../../context/I18nContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../../constants/theme";
 
 function getInitials(name) {
@@ -34,8 +33,6 @@ function getDisplayName(resume) {
 export default function ResumePreviewScreen() {
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState(null);
-  const { t } = useI18n();
-
   useEffect(() => {
     generateResume();
   }, []);
@@ -57,20 +54,210 @@ export default function ResumePreviewScreen() {
     if (!resume) return;
     try {
       const name = getDisplayName(resume);
-      const role = t("roles." + resume.role) || resume.role || "Professional";
+      const role = resume.role || "Professional";
+      const expYears =
+        resume.experience?.reduce((sum, e) => sum + (parseInt(e.years, 10) || 0), 0) ||
+        resume.experience?.[0]?.years ||
+        0;
+      const email = auth.currentUser?.email || "email@example.com";
+      const location = resume.location || "Mumbai";
+      const competencies = resume.skills || [];
+
       const htmlContent = `
         <html>
           <head>
+            <meta charset="utf-8">
             <style>
-              body { font-family: Helvetica, sans-serif; padding: 40px; color: #333; }
-              h1 { color: #2D7D53; }
-              h2 { color: #2D7D53; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+              body {
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                color: #1F2937;
+                background-color: #FFFFFF;
+                -webkit-print-color-adjust: exact;
+              }
+              .header {
+                background-color: #2D7D53;
+                color: #FFFFFF;
+                padding: 30px;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+              }
+              .header-title-container {
+                display: flex;
+                align-items: center;
+                margin-bottom: 15px;
+              }
+              .avatar {
+                width: 60px;
+                height: 60px;
+                border-radius: 30px;
+                background-color: rgba(255, 255, 255, 0.25);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                font-weight: bold;
+                color: #FFFFFF;
+                margin-right: 20px;
+              }
+              .name-role {
+                flex: 1;
+              }
+              .name {
+                font-size: 26px;
+                font-weight: bold;
+                margin: 0 0 5px 0;
+                color: #FFFFFF;
+              }
+              .role {
+                font-size: 16px;
+                color: rgba(255, 255, 255, 0.85);
+                margin: 0;
+              }
+              .contact-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px 20px;
+                font-size: 13px;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                padding-top: 12px;
+              }
+              .contact-item {
+                display: flex;
+                align-items: center;
+                color: rgba(255, 255, 255, 0.9);
+              }
+              .content {
+                padding: 30px;
+              }
+              .section-heading {
+                font-size: 13px;
+                font-weight: bold;
+                color: #2D7D53;
+                letter-spacing: 0.5px;
+                margin-top: 24px;
+                margin-bottom: 12px;
+                text-transform: uppercase;
+                border-bottom: 1px solid #E5E7EB;
+                padding-bottom: 4px;
+              }
+              .section-heading:first-of-type {
+                margin-top: 0;
+              }
+              .body-text {
+                font-size: 14px;
+                line-height: 1.6;
+                color: #374151;
+                margin: 0 0 12px 0;
+              }
+              .competency-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 12px;
+              }
+              .competency-item {
+                font-size: 14px;
+                color: #374151;
+                display: flex;
+                align-items: center;
+              }
+              .bullet {
+                color: #2D7D53;
+                margin-right: 8px;
+                font-size: 16px;
+                font-weight: bold;
+              }
+              .exp-block {
+                display: flex;
+                margin-bottom: 16px;
+              }
+              .exp-border {
+                width: 3px;
+                background-color: #2D7D53;
+                border-radius: 2px;
+                margin-right: 12px;
+                flex-shrink: 0;
+              }
+              .exp-content {
+                flex: 1;
+              }
+              .exp-title {
+                font-size: 15px;
+                font-weight: bold;
+                color: #1F2937;
+                margin: 0 0 4px 0;
+              }
+              .exp-meta {
+                font-size: 13px;
+                color: #6B7280;
+                margin: 0 0 6px 0;
+              }
+              .link-text {
+                font-size: 14px;
+                color: #3B82F6;
+                margin: 0 0 6px 0;
+                text-decoration: none;
+              }
             </style>
           </head>
           <body>
-            <h1>${name}</h1>
-            <h2>${role}</h2>
-            <p>${resume.summary || ""}</p>
+            <div class="header">
+              <div class="header-title-container">
+                <div class="avatar">${getInitials(name)}</div>
+                <div class="name-role">
+                  <h1 class="name">${name}</h1>
+                  <p class="role">${role}</p>
+                </div>
+              </div>
+              <div class="contact-grid">
+                <div class="contact-item">📞 +91 98765 43210</div>
+                <div class="contact-item">✉️ ${email}</div>
+                <div class="contact-item">📍 ${location}</div>
+                <div class="contact-item">📅 ${expYears} years</div>
+              </div>
+            </div>
+            <div class="content">
+              <div class="section-heading">PROFESSIONAL SUMMARY</div>
+              <p class="body-text">${resume.summary || ""}</p>
+              
+              <div class="section-heading">CORE COMPETENCIES</div>
+              <div class="competency-grid">
+                ${competencies.map(skill => `
+                  <div class="competency-item">
+                    <span class="bullet">•</span>
+                    <span>${skill}</span>
+                  </div>
+                `).join('')}
+              </div>
+              
+              <div class="section-heading">PROFESSIONAL EXPERIENCE</div>
+              ${(resume.experience || []).map(item => `
+                <div class="exp-block">
+                  <div class="exp-border"></div>
+                  <div class="exp-content">
+                    <h3 class="exp-title">${item.role || "Role"}</h3>
+                    <p class="exp-meta">${item.company || "Company"} · ${item.years || 0} years</p>
+                    ${item.description ? `<p class="body-text" style="margin-bottom: 0;">${item.description}</p>` : ""}
+                  </div>
+                </div>
+              `).join('')}
+              
+              <div class="section-heading">EDUCATION</div>
+              <p class="body-text">
+                ${resume.education?.degree || "Degree"}${resume.education?.institution ? ` — ${resume.education.institution}` : ""}
+              </p>
+              
+              <div class="section-heading">LANGUAGES</div>
+              <p class="body-text">Hindi, English, Marathi</p>
+              
+              ${(resume.links?.linkedin || resume.links?.github) ? `
+                <div class="section-heading">LINKS</div>
+                ${resume.links?.linkedin ? `<p class="body-text">LinkedIn: <a href="${resume.links.linkedin}" class="link-text">${resume.links.linkedin}</a></p>` : ""}
+                ${resume.links?.github ? `<p class="body-text">GitHub: <a href="${resume.links.github}" class="link-text">${resume.links.github}</a></p>` : ""}
+              ` : ""}
+            </div>
           </body>
         </html>
       `;
@@ -99,7 +286,7 @@ export default function ResumePreviewScreen() {
   }
 
   const displayName = getDisplayName(resume);
-  const roleLabel = t("roles." + resume.role) || resume.role || "Professional";
+  const roleLabel = resume.role || "Professional";
   const expYears =
     resume.experience?.reduce((sum, e) => sum + (parseInt(e.years, 10) || 0), 0) ||
     resume.experience?.[0]?.years ||
@@ -151,7 +338,7 @@ export default function ResumePreviewScreen() {
             {competencies.map((skill, i) => (
               <View key={i} style={styles.competencyItem}>
                 <Text style={styles.bullet}>•</Text>
-                <Text style={styles.competencyText}>{t("skills." + skill) || skill}</Text>
+                <Text style={styles.competencyText}>{skill}</Text>
               </View>
             ))}
           </View>

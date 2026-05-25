@@ -109,7 +109,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
       screenTitle="Skills (2/4)"
       step={2}
       badge="PROFESSIONAL"
-      title="Skills"
+      title={t("selectProfessionalSkills") || "Select your professional skills"}
       subtitle={
         t("skillsImproveMatching") ||
         "Select your strongest skills. AI will suggest more."

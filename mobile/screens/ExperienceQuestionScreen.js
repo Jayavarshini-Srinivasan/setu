@@ -40,7 +40,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
   const handleContinue = () => {
     const expVal = EXP_OPTIONS.find((o) => o.label === expBand)?.value ?? 0;
     if (!availability) {
-      Alert.alert("Required", "Please select your availability.");
+      Alert.alert(t("required") || "Required", t("selectAvailabilityError") || "Please select your availability.");
       return;
     }
 
@@ -56,9 +56,9 @@ export default function ExperienceQuestionScreen({ navigation }) {
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Experience (3/4)"
+      screenTitle={t("labourOnboarding.experienceStepScreen") || "Experience (3/4)"}
       step={3}
-      title="Experience & Availability"
+      title={t("labourOnboarding.experienceStepTitle") || "Experience & Availability"}
       subtitle={t("experienceSubtitle") || "Tell us about your work history and preferences."}
       onContinue={handleContinue}
       variant="labour"

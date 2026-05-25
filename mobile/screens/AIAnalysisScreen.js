@@ -9,10 +9,10 @@ import {
   SafeAreaView,
   Dimensions,
 } from "react-native";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { auth, db } from "../services/firebase";
-import API from "../services/api";
 import { useI18n } from "../context/I18nContext";
+import { useAppliedJobs } from "../context/AppliedJobsContext";
+import { getJobId } from "../utils/jobId";
+import { submitJobApplication, ApplyJobError } from "../utils/applyToJob";
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -23,38 +23,8 @@ export default function AIAnalysisScreen({ route, navigation }) {
   const { selectedJobId, jobs = [] } = route.params || {};
 
   const [activeTab, setActiveTab] = useState(selectedJobId || "all");
-  const [appliedJobs, setAppliedJobs] = useState(new Set());
   const [applyingJobId, setApplyingJobId] = useState(null);
-  const [checkingApplications, setCheckingApplications] = useState(true);
-
-  // Fetch already applied jobs for the current user
-  useEffect(() => {
-    const fetchApplied = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const q = query(
-          collection(db, "applications"),
-          where("workerId", "==", user.uid)
-        );
-        const querySnapshot = await getDocs(q);
-        const appliedSet = new Set();
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.jobId) {
-            appliedSet.add(data.jobId);
-          }
-        });
-        setAppliedJobs(appliedSet);
-      } catch (error) {
-        console.log("Error checking applications in AIAnalysisScreen:", error);
-      } finally {
-        setCheckingApplications(false);
-      }
-    };
-    fetchApplied();
-  }, []);
+  const { markApplied, isApplied } = useAppliedJobs();
 
   // Format salary text (e.g. "₹4.2L/yr" or "₹25K/mo")
   const formatSalaryText = (salary) => {
@@ -209,9 +179,9 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
   // Job Badge helper
   const getJobBadge = (score) => {
-    if (score >= 85) return { label: "Best Pick", bg: "#ECFDF5", text: "#10B981" };
-    if (score >= 70) return { label: "Good Fit", bg: "#EFF6FF", text: "#3B82F6" };
-    return { label: "Possible", bg: "#FEF3C7", text: "#D97706" };
+    if (score >= 85) return { label: t("aiAnalysis.bestPick") || "Best Pick", bg: "#ECFDF5", text: "#10B981" };
+    if (score >= 70) return { label: t("aiAnalysis.goodFit") || "Good Fit", bg: "#EFF6FF", text: "#3B82F6" };
+    return { label: t("aiAnalysis.possible") || "Possible", bg: "#FEF3C7", text: "#D97706" };
   };
 
   // Horizontal Tab Short Title Helper
@@ -231,42 +201,33 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
   // Apply Action handler
   const handleApplyNow = async (job) => {
-    if (appliedJobs.has(job.jobId || job.id)) return;
+    const jobId = getJobId(job);
+    if (!jobId) {
+      alert("This job cannot be applied to right now.");
+      return;
+    }
+    if (isApplied(job)) return;
 
-    setApplyingJobId(job.jobId || job.id);
+    setApplyingJobId(jobId);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error("Not authenticated");
+      const result = await submitJobApplication(job);
+      markApplied(result.jobId);
 
-      const token = await currentUser.getIdToken();
-      const workerId = currentUser.uid;
+      if (result.alreadyApplied) {
+        return;
+      }
 
-      await API.post(
-        "/apply",
-        {
-          workerId,
-          jobId: job.jobId || job.id,
-          matchScore: job.matchScore,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      // Successfully applied! Update local applied status
-      setAppliedJobs((prev) => {
-        const next = new Set(prev);
-        next.add(job.jobId || job.id);
-        return next;
-      });
-
-      // Navigate to ApplySuccessScreen
       navigation.navigate("ApplySuccess", {
         jobTitle: job.title,
         company: job.company,
+        jobId: result.jobId,
       });
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      if (error instanceof ApplyJobError) {
+        alert(error.message);
+      } else {
+        alert(error?.message || "Could not apply to this job.");
+      }
     } finally {
       setApplyingJobId(null);
     }
@@ -287,11 +248,14 @@ export default function AIAnalysisScreen({ route, navigation }) {
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>
-            {selectedJobId ? "Job Details" : "AI Match Analysis"}
+            {selectedJobId
+              ? (t("aiAnalysis.jobDetails") || "Job Details")
+              : (t("aiAnalysis.title") || "AI Match Analysis")}
           </Text>
           {selectedJobId ? null : (
             <Text style={styles.headerSubtitle}>
-              AI analysis of {jobs.length} matched jobs
+              {t("aiAnalysis.subtitle", { count: jobs.length }) ||
+                `AI analysis of ${jobs.length} matched jobs`}
             </Text>
           )}
         </View>
@@ -305,7 +269,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
             <Ionicons name="sparkles" size={18} color="#2563EB" style={{ marginRight: 6 }} />
-            <Text style={styles.summaryTitle}>AI Summary</Text>
+            <Text style={styles.summaryTitle}>{t("aiAnalysis.summaryTitle") || "AI Summary"}</Text>
           </View>
           <Text style={styles.summaryText}>{getAiSummaryText()}</Text>
         </View>
@@ -332,7 +296,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
                 activeTab === "all" && styles.tabTextActive,
               ]}
             >
-              All Jobs
+              {t("aiAnalysis.allJobs") || "All Jobs"}
             </Text>
           </TouchableOpacity>
           {jobs.map((job) => {
@@ -359,14 +323,14 @@ export default function AIAnalysisScreen({ route, navigation }) {
       {/* SCROLLABLE MAIN CONTENT */}
       <ScrollView contentContainerStyle={styles.contentScroll} showsVerticalScrollIndicator={false}>
         {visibleJobs.map((job, idx) => {
-          const jId = job.jobId || job.id;
+          const jId = getJobId(job);
           const badge = getJobBadge(job.matchScore);
           const payScore = getPayScore(job);
           const proximityScore = getProximityScore(job);
           const skillScore = getSkillScore(job);
           const growthScore = getGrowthScore(job);
           const stabilityScore = getStabilityScore(job);
-          const hasApplied = appliedJobs.has(jId);
+          const hasApplied = isApplied(job);
           const isApplying = applyingJobId === jId;
 
           return (
@@ -390,7 +354,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
               <View style={styles.progressContainer}>
                 {/* Pay */}
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>Pay</Text>
+                  <Text style={styles.progressLabel}>{t("aiAnalysis.payScore") || "Pay"}</Text>
                   <View style={styles.progressTrack}>
                     <View style={[styles.progressFill, { width: `${payScore}%`, backgroundColor: "#C2410C" }]} />
                   </View>
@@ -399,7 +363,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
                 {/* Proximity */}
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>Proximity</Text>
+                  <Text style={styles.progressLabel}>{t("aiAnalysis.proximityScore") || "Proximity"}</Text>
                   <View style={styles.progressTrack}>
                     <View style={[styles.progressFill, { width: `${proximityScore}%`, backgroundColor: "#2563EB" }]} />
                   </View>
@@ -408,7 +372,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
                 {/* Skill Match */}
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>Skill match</Text>
+                  <Text style={styles.progressLabel}>{t("aiAnalysis.skillScore") || "Skill match"}</Text>
                   <View style={styles.progressTrack}>
                     <View style={[styles.progressFill, { width: `${skillScore}%`, backgroundColor: "#059669" }]} />
                   </View>
@@ -417,7 +381,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
                 {/* Growth */}
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>Growth</Text>
+                  <Text style={styles.progressLabel}>{t("aiAnalysis.growthScore") || "Growth"}</Text>
                   <View style={styles.progressTrack}>
                     <View style={[styles.progressFill, { width: `${growthScore}%`, backgroundColor: "#7C3AED" }]} />
                   </View>
@@ -426,7 +390,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
                 {/* Stability */}
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>Stability</Text>
+                  <Text style={styles.progressLabel}>{t("aiAnalysis.stabilityScore") || "Stability"}</Text>
                   <View style={styles.progressTrack}>
                     <View style={[styles.progressFill, { width: `${stabilityScore}%`, backgroundColor: "#0D9488" }]} />
                   </View>
@@ -436,7 +400,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
               {/* PROS Section */}
               <View style={styles.prosContainer}>
-                <Text style={styles.sectionHeaderGreen}>PROS</Text>
+                <Text style={styles.sectionHeaderGreen}>{(t("aiAnalysis.pros") || "PROS").toUpperCase()}</Text>
                 {getJobPros(job).map((pro, index) => (
                   <View key={`pro-${index}`} style={styles.bulletRow}>
                     <Ionicons name="checkmark-sharp" size={15} color="#047857" style={styles.bulletIcon} />
@@ -447,7 +411,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
 
               {/* CONS Section */}
               <View style={styles.consContainer}>
-                <Text style={styles.sectionHeaderRed}>CONS</Text>
+                <Text style={styles.sectionHeaderRed}>{(t("aiAnalysis.cons") || "CONS").toUpperCase()}</Text>
                 {getJobCons(job).map((con, index) => (
                   <View key={`con-${index}`} style={styles.bulletRow}>
                     <Ionicons name="close-sharp" size={15} color="#B91C1C" style={styles.bulletIcon} />
@@ -463,7 +427,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
                   hasApplied && styles.appliedButton,
                 ]}
                 onPress={() => handleApplyNow(job)}
-                disabled={hasApplied || isApplying || checkingApplications}
+                disabled={hasApplied || isApplying}
                 activeOpacity={0.85}
               >
                 {isApplying ? (
@@ -477,7 +441,9 @@ export default function AIAnalysisScreen({ route, navigation }) {
                       style={{ marginRight: 8 }}
                     />
                     <Text style={styles.applyButtonText}>
-                      {hasApplied ? "Applied Successfully" : "Apply Now"}
+                      {hasApplied
+                        ? (t("aiAnalysis.applied") || "Applied")
+                        : (t("aiAnalysis.applyNow") || "Apply Now")}
                     </Text>
                   </>
                 )}

@@ -37,14 +37,14 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.logoIcon}>🧱</Text>
       </View>
 
-      <Text style={styles.title}>Welcome back</Text>
-      <Text style={styles.subtitle}>Sign in to find your next job.</Text>
+      <Text style={styles.title}>{t("welcomeBack") || "Welcome back"}</Text>
+      <Text style={styles.subtitle}>{t("signInSubtitle") || "Sign in to find your next job."}</Text>
 
       <View style={styles.inputRow}>
         <Text style={styles.inputIcon}>✉️</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email or phone"
+          placeholder={t("emailOrPhone") || "Email or phone"}
           placeholderTextColor={COLORS.textLight}
           value={email}
           onChangeText={setEmail}
@@ -56,7 +56,7 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.inputIcon}>🔒</Text>
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder={t("password") || "Password"}
           placeholderTextColor={COLORS.textLight}
           secureTextEntry
           value={password}
@@ -65,7 +65,7 @@ export default function LoginScreen({ navigation }) {
       </View>
 
       <TouchableOpacity style={styles.forgotBtn} activeOpacity={0.8}>
-        <Text style={styles.forgotText}>Forgot password?</Text>
+        <Text style={styles.forgotText}>{t("forgotPassword") || "Forgot password?"}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.primaryBtn} onPress={handleLogin} activeOpacity={0.85}>
@@ -75,14 +75,14 @@ export default function LoginScreen({ navigation }) {
       <View style={styles.voiceBox}>
         <Text style={styles.voiceIcon}>🎤</Text>
         <Text style={styles.voiceText}>
-          <Text style={styles.voiceAccent}>Voice sign in</Text>
-          {" "}available in Hindi, Tamil, Telugu
+          <Text style={styles.voiceAccent}>{t("voiceSignIn") || "Voice sign in"}</Text>
+          {" "}{t("voiceSignInLanguages") || "available in Hindi, Tamil, Marathi"}
         </Text>
       </View>
 
       <TouchableOpacity onPress={() => navigation.navigate("Signup")} style={styles.footerLink}>
         <Text style={styles.footerText}>
-          New here? <Text style={styles.footerAccent}>Create account</Text>
+          {t("noAccount") || "New here? Create account"}
         </Text>
       </TouchableOpacity>
     </ScrollView>

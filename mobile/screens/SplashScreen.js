@@ -7,8 +7,10 @@ import {
 } from "react-native";
 
 import { useEffect, useRef } from "react";
+import { useI18n } from "../context/I18nContext";
 
 export default function SplashScreen() {
+  const { t } = useI18n();
 
   const scale   = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -66,7 +68,7 @@ export default function SplashScreen() {
       </Animated.View>
 
       <Animated.Text style={[styles.tagline, { opacity }]}>
-        Your bridge to better employment
+        {t("tagline") || "Your bridge to better employment"}
       </Animated.Text>
 
     </View>

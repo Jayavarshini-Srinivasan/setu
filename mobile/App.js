@@ -16,10 +16,12 @@ import {doc,getDoc,} from "firebase/firestore";
 import {db,} from "./services/firebase";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AppliedJobsProvider } from "./context/AppliedJobsContext";
 
 import { OnboardingProvider, useOnboarding } from "./context/OnboardingContext";
 
-import { I18nProvider } from "./context/I18nContext";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { I18nProvider, useI18n } from "./context/I18nContext";
 
 import LanguageSelectionScreen from "./screens/LanguageSelectionScreen";
 
@@ -150,61 +152,59 @@ const getTabScreenOptions = ({ route }) => ({
   APP TABS
 */
 function LabourTabs() {
+  const { t } = useI18n();
 
   return (
-
     <Tab.Navigator screenOptions={getTabScreenOptions}>
-
       <Tab.Screen
         name="Home"
         component={HomeScreen}
+        options={{ tabBarLabel: t("tabs.home") || "Home" }}
       />
-
       <Tab.Screen
         name="Jobs"
         component={ResultsScreen}
+        options={{ tabBarLabel: t("tabs.jobs") || "Jobs" }}
       />
-
       <Tab.Screen
         name="Applied"
         component={AppliedScreen}
+        options={{ tabBarLabel: t("tabs.applied") || "Applied" }}
       />
-
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
+        options={{ tabBarLabel: t("tabs.profile") || "Profile" }}
       />
-
     </Tab.Navigator>
   );
 }
 
 function ProfessionalTabs() {
+  const { t } = useI18n();
 
   return (
-
     <Tab.Navigator screenOptions={getTabScreenOptions}>
-
       <Tab.Screen
         name="Home"
         component={HomeScreen}
+        options={{ tabBarLabel: t("tabs.home") || "Home" }}
       />
-
       <Tab.Screen
         name="Jobs"
         component={ResultsScreen}
+        options={{ tabBarLabel: t("tabs.jobs") || "Jobs" }}
       />
-
       <Tab.Screen
         name="Applied"
         component={AppliedScreen}
+        options={{ tabBarLabel: t("tabs.applied") || "Applied" }}
       />
-
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
+        options={{ tabBarLabel: t("tabs.profile") || "Profile" }}
       />
-
     </Tab.Navigator>
   );
 }
@@ -558,22 +558,18 @@ export default function App() {
 
   return (
 
-    <I18nProvider>
-
-      <AuthProvider>
-
-        <OnboardingProvider>
-
-          <NavigationContainer>
-
-            <AppNavigator />
-
-          </NavigationContainer>
-
-        </OnboardingProvider>
-
-      </AuthProvider>
-
-    </I18nProvider>
+    <SafeAreaProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <AppliedJobsProvider>
+            <OnboardingProvider>
+              <NavigationContainer>
+                <AppNavigator />
+              </NavigationContainer>
+            </OnboardingProvider>
+          </AppliedJobsProvider>
+        </AuthProvider>
+      </I18nProvider>
+    </SafeAreaProvider>
   );
 }

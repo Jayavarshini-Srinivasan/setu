@@ -8,10 +8,12 @@ import {
 } from "react-native";
 
 import { useOnboarding } from "../context/OnboardingContext";
+import { useI18n } from "../context/I18nContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 
 export default function UserTypeSelectionScreen({ navigation }) {
   const { updateField } = useOnboarding();
+  const { t } = useI18n();
 
   const handleLabour = () => {
     updateField("workerType", "labour");
@@ -29,8 +31,8 @@ export default function UserTypeSelectionScreen({ navigation }) {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>What kind of work are you looking for?</Text>
-        <Text style={styles.subtitle}>We'll personalise your experience.</Text>
+        <Text style={styles.title}>{t("workerType") || "What kind of work are you looking for?"}</Text>
+        <Text style={styles.subtitle}>{t("userTypeSubtitle") || "We'll personalise your experience."}</Text>
 
         <TouchableOpacity
           style={styles.labourCard}
@@ -38,12 +40,10 @@ export default function UserTypeSelectionScreen({ navigation }) {
           activeOpacity={0.9}
         >
           <Text style={styles.cardIcon}>🧱</Text>
-          <Text style={styles.cardTitle}>Labour Worker</Text>
-          <Text style={styles.cardDesc}>
-            Drivers, electricians, plumbers, masons, helpers, delivery workers and more.
-          </Text>
+          <Text style={styles.cardTitle}>{t("labourWorker") || "Blue Collar Worker"}</Text>
+          <Text style={styles.cardDesc}>{t("labourDesc") || "Drivers, electricians, plumbers, masons, helpers, delivery workers and more."}</Text>
           <View style={styles.badgeLabour}>
-            <Text style={styles.badgeLabourText}>ACCESSIBILITY-FIRST</Text>
+            <Text style={styles.badgeLabourText}>{t("accessibilityFirst") || "ACCESSIBILITY-FIRST"}</Text>
           </View>
         </TouchableOpacity>
 
@@ -53,12 +53,10 @@ export default function UserTypeSelectionScreen({ navigation }) {
           activeOpacity={0.9}
         >
           <Text style={styles.cardIcon}>💼</Text>
-          <Text style={styles.cardTitle}>Professional</Text>
-          <Text style={styles.cardDesc}>
-            Accountants, designers, developers, data analysts and office professionals.
-          </Text>
+          <Text style={styles.cardTitle}>{t("professional") || "Professional"}</Text>
+          <Text style={styles.cardDesc}>{t("professionalDesc") || "Accountants, designers, developers, data analysts and office professionals."}</Text>
           <View style={styles.badgePro}>
-            <Text style={styles.badgeProText}>CAREER INTELLIGENCE</Text>
+            <Text style={styles.badgeProText}>{t("careerIntelligence") || "CAREER INTELLIGENCE"}</Text>
           </View>
         </TouchableOpacity>
       </ScrollView>

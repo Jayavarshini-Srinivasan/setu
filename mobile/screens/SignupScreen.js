@@ -14,21 +14,15 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
 import { useI18n } from "../context/I18nContext";
+import { SUPPORTED_LANGUAGES } from "../constants/translations";
 import { COLORS, BORDER_RADIUS } from "../constants/theme";
-
-const LANGUAGES = [
-  { label: "English", code: "en" },
-  { label: "Hindi", code: "hi" },
-  { label: "Tamil", code: "ta" },
-  { label: "Marathi", code: "mr" },
-];
 
 export default function SignupScreen({ navigation }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [language, setLanguage] = useState("English");
+  const [language, setLanguage] = useState(SUPPORTED_LANGUAGES[0].nativeLabel);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const { t, changeLanguage } = useI18n();
@@ -39,7 +33,9 @@ export default function SignupScreen({ navigation }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const langCode = LANGUAGES.find((l) => l.label === language)?.code || "en";
+      const langCode =
+        SUPPORTED_LANGUAGES.find((l) => l.nativeLabel === language || l.label === language)?.code ||
+        "en";
 
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
@@ -70,14 +66,14 @@ export default function SignupScreen({ navigation }) {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>Create account</Text>
-      <Text style={styles.subtitle}>Join thousands finding work every day.</Text>
+      <Text style={styles.title}>{t("createAccount") || "Create account"}</Text>
+      <Text style={styles.subtitle}>{t("joinThousands") || "Join thousands finding work every day."}</Text>
 
       <View style={styles.inputRow}>
         <Text style={styles.inputIcon}>👤</Text>
         <TextInput
           style={styles.input}
-          placeholder="Full name"
+          placeholder={t("fullName") || "Full name"}
           placeholderTextColor={COLORS.textLight}
           value={fullName}
           onChangeText={setFullName}
@@ -88,7 +84,7 @@ export default function SignupScreen({ navigation }) {
         <Text style={styles.inputIcon}>✉️</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email address"
+          placeholder={t("email") || "Email address"}
           placeholderTextColor={COLORS.textLight}
           value={email}
           onChangeText={setEmail}
@@ -101,7 +97,7 @@ export default function SignupScreen({ navigation }) {
         <Text style={styles.inputIcon}>📱</Text>
         <TextInput
           style={styles.input}
-          placeholder="Phone number"
+          placeholder={t("phone") || "Phone number"}
           placeholderTextColor={COLORS.textLight}
           value={phone}
           onChangeText={setPhone}
@@ -113,7 +109,7 @@ export default function SignupScreen({ navigation }) {
         <Text style={styles.inputIcon}>🔒</Text>
         <TextInput
           style={styles.input}
-          placeholder="Create password"
+          placeholder={t("createPassword") || "Create password"}
           placeholderTextColor={COLORS.textLight}
           secureTextEntry
           value={password}
@@ -121,7 +117,7 @@ export default function SignupScreen({ navigation }) {
         />
       </View>
 
-      <Text style={styles.fieldLabel}>PREFERRED LANGUAGE</Text>
+      <Text style={styles.fieldLabel}>{(t("preferredLanguage") || "Preferred language").toUpperCase()}</Text>
       <TouchableOpacity
         style={styles.dropdown}
         onPress={() => setShowLangPicker(!showLangPicker)}
@@ -132,16 +128,16 @@ export default function SignupScreen({ navigation }) {
       </TouchableOpacity>
       {showLangPicker && (
         <View style={styles.pickerList}>
-          {LANGUAGES.map((lang) => (
+          {SUPPORTED_LANGUAGES.map((lang) => (
             <TouchableOpacity
               key={lang.code}
               style={styles.pickerItem}
               onPress={() => {
-                setLanguage(lang.label);
+                setLanguage(lang.nativeLabel);
                 setShowLangPicker(false);
               }}
             >
-              <Text style={styles.pickerItemText}>{lang.label}</Text>
+              <Text style={styles.pickerItemText}>{lang.nativeLabel}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -162,18 +158,18 @@ export default function SignupScreen({ navigation }) {
 
       <View style={styles.dividerRow}>
         <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>or</Text>
+        <Text style={styles.dividerText}>{t("orDivider") || "or"}</Text>
         <View style={styles.dividerLine} />
       </View>
 
       <TouchableOpacity style={styles.googleBtn} activeOpacity={0.85}>
         <Text style={styles.googleIcon}>G</Text>
-        <Text style={styles.googleText}>Continue with Google</Text>
+        <Text style={styles.googleText}>{t("continueGoogle") || "Continue with Google"}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Login")} style={styles.footerLink}>
         <Text style={styles.footerText}>
-          Already have an account? <Text style={styles.footerAccent}>Sign in</Text>
+          {t("hasAccount") || "Already have an account? Sign in"}
         </Text>
       </TouchableOpacity>
     </ScrollView>

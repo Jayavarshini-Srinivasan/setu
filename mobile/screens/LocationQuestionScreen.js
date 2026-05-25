@@ -60,7 +60,7 @@ export default function LocationQuestionScreen({ navigation }) {
 
   const handleContinue = () => {
     if (!location) {
-      Alert.alert("Required", "Please select or enter your city.");
+      Alert.alert(t("required") || "Required", t("enterLocation") || "Please select or enter location");
       return;
     }
     updateField("location", location);

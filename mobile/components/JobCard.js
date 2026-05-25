@@ -20,7 +20,7 @@ function scoreBg(score) {
   return "#F3F4F6";
 }
 
-export default function JobCard({ job, onAnalyze }) {
+export default function JobCard({ job, onAnalyze, isApplied = false }) {
   const { t } = useI18n();
 
   const matched = Array.isArray(job.analysis?.matchedSkills) ? job.analysis.matchedSkills : [];
@@ -41,11 +41,19 @@ export default function JobCard({ job, onAnalyze }) {
   const getDistanceText = () => {
     const jobKey = job.title || job.jobId || "";
     const distanceVal = job.distance || (((jobKey.charCodeAt(0) || 5) % 10) + 2.5).toFixed(1);
-    return `${distanceVal} km away`;
+    return t("kmAway", { distance: distanceVal }) || `${distanceVal} km away`;
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isApplied && styles.cardApplied]}>
+      {isApplied && (
+        <View style={styles.appliedBanner}>
+          <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+          <Text style={styles.appliedBadgeText}>
+            {t("aiAnalysis.applied") || "Applied"}
+          </Text>
+        </View>
+      )}
       <View style={styles.headerRow}>
         <View style={styles.infoCol}>
           <Text style={styles.title} numberOfLines={1}>{job.title}</Text>
@@ -69,7 +77,7 @@ export default function JobCard({ job, onAnalyze }) {
               {job.matchScore}%
             </Text>
           </View>
-          <Text style={styles.matchLabel}>match</Text>
+          <Text style={styles.matchLabel}>{t("matchLabel") || "match"}</Text>
         </View>
       </View>
 
@@ -77,7 +85,7 @@ export default function JobCard({ job, onAnalyze }) {
 
       {matched.length > 0 && (
         <View style={styles.skillSection}>
-          <Text style={styles.skillLabel}>You have:</Text>
+          <Text style={styles.skillLabel}>{t("youHave") || "You have:"}</Text>
           <View style={styles.skillRow}>
             {matched.slice(0, 3).map((skill, index) => (
               <View key={`matched-${index}`} style={styles.skillChipMatched}>
@@ -90,7 +98,7 @@ export default function JobCard({ job, onAnalyze }) {
 
       {missing.length > 0 && (
         <View style={styles.skillSection}>
-          <Text style={styles.skillLabel}>Missing:</Text>
+          <Text style={styles.skillLabel}>{t("missingLabel") || "Missing:"}</Text>
           <View style={styles.skillRow}>
             {missing.slice(0, 3).map((skill, index) => (
               <View key={`missing-${index}`} style={styles.skillChipMissing}>
@@ -113,7 +121,7 @@ export default function JobCard({ job, onAnalyze }) {
           activeOpacity={0.8}
         >
           <Ionicons name="hardware-chip-outline" size={16} color={COLORS.accent} style={{ marginRight: 6 }} />
-          <Text style={styles.analyzeButtonText}>Analyze with AI</Text>
+          <Text style={styles.analyzeButtonText}>{t("analyzeWithAI") || "Analyze with AI"}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -129,6 +137,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     ...SHADOWS.card,
+  },
+  cardApplied: {
+    borderWidth: 2.5,
+    borderColor: "#16A34A",
+    backgroundColor: "#F0FDF4",
+  },
+  appliedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: "#16A34A",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  appliedBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
   },
   headerRow: {
     flexDirection: "row",
