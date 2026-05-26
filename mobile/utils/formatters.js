@@ -62,11 +62,15 @@ export function formatSkills(
   FORMAT SALARY
 */
 export function formatSalary(
-  salary
+  salary,
+  category
 ) {
   if (!salary) {
     return "N/A";
   }
 
-  return `₹${salary}`;
+  const isLabour = (category || "").toLowerCase() === "labour";
+  const period = isLabour ? "/mo" : "/yr";
+  const formatted = typeof salary === "number" ? salary.toLocaleString() : salary;
+  return `₹${formatted}${period}`;
 }

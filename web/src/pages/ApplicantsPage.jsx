@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { getApplicantsForJob, updateApplicationStatus as updateApplicationStatusService } from "../services/applicationsService";
+import { getSingleJob, getRecruiterJobs } from "../services/jobsService";
 import { handleError } from "../utils/errorHandler";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorState from "../components/ErrorState";
@@ -28,18 +29,35 @@ function matchColor(score) {
 
 export default function ApplicantsPage() {
   const { jobId } = useParams();
+  const navigate = useNavigate();
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [activeFilter, setFilter]   = useState("All");
   const [sortBy, setSortBy]         = useState("Best Match");
+  const [jobTitle, setJobTitle]     = useState("Job Pipeline");
+  const [recruiterJobs, setRecruiterJobs] = useState([]);
 
   const fetchApplicants = async () => {
     try {
       setLoading(true);
       const data = await getApplicantsForJob(jobId);
       setApplicants(data);
+      try {
+        const job = await getSingleJob(jobId);
+        if (job && job.title) {
+          setJobTitle(job.title);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch job title:", err);
+      }
+      try {
+        const jobsData = await getRecruiterJobs();
+        setRecruiterJobs(jobsData || []);
+      } catch (err) {
+        console.warn("Failed to fetch recruiter jobs list:", err);
+      }
     } catch (e) { setError(handleError(e)); }
     finally { setLoading(false); }
   };
@@ -92,7 +110,7 @@ export default function ApplicantsPage() {
         <div>
           <h1 style={{ marginBottom:2 }}>Applicants</h1>
           <p style={{ color:"#6B7280", fontSize:13, margin:0 }}>
-            Accounts Executive · {applicants.length} candidates
+            {jobTitle} · {applicants.length} candidates
           </p>
         </div>
         <div style={{ display:"flex", gap:10 }}>

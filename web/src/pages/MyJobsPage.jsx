@@ -140,7 +140,7 @@ export default function MyJobsPage() {
                     </span>
                   </div>
                   <p style={{ margin:0, fontSize:12, color:"#6B7280" }}>
-                    ₹{job.salary?.toLocaleString?.() ?? job.salary}/yr · Posted {job.postedAt ? new Date(job.postedAt._seconds ? job.postedAt._seconds*1000 : job.postedAt).toLocaleDateString() : "recently"}
+                    ₹{job.salary?.toLocaleString?.() ?? job.salary}{(job.workerCategory || job.category || "").toLowerCase() === "labour" ? "/mo" : "/yr"} · Posted {job.postedAt ? new Date(job.postedAt._seconds ? job.postedAt._seconds*1000 : job.postedAt).toLocaleDateString() : "recently"}
                   </p>
                 </Link>
 

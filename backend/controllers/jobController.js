@@ -128,9 +128,9 @@ const createJob =
             STORAGE
           */
           salary:
-            Number(
-              salary || 0
-            ),
+            typeof salary === "string"
+              ? (Number(salary.replace(/[^0-9.-]/g, "")) || 0)
+              : Number(salary || 0),
 
           experienceRequired:
             experienceRequired !== undefined
@@ -496,7 +496,11 @@ const updateJob =
           : [];
       }
       if (location !== undefined) updateData.location = location.trim();
-      if (salary !== undefined) updateData.salary = Number(salary || 0);
+      if (salary !== undefined) {
+        updateData.salary = typeof salary === "string"
+          ? (Number(salary.replace(/[^0-9.-]/g, "")) || 0)
+          : Number(salary || 0);
+      }
       if (experienceRequired !== undefined) {
         updateData.experienceRequired = isNaN(Number(experienceRequired))
           ? 0

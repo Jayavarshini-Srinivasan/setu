@@ -148,16 +148,16 @@ Example:
   {
     "icon": "📉",
     "title": "Lower experience bar",
-    "desc": "Consider lowering experience requirements to attract more of the \${stats.totalApplicants || 0} candidates in the pipeline."
+    "desc": "Consider lowering experience requirements to attract more of the ${stats.totalApplicants || 0} candidates in the pipeline."
   }
 ]
 
 Stats for this Recruiter:
-Total Pipeline Applicants: \${stats.totalApplicants || 0}
-Professional Candidates: \${stats.workerTypeCounts?.professional || 0}
-Blue Collar/Labour Candidates: \${stats.workerTypeCounts?.labour || 0}
-Top Skills Present in Pipeline: \${stats.topSkills?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
-Top Skill Gaps (missing from applicants): \${stats.topSkillGaps?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
+Total Pipeline Applicants: ${stats.totalApplicants || 0}
+Professional Candidates: ${stats.workerTypeCounts?.professional || 0}
+Blue Collar/Labour Candidates: ${stats.workerTypeCounts?.labour || 0}
+Top Skills Present in Pipeline: ${stats.topSkills?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
+Top Skill Gaps (missing from applicants): ${stats.topSkillGaps?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
 `;
   const fallback = JSON.stringify([
     {

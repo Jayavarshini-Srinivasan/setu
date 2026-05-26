@@ -44,7 +44,7 @@ export default function JobCard({ job, onApply }) {
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{job.title}</Text>
           <Text style={styles.meta}>📍 {job.location}</Text>
-          <Text style={styles.meta}>💰 {formatSalary(job.salary)}</Text>
+          <Text style={styles.meta}>💰 {formatSalary(job.salary, job.category || job.workerCategory)}</Text>
         </View>
         <View style={[styles.scoreBadge, { backgroundColor: scoreColor(job.matchScore) }]}>
           <Text style={styles.scoreValue}>{job.matchScore}%</Text>
