@@ -8,26 +8,26 @@ import OnboardingStepLayout, { onboardingStyles as os } from "../components/Onbo
 import { COLORS, BORDER_RADIUS } from "../constants/theme";
 
 const ROLE_OPTIONS = [
-  { id: "Electrician", icon: "?" },
-  { id: "Plumber", icon: "??" },
-  { id: "Welder", icon: "??" },
-  { id: "Driver", icon: "??" },
-  { id: "Tailor", icon: "??" },
-  { id: "Helper", icon: "??" },
-  { id: "Carpenter", icon: "??" },
-  { id: "Mason", icon: "??" },
-  { id: "Painter", icon: "??" },
-  { id: "Mechanic", icon: "??" },
-  { id: "Delivery", icon: "??" },
-  { id: "Security", icon: "???" },
-  { id: "Cook", icon: "??" },
-  { id: "Factory Operator", icon: "??" },
-  { id: "Cleaner", icon: "??" },
-  { id: "Gardener", icon: "??" },
-  { id: "AC Technician", icon: "??" },
-  { id: "Tiler", icon: "??" },
-  { id: "Fabricator", icon: "??" },
-  { id: "Other", icon: "?" }
+  { id: "Electrician", icon: "⚡" },
+  { id: "Plumber", icon: "🚰" },
+  { id: "Welder", icon: "🔧" },
+  { id: "Driver", icon: "🚚" },
+  { id: "Tailor", icon: "🧵" },
+  { id: "Helper", icon: "🏗️" },
+  { id: "Carpenter", icon: "🔨" },
+  { id: "Mason", icon: "🧱" },
+  { id: "Painter", icon: "🖌️" },
+  { id: "Mechanic", icon: "⚙️" },
+  { id: "Delivery", icon: "📦" },
+  { id: "Security", icon: "🛡️" },
+  { id: "Cook", icon: "🍳" },
+  { id: "Factory Operator", icon: "🏭" },
+  { id: "Cleaner", icon: "🧹" },
+  { id: "Gardener", icon: "🌿" },
+  { id: "AC Technician", icon: "❄️" },
+  { id: "Tiler", icon: "📏" },
+  { id: "Fabricator", icon: "🛠️" },
+  { id: "Other", icon: "✨" }
 ];
 
 export default function RoleQuestionScreen({ navigation }) {
@@ -82,6 +82,7 @@ export default function RoleQuestionScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Role (1/5)"
       step={1}
+      totalSteps={5}
       title="What do you do?"
       subtitle="Speak or select your role"
       onContinue={handleContinue}
@@ -89,7 +90,7 @@ export default function RoleQuestionScreen({ navigation }) {
       variant="labour"
     >
       <View style={os.inputRow}>
-        <Text style={styles.fieldIcon}>??</Text>
+        <Text style={styles.fieldIcon}>👤</Text>
         <TextInput
           style={os.inputFlex}
           placeholder="Your full name"
@@ -130,10 +131,10 @@ export default function RoleQuestionScreen({ navigation }) {
             {extractedProfile.fullName ? extractedProfile.fullName + " - " : ""}{extractedProfile.canonicalRole || extractedProfile.role}
           </Text>
           <TouchableOpacity onPress={confirmExtraction}>
-            <Text style={styles.useText}>? Use</Text>
+            <Text style={styles.useText}>✓ Use</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={rejectExtraction}>
-            <Text style={styles.rejectText}>?</Text>
+            <Text style={styles.rejectText}>✕</Text>
           </TouchableOpacity>
         </View>
       ) : null}

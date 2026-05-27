@@ -50,6 +50,7 @@ export default function LocationQuestionScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Location (4/5)"
       step={4}
+      totalSteps={5}
       title="Where do you live?"
       subtitle="This helps us find jobs near you"
       onContinue={handleContinue}
@@ -111,7 +112,7 @@ export default function LocationQuestionScreen({ navigation }) {
             <Text style={styles.useText}>? Keep</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={rejectExtraction}>
-            <Text style={styles.rejectText}>?</Text>
+            <Text style={styles.rejectText}>✕</Text>
           </TouchableOpacity>
         </View>
       ) : null}

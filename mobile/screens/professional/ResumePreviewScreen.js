@@ -16,6 +16,7 @@ import * as Sharing from "expo-sharing";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { useOnboarding } from "../../context/OnboardingContext";
+import { useI18n } from "../../context/I18nContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../../constants/theme";
 
 function getInitials(name) {
@@ -34,6 +35,7 @@ function getDisplayName(resume) {
 
 export default function ResumePreviewScreen({ navigation }) {
   const { resetOnboarding, refreshOnboarding, onboardingData } = useOnboarding() || {};
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState(null);
   const [approving, setApproving] = useState(false);

@@ -120,6 +120,7 @@ export default function ProfessionalExperienceScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Experience (4/6)"
       step={4}
+      totalSteps={6}
       badge="PROFESSIONAL"
       title="Work Experience"
       subtitle="Where have you worked?"
@@ -208,7 +209,7 @@ export default function ProfessionalExperienceScreen({ navigation }) {
               <Text style={styles.detectedText}>Detected {extractedProfile.experienceDetails.length} roles</Text>
               <View style={styles.detectedActions}>
                 <TouchableOpacity onPress={confirmExtraction}><Text style={styles.confirmText}>? Add</Text></TouchableOpacity>
-                <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>?</Text></TouchableOpacity>
+                <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>✕</Text></TouchableOpacity>
               </View>
             </View>
           ) : null}

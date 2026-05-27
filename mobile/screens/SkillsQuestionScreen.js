@@ -21,7 +21,7 @@ export default function SkillsQuestionScreen({ navigation }) {
 
   const skillOptions = useMemo(() => {
     const fromRole = roleSkills.map((s) => ({ key: s, label: t(`skills.${s}`) || s }));
-    const merged = [...fromRole, { key: "Other", label: "Other ?" }];
+    const merged = [...fromRole, { key: "Other", label: "Other ✨" }];
     const seen = new Set();
     return merged.filter((item) => {
       if (seen.has(item.key)) return false;
@@ -86,6 +86,7 @@ export default function SkillsQuestionScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Skills (2/5)"
       step={2}
+      totalSteps={5}
       title="What are your skills?"
       subtitle="Select or say your skills"
       onContinue={handleContinue}
@@ -153,10 +154,10 @@ export default function SkillsQuestionScreen({ navigation }) {
             Detected: {(extractedProfile.skills || []).join(", ")}
           </Text>
           <TouchableOpacity onPress={confirmExtraction}>
-            <Text style={styles.useText}>? Keep</Text>
+            <Text style={styles.useText}>✓ Keep</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={rejectExtraction}>
-            <Text style={styles.rejectText}>?</Text>
+            <Text style={styles.rejectText}>✕</Text>
           </TouchableOpacity>
         </View>
       ) : null}

@@ -75,6 +75,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Experience (3/5)"
       step={3}
+      totalSteps={5}
       title="Experience & Age"
       subtitle="How long have you been working?"
       onContinue={handleContinue}
@@ -112,10 +113,10 @@ export default function ExperienceQuestionScreen({ navigation }) {
             Detected: {extractedProfile.experience !== undefined ? `${extractedProfile.experience} years` : ""} {extractedProfile.age !== undefined ? `| ${extractedProfile.age} yrs old` : ""}
           </Text>
           <TouchableOpacity onPress={confirmExtraction}>
-            <Text style={styles.useText}>? Use</Text>
+            <Text style={styles.useText}>✓ Use</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={rejectExtraction}>
-            <Text style={styles.rejectText}>?</Text>
+            <Text style={styles.rejectText}>✕</Text>
           </TouchableOpacity>
         </View>
       ) : null}

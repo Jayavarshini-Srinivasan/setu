@@ -62,6 +62,7 @@ export default function ProfessionalLinksScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Links (6/6)"
       step={6}
+      totalSteps={6}
       badge="PROFESSIONAL"
       title="Links & Certifications"
       subtitle="Help recruiters find your work."
