@@ -1,4 +1,4 @@
-const { db } = require("../config/firebase");
+const { db, admin } = require("../config/firebase");
 
 const getNotifications = async (req, res) => {
   try {
@@ -36,7 +36,10 @@ const markAsRead = async (req, res) => {
       .doc(uid)
       .collection("notifications")
       .doc(id)
-      .update({ status: "read" });
+      .update({ 
+        status: "read",
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
       
     res.status(200).json({ success: true });
   } catch (error) {
@@ -58,7 +61,10 @@ const markAllAsRead = async (req, res) => {
       
     const batch = db.batch();
     unreadSnapshot.docs.forEach(doc => {
-      batch.update(doc.ref, { status: "read" });
+      batch.update(doc.ref, { 
+        status: "read",
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
     });
     
     await batch.commit();

@@ -14,7 +14,7 @@ export const VOICE_STATE = {
 };
 
 
-export default function useVoiceRecorder({ onResult }) {
+export default function useVoiceRecorder({ onResult, contextData }) {
 
   const [voiceState,       setVoiceState]       = useState(VOICE_STATE.IDLE);
   const [transcript,       setTranscript]        = useState("");
@@ -151,6 +151,9 @@ export default function useVoiceRecorder({ onResult }) {
         name: "voice-recording.m4a",
         type: "audio/m4a",
       });
+      if (contextData) {
+        formData.append("context", JSON.stringify(contextData));
+      }
 
       const response = await fetch(`${API_BASE_URL}/voice/upload-audio`, {
         method:  "POST",

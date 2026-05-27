@@ -87,3 +87,19 @@ export function formatStatus(
     status.slice(1)
   );
 }
+
+/*
+  GET DISPLAY NAME
+*/
+export function getDisplayName(profile = {}, authUser = {}) {
+  if (profile.fullName && profile.fullName.trim()) {
+    return profile.fullName.trim();
+  }
+  if (profile.resumeSummary && profile.resumeSummary.includes("|")) {
+    return profile.resumeSummary.split("|")[0].trim();
+  }
+  if (authUser && authUser.email) {
+    return authUser.email.split("@")[0].trim();
+  }
+  return "Worker";
+}

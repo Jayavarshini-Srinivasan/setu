@@ -1,73 +1,27 @@
 import { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
-
+import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput } from "react-native";
 import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
 import VoiceButton from "../components/VoiceButton";
 import { useOnboarding } from "../context/OnboardingContext";
 import { SKILLS_BY_ROLE } from "../constants/skills";
 import { useI18n } from "../context/I18nContext";
-import OnboardingStepLayout from "../components/OnboardingStepLayout";
+import OnboardingStepLayout, { onboardingStyles as os } from "../components/OnboardingStepLayout";
 import { COLORS, BORDER_RADIUS } from "../constants/theme";
-
-const SKILL_ICONS = {
-  driving: "🚗",
-  navigation: "🧭",
-  "auto rickshaw": "🛺",
-  "customer service": "🤝",
-  "road safety": "🛑",
-  "app usage": "📱",
-  "parcel delivery": "📦",
-  "time management": "⏱️",
-  "two-wheeler riding": "🛵",
-  loading: "📦",
-  "vehicle maintenance": "🔧",
-  "passenger handling": "👥",
-  "schedule adherence": "📅",
-  electrician: "⚡",
-  wiring: "🔌",
-  "safety compliance": "🦺",
-  masonry: "🧱",
-  carpentry: "🔨",
-  plumbing: "🔧",
-  construction: "🏗️",
-  helper: "👷",
-  cleaning: "🧹",
-  cooking: "🍳",
-  security: "🛡️",
-  default: "💼",
-};
-
-const DISPLAY_SKILLS = [
-  { key: "driving", label: "Driver", icon: "🚗" },
-  { key: "electrician", label: "Electrician", icon: "⚡" },
-  { key: "plumbing", label: "Plumber", icon: "🔧" },
-  { key: "masonry", label: "Mason", icon: "🧱" },
-  { key: "helper", label: "Helper", icon: "🏗️" },
-  { key: "parcel delivery", label: "Delivery", icon: "🛵" },
-  { key: "cleaning", label: "Cleaner", icon: "🧹" },
-  { key: "cooking", label: "Cook", icon: "🍳" },
-  { key: "carpentry", label: "Carpenter", icon: "🔨" },
-  { key: "construction", label: "Gardener", icon: "🌿" },
-  { key: "security", label: "Security", icon: "🛡️" },
-  { key: "loading", label: "Loader", icon: "📦" },
-];
 
 export default function SkillsQuestionScreen({ navigation }) {
   const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
   const [selectedSkills, setSelectedSkills] = useState(onboardingData.skills || []);
+  const [showOtherInput, setShowOtherInput] = useState(false);
+  const [customSkill, setCustomSkill] = useState("");
 
   const role = onboardingData.canonicalRole || onboardingData.role || "";
-  const roleSkills = SKILLS_BY_ROLE[role] || [];
+  const roleSkills = SKILLS_BY_ROLE[role] || ["Welding", "Pipe Fitting", "Gas Cutting", "Wiring", "Painting"];
 
   const skillOptions = useMemo(() => {
-    const fromRole = roleSkills.map((s) => ({
-      key: s,
-      label: t(`skills.${s}`) || s,
-      icon: SKILL_ICONS[s?.toLowerCase?.()] || SKILL_ICONS[s] || SKILL_ICONS.default,
-    }));
-    const merged = [...DISPLAY_SKILLS.map((d) => ({ ...d, key: d.key })), ...fromRole];
+    const fromRole = roleSkills.map((s) => ({ key: s, label: t(`skills.${s}`) || s }));
+    const merged = [...fromRole, { key: "Other", label: "Other ?" }];
     const seen = new Set();
     return merged.filter((item) => {
       if (seen.has(item.key)) return false;
@@ -87,18 +41,34 @@ export default function SkillsQuestionScreen({ navigation }) {
     onResult: ({ transcript: tx, extractedProfile: ep }) => {
       if (tx) addTranscript(tx);
       const extracted = ep?.skills || [];
-      const merged = [...new Set([...selectedSkills, ...extracted])];
-      setSelectedSkills(merged);
-      updateField("skills", merged);
+      if (extracted.length > 0) {
+        const merged = [...new Set([...selectedSkills, ...extracted])];
+        setSelectedSkills(merged);
+        updateField("skills", merged);
+      }
     },
   });
 
   const toggleSkill = (skill) => {
+    if (skill === "Other") {
+      setShowOtherInput(true);
+      return;
+    }
     const updated = selectedSkills.includes(skill)
       ? selectedSkills.filter((s) => s !== skill)
       : [...selectedSkills, skill];
     setSelectedSkills(updated);
     updateField("skills", updated);
+  };
+
+  const handleAddCustomSkill = () => {
+    if (customSkill.trim()) {
+      const updated = [...new Set([...selectedSkills, customSkill.trim()])];
+      setSelectedSkills(updated);
+      updateField("skills", updated);
+      setCustomSkill("");
+      setShowOtherInput(false);
+    }
   };
 
   const handleContinue = () => {
@@ -114,26 +84,24 @@ export default function SkillsQuestionScreen({ navigation }) {
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Skills (2/4)"
+      screenTitle="Skills (2/5)"
       step={2}
-      title="Your Skills"
-      subtitle="Select all that apply. आप क्या काम करते हैं?"
+      title="What are your skills?"
+      subtitle="Select or say your skills"
       onContinue={handleContinue}
       continueDisabled={!isFormValid}
       variant="labour"
     >
-      <View style={styles.skillGrid}>
-        {skillOptions.slice(0, 12).map((item) => {
+      <View style={os.chipRow}>
+        {skillOptions.map((item) => {
           const isSelected = selectedSkills.includes(item.key);
           return (
             <TouchableOpacity
               key={item.key}
-              style={[styles.skillCard, isSelected && styles.skillCardSelected]}
+              style={[os.chip, isSelected && os.chipSelectedLabour]}
               onPress={() => toggleSkill(item.key)}
-              activeOpacity={0.85}
             >
-              <Text style={styles.skillIcon}>{item.icon}</Text>
-              <Text style={[styles.skillLabel, isSelected && styles.skillLabelSelected]}>
+              <Text style={[os.chipText, isSelected && os.chipTextSelected]}>
                 {item.label}
               </Text>
             </TouchableOpacity>
@@ -141,25 +109,54 @@ export default function SkillsQuestionScreen({ navigation }) {
         })}
       </View>
 
+      {/* Render Custom Selected Skills as pills too if they aren't in options */}
+      <View style={os.chipRow}>
+        {selectedSkills.filter(s => !skillOptions.find(o => o.key === s)).map(custom => (
+          <TouchableOpacity
+            key={custom}
+            style={[os.chip, os.chipSelectedLabour]}
+            onPress={() => toggleSkill(custom)}
+          >
+            <Text style={[os.chipText, os.chipTextSelected]}>{custom} ?</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {showOtherInput && (
+        <View style={styles.customInputRow}>
+          <TextInput
+            style={[os.inputFlex, styles.customInput]}
+            placeholder="Type your skill..."
+            placeholderTextColor={COLORS.textLight}
+            value={customSkill}
+            onChangeText={setCustomSkill}
+            autoFocus
+          />
+          <TouchableOpacity style={styles.addButton} onPress={handleAddCustomSkill}>
+            <Text style={styles.addButtonText}>Add</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.voiceRow}>
         <VoiceButton
           isRecording={voiceState === VOICE_STATE.RECORDING}
           onPressIn={startRecording}
           onPressOut={stopRecording}
         />
-        <Text style={styles.voiceHint}>{t("holdToSpeak") || "Hold to speak your skills"}</Text>
+        <Text style={styles.voiceHint}>Hold mic and say: "I know welding, pipe fitting, gas cutting."</Text>
       </View>
-
+      
       {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.skills || []).length > 0 ? (
         <View style={styles.detectedBox}>
           <Text style={styles.detectedText}>
-            {(extractedProfile.skills || []).join(", ")}
+            Detected: {(extractedProfile.skills || []).join(", ")}
           </Text>
           <TouchableOpacity onPress={confirmExtraction}>
-            <Text style={styles.useText}>✓ Add</Text>
+            <Text style={styles.useText}>? Keep</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={rejectExtraction}>
-            <Text style={styles.rejectText}>✕</Text>
+            <Text style={styles.rejectText}>?</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -168,34 +165,29 @@ export default function SkillsQuestionScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  skillGrid: {
+  customInputRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 8,
+    alignItems: "center",
+    marginTop: 12,
+    gap: 8,
   },
-  skillCard: {
-    width: "31%",
-    minWidth: 100,
-    backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.md,
+  customInput: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingVertical: 14,
-    alignItems: "center",
+    borderRadius: BORDER_RADIUS.md,
+    padding: 12,
+    flex: 1,
+    backgroundColor: COLORS.surface,
   },
-  skillCardSelected: {
-    backgroundColor: COLORS.accentLight,
-    borderColor: COLORS.accent,
+  addButton: {
+    backgroundColor: COLORS.primary,
+    padding: 12,
+    borderRadius: BORDER_RADIUS.md,
   },
-  skillIcon: { fontSize: 24, marginBottom: 6 },
-  skillLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.text,
-    textAlign: "center",
+  addButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
   },
-  skillLabelSelected: { color: COLORS.accent },
   voiceRow: {
     flexDirection: "row",
     alignItems: "center",

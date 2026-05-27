@@ -79,7 +79,7 @@ export default function ContactQuestionScreen({ navigation }) {
         style={styles.input}
         placeholder={
           isProfessional
-            ? (t("emailPlaceholder") || "e.g., candidate@example.com")
+            ? (t("emailPlaceholder") || "Your email address")
             : (t("phonePlaceholder") || "e.g., 9876543210")
         }
         placeholderTextColor="#9CA3AF"

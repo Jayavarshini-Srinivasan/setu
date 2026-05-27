@@ -1,103 +1,73 @@
-import { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  TextInput,
-  Alert,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-
+import { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, ScrollView } from "react-native";
+import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
+import VoiceButton from "../../components/VoiceButton";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
 
-const SKILL_META = {
-  React: { icon: "⚛️" },
-  Excel: { icon: "📊" },
-  Tally: { icon: "📒" },
-  GST: { icon: "🧾" },
-  SQL: { icon: "🗄️" },
-  Python: { icon: "🐍" },
-  "UI Design": { icon: "🎨" },
-  Figma: { icon: "🎨" },
-  "Data Analysis": { icon: "📈" },
-  Analytics: { icon: "📈" },
-  Marketing: { icon: "📣" },
-  JavaScript: { icon: "💻" },
-  "React Native": { icon: "📱" },
-  "Node.js": { icon: "🟢" },
-  "Machine Learning": { icon: "🤖" },
-  Communication: { icon: "💬" },
-  Leadership: { icon: "👥" },
-  "Project Management": { icon: "📋" },
-  Firebase: { icon: "🔥" },
-  Git: { icon: "🔀" },
-  "API Development": { icon: "🔌" },
-  "Power BI": { icon: "📉" },
-  "Pivot Tables": { icon: "📊" },
-  VLOOKUP: { icon: "🔍" },
-  CyberSec: { icon: "🔒" },
-  Cloud: { icon: "☁️" },
-  Content: { icon: "✍️" },
-};
-
-const availableSkills = [
-  "React",
-  "Excel",
-  "Tally",
-  "GST",
-  "SQL",
-  "Python",
-  "UI Design",
-  "Figma",
-  "Data Analysis",
-  "Machine Learning",
-  "Communication",
-  "Leadership",
-  "Project Management",
-  "Marketing",
-  "JavaScript",
-  "React Native",
-  "Node.js",
-  "Firebase",
-  "Git",
-  "API Development",
+const SKILL_CATEGORIES = [
+  {
+    title: "Software",
+    skills: ["Tally", "Excel", "SAP", "QuickBooks", "AutoCAD", "Salesforce"]
+  },
+  {
+    title: "Office",
+    skills: ["MS Word", "PowerPoint", "Email", "Data Entry", "Scheduling"]
+  },
+  {
+    title: "Domain",
+    skills: ["GST", "Payroll", "Accounting", "Logistics", "Marketing", "HR"]
+  }
 ];
 
-const AI_SUGGESTED = ["Power BI", "Pivot Tables", "VLOOKUP"];
-
 export default function ProfessionalSkillsScreen({ navigation }) {
-  const { onboardingData, updateField } = useOnboarding();
+  const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
-  const [selectedSkills, setSelectedSkills] = useState(
-    onboardingData.professionalSkills || []
-  );
-  const [search, setSearch] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState(onboardingData.professionalSkills || []);
+  const [customSkill, setCustomSkill] = useState("");
 
-  const filteredSkills = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return availableSkills;
-    return availableSkills.filter((s) => s.toLowerCase().includes(q));
-  }, [search]);
+  const {
+    voiceState,
+    extractedProfile,
+    startRecording,
+    stopRecording,
+    confirmExtraction,
+    rejectExtraction,
+  } = useVoiceRecorder({
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
+      if (tx) addTranscript(tx);
+      const extracted = ep?.professionalSkills || ep?.skills || [];
+      if (extracted.length > 0) {
+        const merged = [...new Set([...selectedSkills, ...extracted.map(s => String(s).trim())])];
+        setSelectedSkills(merged);
+        updateField("professionalSkills", merged);
+      }
+    },
+  });
 
   const toggleSkill = (skill) => {
-    let updated = selectedSkills.includes(skill)
-      ? selectedSkills.filter((item) => item !== skill)
+    const updated = selectedSkills.includes(skill)
+      ? selectedSkills.filter((s) => s !== skill)
       : [...selectedSkills, skill];
     setSelectedSkills(updated);
     updateField("professionalSkills", updated);
   };
 
+  const handleAddCustomSkill = () => {
+    if (customSkill.trim()) {
+      const updated = [...new Set([...selectedSkills, customSkill.trim()])];
+      setSelectedSkills(updated);
+      updateField("professionalSkills", updated);
+      setCustomSkill("");
+    }
+  };
+
   const handleContinue = () => {
     if (selectedSkills.length === 0) {
-      Alert.alert(
-        t("required") || "Required",
-        t("selectSkillsError") || "Please select at least one skill"
-      );
+      Alert.alert(t("required") || "Required", "Please select at least one skill.");
       return;
     }
     navigation.navigate("Education");
@@ -105,128 +75,148 @@ export default function ProfessionalSkillsScreen({ navigation }) {
 
   const isFormValid = selectedSkills.length > 0;
 
+  // Flatten pre-defined skills to check for custom ones
+  const predefinedSkills = SKILL_CATEGORIES.flatMap(c => c.skills.map(s => s.toLowerCase()));
+  const customSelectedSkills = selectedSkills.filter(s => !predefinedSkills.includes(s.toLowerCase()));
+
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Skills (2/4)"
+      screenTitle="Skills (2/6)"
       step={2}
       badge="PROFESSIONAL"
-      title={t("selectProfessionalSkills") || "Select your professional skills"}
-      subtitle={
-        t("skillsImproveMatching") ||
-        "Select your strongest skills. AI will suggest more."
-      }
+      title="Professional Skills"
+      subtitle="What tools and skills do you know?"
       onContinue={handleContinue}
       continueDisabled={!isFormValid}
     >
-      <View style={styles.searchRow}>
-        <Ionicons name="search-outline" size={18} color={COLORS.textLight} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search skills..."
-          placeholderTextColor={COLORS.textLight}
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        
+        {SKILL_CATEGORIES.map((category) => (
+          <View key={category.title} style={styles.categoryBlock}>
+            <Text style={os.label}>{category.title.toUpperCase()}</Text>
+            <View style={os.chipRow}>
+              {category.skills.map((skill) => {
+                const isSelected = selectedSkills.some(s => s.toLowerCase() === skill.toLowerCase());
+                return (
+                  <TouchableOpacity
+                    key={skill}
+                    style={[os.chip, isSelected && os.chipSelected]}
+                    onPress={() => toggleSkill(skill)}
+                  >
+                    <Text style={[os.chipText, isSelected && os.chipTextSelected]}>
+                      {skill}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        ))}
 
-      <View style={styles.skillGrid}>
-        {filteredSkills.map((skill) => {
-          const isSelected = selectedSkills.includes(skill);
-          const meta = SKILL_META[skill] || { icon: "💼" };
-          return (
-            <TouchableOpacity
-              key={skill}
-              style={[styles.skillCard, isSelected && styles.skillCardSelected]}
-              onPress={() => toggleSkill(skill)}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.skillIcon}>{meta.icon}</Text>
-              <Text style={[styles.skillName, isSelected && styles.skillNameSelected]}>
-                {t(`skills.${skill}`) || skill}
-              </Text>
+        {customSelectedSkills.length > 0 && (
+          <View style={styles.categoryBlock}>
+            <Text style={os.label}>OTHER ADDED</Text>
+            <View style={os.chipRow}>
+              {customSelectedSkills.map((skill) => (
+                <TouchableOpacity
+                  key={skill}
+                  style={[os.chip, os.chipSelected]}
+                  onPress={() => toggleSkill(skill)}
+                >
+                  <Text style={[os.chipText, os.chipTextSelected]}>{skill} ?</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <View style={styles.customInputRow}>
+          <TextInput
+            style={[os.inputFlex, styles.customInput]}
+            placeholder="Add another skill..."
+            placeholderTextColor={COLORS.textLight}
+            value={customSkill}
+            onChangeText={setCustomSkill}
+          />
+          <TouchableOpacity style={styles.addButton} onPress={handleAddCustomSkill}>
+            <Text style={styles.addButtonText}>Add</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.voiceRow}>
+          <VoiceButton
+            isRecording={voiceState === VOICE_STATE.RECORDING}
+            onPressIn={startRecording}
+            onPressOut={stopRecording}
+          />
+          <Text style={styles.voiceHint}>Hold mic and say: "I know Excel, Tally, GST filing, and payroll."</Text>
+        </View>
+        
+        {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.professionalSkills || extractedProfile?.skills || []).length > 0 ? (
+          <View style={styles.detectedBox}>
+            <Text style={styles.detectedText}>
+              Detected: {(extractedProfile.professionalSkills || extractedProfile.skills || []).join(", ")}
+            </Text>
+            <TouchableOpacity onPress={confirmExtraction}>
+              <Text style={styles.useText}>? Keep</Text>
             </TouchableOpacity>
-          );
-        })}
-      </View>
+            <TouchableOpacity onPress={rejectExtraction}>
+              <Text style={styles.rejectText}>?</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
-      <View style={styles.aiBox}>
-        <Text style={styles.aiRobot}>🤖</Text>
-        <Text style={styles.aiText}>
-          AI suggests:{" "}
-          <Text style={styles.aiBold}>
-            {AI_SUGGESTED.join(", ")}
-          </Text>{" "}
-          based on your profile.
-        </Text>
-      </View>
+      </ScrollView>
     </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  searchRow: {
+  categoryBlock: {
+    marginBottom: 20,
+  },
+  customInputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.surface,
+    marginTop: 12,
+    gap: 8,
+    marginBottom: 24,
+  },
+  customInput: {
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,
-    paddingHorizontal: 14,
+    padding: 12,
+    flex: 1,
+    backgroundColor: COLORS.surface,
+  },
+  addButton: {
+    backgroundColor: COLORS.primary,
+    padding: 12,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  addButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
+  voiceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     marginTop: 8,
-    marginBottom: 16,
   },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingLeft: 10,
-    fontSize: 16,
-    color: COLORS.text,
-  },
-  skillGrid: {
+  voiceHint: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
+  detectedBox: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 16,
-  },
-  skillCard: {
-    width: "31%",
-    minWidth: 100,
-    backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
     alignItems: "center",
-  },
-  skillCardSelected: {
-    backgroundColor: COLORS.primaryLight,
-    borderColor: COLORS.primary,
-  },
-  skillIcon: { fontSize: 22, marginBottom: 6 },
-  skillName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.text,
-    textAlign: "center",
-  },
-  skillNameSelected: { color: COLORS.primary },
-  aiBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    gap: 12,
+    marginTop: 12,
+    padding: 12,
     backgroundColor: COLORS.primaryLight,
     borderRadius: BORDER_RADIUS.md,
-    padding: 14,
-    gap: 10,
-    marginBottom: 8,
   },
-  aiRobot: { fontSize: 18 },
-  aiText: {
-    flex: 1,
-    fontSize: 14,
-    color: COLORS.primary,
-    lineHeight: 20,
-  },
-  aiBold: { fontWeight: "700" },
+  detectedText: { flex: 1, fontSize: 13, color: COLORS.text },
+  useText: { color: COLORS.success, fontWeight: "700" },
+  rejectText: { color: COLORS.textLight, fontSize: 18 },
 });

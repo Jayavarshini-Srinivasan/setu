@@ -64,12 +64,14 @@ const signup = async (req, res) => {
 
   profile: {
     name,
+    fullName: name,
 
     skills: [],
 
     location: "",
 
     experience: 0,
+    canonicalRole: "",
 
     labourData: {
       availability: "",
@@ -93,6 +95,7 @@ const signup = async (req, res) => {
   createdAt: new Date(),
 
   updatedAt: new Date(),
+  updated_at: new Date(),
 };
 
     /*

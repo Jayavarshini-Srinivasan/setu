@@ -1,396 +1,251 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from "react-native";
-
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
+import VoiceButton from "../../components/VoiceButton";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
-import OnboardingStepLayout from "../../components/OnboardingStepLayout";
+import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
+import { COLORS, BORDER_RADIUS } from "../../constants/theme";
 
-export default function ProfessionalExperienceScreen({
-  navigation,
-}) {
+const Stepper = ({ value, min, max, onChange, label }) => (
+  <View style={styles.stepperContainer}>
+    <Text style={styles.stepperLabel}>{label}</Text>
+    <View style={styles.stepperRow}>
+      <TouchableOpacity style={styles.stepperBtn} onPress={() => onChange(Math.max(min, Number(value) - 1))}>
+        <Text style={styles.stepperBtnText}>-</Text>
+      </TouchableOpacity>
+      <TextInput 
+        style={styles.stepperInput}
+        value={String(value)}
+        onChangeText={val => {
+          const num = Number(val.replace(/[^0-9]/g, ""));
+          onChange(Math.min(max, Math.max(min, num)));
+        }}
+        keyboardType="numeric"
+      />
+      <TouchableOpacity style={styles.stepperBtn} onPress={() => onChange(Math.min(max, Number(value) + 1))}>
+        <Text style={styles.stepperBtnText}>+</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 
-  /*
-    CONTEXT
-  */
-  const {
-    onboardingData,
-
-    updateField,
-  } = useOnboarding();
+export default function ProfessionalExperienceScreen({ navigation }) {
+  const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
-  /*
-    LOCAL STATE
-  */
-  const [
-    company,
-    setCompany,
-  ] = useState("");
+  const [company, setCompany] = useState("");
+  const [role, setRole] = useState("");
+  const [startYear, setStartYear] = useState(2020);
+  const [endYear, setEndYear] = useState(2023);
+  const [isPresent, setIsPresent] = useState(false);
+  const [achievements, setAchievements] = useState("");
 
-  const [
-    role,
-    setRole,
-  ] = useState("");
+  const existingExperience = onboardingData.experienceDetails || [];
 
-  const [
-    years,
-    setYears,
-  ] = useState("");
-
-  const [
-    achievements,
-    setAchievements,
-  ] = useState("");
-
-  /*
-    EXISTING EXPERIENCE
-  */
-  const existingExperience =
-    onboardingData.experienceDetails || [];
-
-  const canAddExperience =
-    Boolean(company.trim()) &&
-    Boolean(role.trim()) &&
-    Boolean(years.trim()) &&
-    Boolean(achievements.trim());
-
-  const canContinue = existingExperience.length > 0;
-
-  /*
-    ADD EXPERIENCE
-  */
-  const handleAddExperience =
-    () => {
-
-      if (
-        !canAddExperience
-      ) {
-
-        Alert.alert(
-          t("required") || "Required",
-          t("experienceOnboarding.completeAllFieldsError") || "Please complete all required fields"
-        );
-
-        return;
+  const {
+    voiceState,
+    extractedProfile,
+    startRecording,
+    stopRecording,
+    confirmExtraction,
+    rejectExtraction,
+  } = useVoiceRecorder({
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
+      if (tx) addTranscript(tx);
+      const extractedEntries = ep?.experienceDetails || [];
+      if (extractedEntries.length > 0) {
+        const merged = [...existingExperience, ...extractedEntries];
+        updateField("experienceDetails", merged);
       }
+    },
+  });
 
-      const newExperience = {
+  const canAddExperience = Boolean(company.trim()) && Boolean(role.trim());
+  const canContinue = existingExperience.length > 0 || (company.trim() && role.trim());
 
-        company: company.trim(),
+  const handleAddExperience = () => {
+    if (!canAddExperience) {
+      Alert.alert(t("required") || "Required", "Please provide at least company and role.");
+      return;
+    }
 
-        role: role.trim(),
-
-        years: years.trim(),
-
-        achievements: achievements.trim(),
-      };
-
-      const updatedExperience = [
-
-        ...existingExperience,
-
-        newExperience,
-      ];
-
-      /*
-        SAVE
-      */
-      updateField(
-        "experienceDetails",
-        updatedExperience
-      );
-
-      /*
-        RESET INPUTS
-      */
-      setCompany("");
-
-      setRole("");
-
-      setYears("");
-
-      setAchievements("");
-
-      Alert.alert(
-        t("added") || "Added",
-        t("experienceOnboarding.experienceAddedSuccess") || "Experience added successfully"
-      );
+    const newExperience = {
+      company: company.trim(),
+      role: role.trim(),
+      startYear: startYear,
+      endYear: isPresent ? "Present" : endYear,
+      achievements: achievements.trim(),
     };
 
-  /*
-    CONTINUE
-  */
-  const handleContinue =
-    () => {
+    updateField("experienceDetails", [...existingExperience, newExperience]);
 
-      if (
-        existingExperience.length === 0
-      ) {
+    setCompany("");
+    setRole("");
+    setAchievements("");
+    setIsPresent(false);
+  };
 
-        Alert.alert(
-          t("required") || "Required",
-          t("experienceOnboarding.addExperienceError") || "Please add at least one experience"
-        );
+  const removeExperience = (index) => {
+    const updated = [...existingExperience];
+    updated.splice(index, 1);
+    updateField("experienceDetails", updated);
+  };
 
-        return;
+  const handleContinue = () => {
+    if (canAddExperience) {
+      handleAddExperience();
+    } else if (existingExperience.length === 0) {
+      Alert.alert(t("required") || "Required", "Please add at least one work experience.");
+      return;
+    }
+    
+    // Calculate total years
+    const totalYears = existingExperience.reduce((sum, item) => {
+      if (item.startYear) {
+        const end = item.endYear === "Present" ? new Date().getFullYear() : Number(item.endYear);
+        return sum + Math.max(1, end - Number(item.startYear));
       }
+      return sum + (Number(item.years) || 1);
+    }, 0);
+    
+    updateField("experience", totalYears);
 
-      navigation.navigate(
-        "ProfessionalLinks"
-      );
-    };
+    navigation.navigate("CareerGoals");
+  };
 
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Experience (4/4)"
+      screenTitle="Experience (4/6)"
       step={4}
       badge="PROFESSIONAL"
-      title={t("experienceOnboarding.title") || "Add your work experience"}
-      subtitle={t("experienceOnboarding.subtitle") || "This helps generate professional resumes and career insights."}
+      title="Work Experience"
+      subtitle="Where have you worked?"
       onContinue={handleContinue}
       continueDisabled={!canContinue}
     >
-
-      <TextInput
-        style={styles.input}
-
-        placeholder={t("experienceOnboarding.companyPlaceholder") || "Company"}
-
-        value={company}
-
-        onChangeText={setCompany}
-      />
-
-      <TextInput
-        style={styles.input}
-
-        placeholder={t("experienceOnboarding.rolePlaceholder") || "Role"}
-
-        value={role}
-
-        onChangeText={setRole}
-      />
-
-      <TextInput
-        style={styles.input}
-
-        placeholder={t("experienceOnboarding.yearsPlaceholder") || "Years of Experience"}
-
-        keyboardType="numeric"
-
-        value={years}
-
-        onChangeText={setYears}
-      />
-
-      <TextInput
-        style={[
-          styles.input,
-          styles.textArea,
-        ]}
-
-        placeholder={t("experienceOnboarding.achievementsPlaceholder") || "Key achievements"}
-
-        multiline
-
-        numberOfLines={5}
-
-        value={achievements}
-
-        onChangeText={setAchievements}
-      />
-
-      <TouchableOpacity
-        style={[styles.addButton, !canAddExperience && styles.addButtonDisabled]}
-
-        onPress={handleAddExperience}
-
-        disabled={!canAddExperience}
-      >
-
-        <Text style={styles.buttonText}>
-          {t("experienceOnboarding.addButtonLabel") || "Add Experience"}
-        </Text>
-
-      </TouchableOpacity>
-
-      {/* EXPERIENCE LIST */}
-
-      {
-        existingExperience.map(
-          (
-            item,
-            index
-          ) => (
-
-            <View
-              key={index}
-
-              style={styles.experienceCard}
-            >
-
-              <Text style={styles.cardTitle}>
-                {item.role}
-              </Text>
-
-              <Text style={styles.cardSubtitle}>
-                {item.company}
-              </Text>
-
-              <Text style={styles.cardText}>
-                {item.years} {t("experienceOnboarding.yearsSuffix") || "years"}
-              </Text>
-
-              {
-                item.achievements ? (
-                  <Text style={styles.cardText}>
-                    {item.achievements}
-                  </Text>
-                ) : null
-              }
-
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        
+        {existingExperience.map((item, index) => (
+          <View key={index} style={styles.experienceCard}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>{item.role}</Text>
+              <Text style={styles.cardSubtitle}>{item.company}</Text>
+              <Text style={styles.cardDate}>{item.startYear || "?"} - {item.endYear || "?"}</Text>
             </View>
-          )
-        )
-      }
+            <TouchableOpacity onPress={() => removeExperience(index)} style={styles.deleteBtn}>
+              <Ionicons name="trash-outline" size={20} color={COLORS.error} />
+            </TouchableOpacity>
+          </View>
+        ))}
 
+        <View style={styles.addCard}>
+          <Text style={os.label}>{existingExperience.length > 0 ? "ADD ANOTHER ROLE" : "ADD EXPERIENCE"}</Text>
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Job Title"
+            placeholderTextColor={COLORS.textLight}
+            value={role}
+            onChangeText={setRole}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Company Name"
+            placeholderTextColor={COLORS.textLight}
+            value={company}
+            onChangeText={setCompany}
+          />
+
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Stepper label="START YEAR" value={startYear} min={1980} max={2026} onChange={setStartYear} />
+            </View>
+            <View style={{ width: 16 }} />
+            <View style={{ flex: 1 }}>
+              {!isPresent ? (
+                <Stepper label="END YEAR" value={endYear} min={startYear} max={2026} onChange={setEndYear} />
+              ) : (
+                <View style={[styles.stepperContainer, { opacity: 0.5 }]}>
+                  <Text style={styles.stepperLabel}>END YEAR</Text>
+                  <View style={[styles.stepperRow, { justifyContent: "center", backgroundColor: COLORS.background }]}>
+                    <Text style={{ fontWeight: "bold", color: COLORS.textSecondary }}>PRESENT</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.presentToggle} onPress={() => setIsPresent(!isPresent)}>
+            <View style={styles.checkbox}>{isPresent && <View style={styles.checkboxInner} />}</View>
+            <Text style={styles.presentText}>I currently work here</Text>
+          </TouchableOpacity>
+
+          <TextInput
+            style={[styles.input, { height: 80, textAlignVertical: "top" }]}
+            placeholder="Brief description of your role..."
+            placeholderTextColor={COLORS.textLight}
+            multiline
+            value={achievements}
+            onChangeText={setAchievements}
+          />
+
+          <TouchableOpacity style={styles.addBtn} onPress={handleAddExperience}>
+            <Text style={styles.addBtnText}>+ Add Experience</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.voiceSection}>
+          <View style={styles.voiceRow}>
+            <VoiceButton isRecording={voiceState === VOICE_STATE.RECORDING} onPressIn={startRecording} onPressOut={stopRecording} />
+            <Text style={styles.voiceHint}>Hold mic and say: "I worked at ABC for 3 years as an accountant, then 2 years at XYZ Ltd."</Text>
+          </View>
+          
+          {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.experienceDetails?.length > 0) ? (
+            <View style={styles.detectedBox}>
+              <Text style={styles.detectedText}>Detected {extractedProfile.experienceDetails.length} roles</Text>
+              <View style={styles.detectedActions}>
+                <TouchableOpacity onPress={confirmExtraction}><Text style={styles.confirmText}>? Add</Text></TouchableOpacity>
+                <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>?</Text></TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
+        </View>
+
+      </ScrollView>
     </OnboardingStepLayout>
   );
 }
 
-const styles =
-  StyleSheet.create({
-
-    container: {
-      flexGrow: 1,
-
-      backgroundColor:
-        COLORS.background,
-
-      padding: 24,
-    },
-
-    title: {
-      fontSize: 30,
-
-      fontWeight: "bold",
-
-      marginTop: 50,
-
-      marginBottom: 12,
-    },
-
-    subtitle: {
-      fontSize: 16,
-
-      color: "#666",
-
-      marginBottom: 30,
-    },
-
-    input: {
-      borderWidth: 1,
-
-      borderColor:
-        "#ddd",
-
-      borderRadius: 14,
-
-      padding: 18,
-
-      fontSize: 16,
-
-      marginBottom: 18,
-    },
-
-    textArea: {
-      height: 120,
-
-      textAlignVertical:
-        "top",
-    },
-
-    addButton: {
-      backgroundColor:
-        COLORS.primary,
-
-      padding: 18,
-
-      borderRadius: 16,
-
-      alignItems:
-        "center",
-
-      marginBottom: 30,
-    },
-
-    addButtonDisabled: {
-      backgroundColor:
-        "#D1D5DB",
-    },
-
-    continueButton: {
-      backgroundColor:
-        COLORS.primary,
-
-      padding: 20,
-
-      borderRadius: 16,
-
-      alignItems:
-        "center",
-
-      marginTop: 20,
-
-      marginBottom: 40,
-    },
-
-    buttonText: {
-      color: "#fff",
-
-      fontSize: 18,
-
-      fontWeight: "bold",
-    },
-
-    experienceCard: {
-      backgroundColor:
-        "#F8FAFC",
-
-      padding: 18,
-
-      borderRadius: 16,
-
-      marginBottom: 16,
-    },
-
-    cardTitle: {
-      fontSize: 20,
-
-      fontWeight: "bold",
-
-      marginBottom: 4,
-    },
-
-    cardSubtitle: {
-      fontSize: 16,
-
-      color: "#555",
-
-      marginBottom: 8,
-    },
-
-    cardText: {
-      fontSize: 15,
-
-      color: "#333",
-    },
-  });
+const styles = StyleSheet.create({
+  experienceCard: { flexDirection: "row", backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 16, marginBottom: 12, alignItems: "center" },
+  cardTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.text },
+  cardSubtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4 },
+  cardDate: { fontSize: 12, color: COLORS.primary, fontWeight: "600", marginTop: 4 },
+  deleteBtn: { padding: 8 },
+  addCard: { backgroundColor: COLORS.background, borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 16, marginTop: 12 },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 12, backgroundColor: COLORS.surface, marginBottom: 12, fontSize: 15 },
+  row: { flexDirection: "row" },
+  stepperContainer: { marginBottom: 12 },
+  stepperLabel: { fontSize: 11, fontWeight: "bold", color: COLORS.textLight, marginBottom: 4 },
+  stepperRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 4, height: 44 },
+  stepperBtn: { backgroundColor: COLORS.primaryLight, width: 36, height: 36, borderRadius: BORDER_RADIUS.sm, alignItems: "center", justifyContent: "center" },
+  stepperBtnText: { fontSize: 20, color: COLORS.primary, fontWeight: "bold" },
+  stepperInput: { fontSize: 16, fontWeight: "bold", color: COLORS.text, textAlign: "center", flex: 1 },
+  presentToggle: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+  checkbox: { width: 20, height: 20, borderWidth: 2, borderColor: COLORS.textLight, borderRadius: 4, marginRight: 8, alignItems: "center", justifyContent: "center" },
+  checkboxInner: { width: 10, height: 10, backgroundColor: COLORS.primary, borderRadius: 2 },
+  presentText: { fontSize: 14, color: COLORS.textSecondary },
+  addBtn: { backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: BORDER_RADIUS.md, alignItems: "center" },
+  addBtnText: { color: COLORS.primary, fontWeight: "bold", fontSize: 14 },
+  voiceSection: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: COLORS.border },
+  voiceHint: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
+  voiceRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  detectedBox: { marginTop: 16, backgroundColor: COLORS.primaryLight, padding: 14, borderRadius: 12, flexDirection: "row", alignItems: "center" },
+  detectedText: { fontSize: 13, fontWeight: "600", color: COLORS.text, flex: 1 },
+  detectedActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  confirmText: { color: COLORS.success, fontWeight: "700" },
+  rejectText: { color: COLORS.textLight, fontSize: 18 },
+});

@@ -12,8 +12,10 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { auth } from "../../services/firebase";
 import API from "../../services/api";
-import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../services/firebase";
+import { useOnboarding } from "../../context/OnboardingContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../../constants/theme";
 
 function getInitials(name) {
@@ -30,9 +32,12 @@ function getDisplayName(resume) {
   return email.split("@")[0]?.replace(/[._]/g, " ") || "Candidate";
 }
 
-export default function ResumePreviewScreen() {
+export default function ResumePreviewScreen({ navigation }) {
+  const { resetOnboarding, refreshOnboarding, onboardingData } = useOnboarding() || {};
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState(null);
+  const [approving, setApproving] = useState(false);
+
   useEffect(() => {
     generateResume();
   }, []);
@@ -50,6 +55,23 @@ export default function ResumePreviewScreen() {
     }
   };
 
+  const handleApprove = async () => {
+    setApproving(true);
+    try {
+      const uid = auth.currentUser.uid;
+      await updateDoc(doc(db, "users", uid), {
+        onboardingCompleted: true,
+        updatedAt: serverTimestamp(),
+      });
+      if (refreshOnboarding) refreshOnboarding();
+      if (resetOnboarding) resetOnboarding();
+    } catch (err) {
+      Alert.alert("Error", "Failed to approve profile. Please try again.");
+    } finally {
+      setApproving(false);
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!resume) return;
     try {
@@ -59,9 +81,11 @@ export default function ResumePreviewScreen() {
         resume.experience?.reduce((sum, e) => sum + (parseInt(e.years, 10) || 0), 0) ||
         resume.experience?.[0]?.years ||
         0;
-      const email = auth.currentUser?.email || "email@example.com";
-      const location = resume.location || "Mumbai";
+      const email = auth.currentUser?.email || "Not provided";
+      const location = resume.location || "Not specified";
       const competencies = resume.skills || [];
+      const phone = resume.phoneNumber || auth.currentUser?.phoneNumber || "Not provided";
+      const languages = resume.languages?.join(", ") || "English";
 
       const htmlContent = `
         <html>
@@ -212,7 +236,7 @@ export default function ResumePreviewScreen() {
                 </div>
               </div>
               <div class="contact-grid">
-                <div class="contact-item">📞 +91 98765 43210</div>
+                <div class="contact-item">📞 ${phone}</div>
                 <div class="contact-item">✉️ ${email}</div>
                 <div class="contact-item">📍 ${location}</div>
                 <div class="contact-item">📅 ${expYears} years</div>
@@ -250,7 +274,7 @@ export default function ResumePreviewScreen() {
               </p>
               
               <div class="section-heading">LANGUAGES</div>
-              <p class="body-text">Hindi, English, Marathi</p>
+              <p class="body-text">${languages}</p>
               
               ${(resume.links?.linkedin || resume.links?.github) ? `
                 <div class="section-heading">LINKS</div>
@@ -291,9 +315,11 @@ export default function ResumePreviewScreen() {
     resume.experience?.reduce((sum, e) => sum + (parseInt(e.years, 10) || 0), 0) ||
     resume.experience?.[0]?.years ||
     0;
-  const email = auth.currentUser?.email || "email@example.com";
-  const location = resume.location || "Mumbai";
+  const email = auth.currentUser?.email || "Not provided";
+  const location = resume.location || "Not specified";
   const competencies = resume.skills || [];
+  const phone = resume.phoneNumber || auth.currentUser?.phoneNumber || "Not provided";
+  const languages = resume.languages?.join(", ") || "English";
 
   return (
     <View style={styles.root}>
@@ -306,7 +332,7 @@ export default function ResumePreviewScreen() {
           <Text style={styles.topRole}>{roleLabel}</Text>
           <View style={styles.contactGrid}>
             <View style={styles.contactCol}>
-              <Text style={styles.contactItem}>📞 +91 98765 43210</Text>
+              <Text style={styles.contactItem}>📞 {phone}</Text>
               <Text style={styles.contactItem}>📍 {location}</Text>
             </View>
             <View style={styles.contactCol}>
@@ -326,7 +352,7 @@ export default function ResumePreviewScreen() {
           <Text style={styles.cvName}>{displayName}</Text>
           <Text style={styles.cvRole}>{roleLabel}</Text>
           <Text style={styles.cvContactLine}>
-            +91 98765 43210 • {email} • {location}
+            {phone} • {email} • {location}
           </Text>
           <View style={styles.cvDivider} />
 
@@ -366,7 +392,7 @@ export default function ResumePreviewScreen() {
           </Text>
 
           <Text style={styles.sectionHeading}>LANGUAGES</Text>
-          <Text style={styles.bodyText}>Hindi, English, Marathi</Text>
+          <Text style={styles.bodyText}>{languages}</Text>
 
           {(resume.links?.linkedin || resume.links?.github) && (
             <>
@@ -382,10 +408,14 @@ export default function ResumePreviewScreen() {
         </View>
       </ScrollView>
 
-      <TouchableOpacity style={styles.downloadBtn} onPress={handleDownloadPDF} activeOpacity={0.85}>
-        <Ionicons name="download-outline" size={22} color="#FFFFFF" style={{ marginRight: 8 }} />
-        <Text style={styles.downloadBtnText}>Download PDF</Text>
-      </TouchableOpacity>
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.approveBtn} onPress={handleApprove} disabled={approving}>
+          {approving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.approveBtnText}>{t("approveFinish") || "Approve & Finish"}</Text>}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.downloadIconBtn} onPress={handleDownloadPDF} activeOpacity={0.85}>
+          <Ionicons name="download-outline" size={24} color={COLORS.resumeGreen} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -545,12 +575,17 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginBottom: 6,
   },
-  downloadBtn: {
+  actionRow: {
     position: "absolute",
     bottom: 24,
     left: 20,
     right: 20,
     flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  approveBtn: {
+    flex: 1,
     backgroundColor: COLORS.resumeGreen,
     paddingVertical: 18,
     borderRadius: BORDER_RADIUS.lg,
@@ -558,9 +593,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     ...SHADOWS.lg,
   },
-  downloadBtnText: {
+  approveBtnText: {
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "700",
+  },
+  downloadIconBtn: {
+    width: 60,
+    height: 60,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.resumeGreen,
+    ...SHADOWS.lg,
   },
 });

@@ -33,15 +33,73 @@ function calculateSalaryScore(
 /*
   GROWTH SCORE
 */
-function calculateGrowthScore() {
-  return 75;
+function calculateGrowthScore(workerProfile, job) {
+  let base = 0;
+  
+  const workerExpectedMax = workerProfile.expectedSalary?.max || parseInt(workerProfile.expectedWage) || 0;
+  const jobSalaryMax = job.salary?.max || parseInt(job.salary) || 0;
+  if (jobSalaryMax > 0 && workerExpectedMax > 0 && jobSalaryMax > workerExpectedMax * 1.1) {
+    base += 30;
+  }
+  
+  const roleHierarchy = { helper: 1, operator: 2, technician: 3, supervisor: 4, manager: 5 };
+  const wRole = (workerProfile.canonicalRole || "").toLowerCase();
+  const jRole = (job.canonicalRole || "").toLowerCase();
+  if (roleHierarchy[jRole] && roleHierarchy[wRole] && roleHierarchy[jRole] > roleHierarchy[wRole]) {
+    base += 20;
+  }
+  
+  const workerSkills = (workerProfile.skills || workerProfile.professionalSkills || []).map(s => s.toLowerCase());
+  const jobSkills = (job.requiredSkills || []).map(s => s.toLowerCase());
+  const missingSkills = jobSkills.filter(s => !workerSkills.includes(s));
+  if (missingSkills.length > 0) {
+    base += 20;
+  }
+  
+  if (workerProfile.location && job.location && workerProfile.location.toLowerCase() !== job.location.toLowerCase()) {
+    base += 15;
+  }
+  
+  const growingSectors = ["manufacturing", "logistics", "tech", "healthcare"];
+  const sector = (job.sector || job.category || "").toLowerCase();
+  if (growingSectors.some(s => sector.includes(s))) {
+    base += 15;
+  }
+  
+  return Math.min(100, base);
 }
 
 /*
   STABILITY SCORE
 */
-function calculateStabilityScore() {
-  return 80;
+function calculateStabilityScore(workerProfile, job) {
+  let base = 0;
+  
+  if (job.createdAt) {
+    const createdTime = job.createdAt._seconds ? job.createdAt._seconds * 1000 : new Date(job.createdAt).getTime();
+    const daysOld = (Date.now() - createdTime) / (1000 * 60 * 60 * 24);
+    if (daysOld > 90) base += 30;
+  }
+  
+  const jobType = (job.jobType || job.availability || "").toLowerCase();
+  if (jobType === "full-time" || jobType === "fulltime") {
+    base += 25;
+  }
+  
+  const period = (job.salary?.period || job.salaryPeriod || "").toLowerCase();
+  if (period === "month" || period === "year") {
+    base += 20;
+  }
+  
+  if (workerProfile.location && job.location && workerProfile.location.toLowerCase() === job.location.toLowerCase()) {
+    base += 15;
+  }
+  
+  if (job.isActive && !job.expiresAt) {
+    base += 10;
+  }
+  
+  return Math.min(100, base);
 }
 
 /*
@@ -165,10 +223,10 @@ const analyzeMatchedJob =
       );
 
     const growthScore =
-      calculateGrowthScore();
+      calculateGrowthScore(workerProfile, matchedJob);
 
     const stabilityScore =
-      calculateStabilityScore();
+      calculateStabilityScore(workerProfile, matchedJob);
 
     /*
       ANALYSIS DATA
@@ -264,6 +322,10 @@ const analyzeMatchedJob =
 
       experienceMatch:
         experienceScore >= 90,
+
+      growthScore,
+      stabilityScore,
+      matchScore: matchedJob.matchScore
     };
 
     /*
@@ -312,9 +374,21 @@ const analyzeMatchedJob =
         matchedJob.matchScore
       );
 
+    /*
+      UK SALARY WARNING
+    */
+    let warning = null;
+    if (matchedJob.salary?.currency === 'GBP') {
+      const jobMin = matchedJob.salary?.min || 0;
+      if ((jobMin / 2080) < 10.82) {
+        warning = 'Salary may be below minimum wage — verify with employer';
+      }
+    }
+
     return {
 
       ...matchedJob,
+      warning,
 
       recommendationType:
         getRecommendationType(

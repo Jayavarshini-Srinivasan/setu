@@ -1,148 +1,179 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-
+import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
+import VoiceButton from "../components/VoiceButton";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../components/OnboardingStepLayout";
-import { COLORS } from "../constants/theme";
+import { COLORS, BORDER_RADIUS } from "../constants/theme";
 
-const EXP_OPTIONS = [
-  { label: "No exp", value: 0 },
-  { label: "1-2 yr", value: 2 },
-  { label: "3-5 yr", value: 4 },
-  { label: "5+ yr", value: 6 },
-];
-
-const AVAILABILITY_OPTIONS = [
-  { label: "Full time", value: "full-time" },
-  { label: "Part time", value: "part-time" },
-  { label: "Contract", value: "contract" },
-];
-
-const WAGE_OPTIONS = [
-  { label: "< 300", value: "<300" },
-  { label: "300-600", value: "300-600" },
-  { label: "600-1000", value: "600-1000" },
-  { label: "1000+", value: "1000+" },
-];
+const Stepper = ({ value, min, max, onChange, label }) => (
+  <View style={styles.stepperContainer}>
+    <Text style={os.label}>{label}</Text>
+    <View style={styles.stepperRow}>
+      <TouchableOpacity 
+        style={styles.stepperBtn} 
+        onPress={() => onChange(Math.max(min, Number(value) - 1))}
+      >
+        <Text style={styles.stepperBtnText}>-</Text>
+      </TouchableOpacity>
+      
+      <TextInput 
+        style={styles.stepperInput}
+        value={String(value)}
+        onChangeText={val => {
+          const num = Number(val.replace(/[^0-9]/g, ""));
+          onChange(Math.min(max, Math.max(min, num)));
+        }}
+        keyboardType="numeric"
+      />
+      
+      <TouchableOpacity 
+        style={styles.stepperBtn} 
+        onPress={() => onChange(Math.min(max, Number(value) + 1))}
+      >
+        <Text style={styles.stepperBtnText}>+</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 
 export default function ExperienceQuestionScreen({ navigation }) {
-  const { onboardingData, updateField } = useOnboarding();
+  const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
-  const [expBand, setExpBand] = useState(
-    onboardingData.experience !== "" && onboardingData.experience != null
-      ? EXP_OPTIONS.find((o) => o.value === Number(onboardingData.experience))?.label || ""
-      : ""
-  );
-  const [availability, setAvailability] = useState(onboardingData.availability || "");
-  const [wage, setWage] = useState(onboardingData.expectedWage || "");
-  const [previousWork, setPreviousWork] = useState(onboardingData.previousWorkType || "");
+  const [experience, setExperience] = useState(onboardingData.experience !== "" && onboardingData.experience != null ? Number(onboardingData.experience) : 0);
+  const [age, setAge] = useState(onboardingData.age ? Number(onboardingData.age) : 25);
+
+  const {
+    voiceState,
+    extractedProfile,
+    startRecording,
+    stopRecording,
+    confirmExtraction,
+    rejectExtraction,
+  } = useVoiceRecorder({
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
+      if (tx) addTranscript(tx);
+      if (ep?.experience !== undefined && ep.experience !== null) {
+        setExperience(Number(ep.experience));
+      }
+      if (ep?.age !== undefined && ep.age !== null) {
+        setAge(Number(ep.age));
+      }
+    },
+  });
 
   const handleContinue = () => {
-    const expVal = EXP_OPTIONS.find((o) => o.label === expBand)?.value ?? 0;
-    if (!isFormValid) {
-      Alert.alert(t("required") || "Required", t("selectAvailabilityError") || "Please complete all required fields.");
-      return;
-    }
-
-    updateField("experience", expVal);
-    updateField("availability", availability);
-    updateField("expectedWage", wage);
-    if (previousWork.trim()) {
-      updateField("previousWorkType", previousWork.trim());
-    }
+    updateField("experience", experience);
+    updateField("age", age);
     navigation.navigate("LocationQuestion");
   };
-
-  const isFormValid =
-    Boolean(expBand) &&
-    Boolean(availability) &&
-    Boolean(wage) &&
-    Boolean(previousWork.trim());
 
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle={t("labourOnboarding.experienceStepScreen") || "Experience (3/4)"}
+      screenTitle="Experience (3/5)"
       step={3}
-      title={t("labourOnboarding.experienceStepTitle") || "Experience & Availability"}
-      subtitle={t("experienceSubtitle") || "Tell us about your work history and preferences."}
+      title="Experience & Age"
+      subtitle="How long have you been working?"
       onContinue={handleContinue}
-      continueDisabled={!isFormValid}
+      continueDisabled={false}
       variant="labour"
     >
-      <Text style={os.label}>YEARS OF EXPERIENCE</Text>
-      <View style={os.chipRow}>
-        {EXP_OPTIONS.map((opt) => (
-          <TouchableOpacity
-            key={opt.label}
-            style={[os.chip, expBand === opt.label && os.chipSelectedLabour]}
-            onPress={() => {
-              setExpBand(opt.label);
-              updateField("experience", opt.value);
-            }}
-          >
-            <Text style={[os.chipText, expBand === opt.label && os.chipTextSelected]}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={os.label}>AVAILABILITY</Text>
-      <View style={os.chipRow}>
-        {AVAILABILITY_OPTIONS.map((opt) => (
-          <TouchableOpacity
-            key={opt.value}
-            style={[os.chip, availability === opt.value && os.chipSelectedLabour]}
-            onPress={() => setAvailability(opt.value)}
-          >
-            <Text style={[os.chipText, availability === opt.value && os.chipTextSelected]}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={os.label}>EXPECTED DAILY WAGE (₹)</Text>
-      <View style={os.chipRow}>
-        {WAGE_OPTIONS.map((opt) => (
-          <TouchableOpacity
-            key={opt.value}
-            style={[os.chip, wage === opt.value && os.chipSelectedLabour]}
-            onPress={() => setWage(opt.value)}
-          >
-            <Text style={[os.chipText, wage === opt.value && os.chipTextSelected]}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={os.label}>PREVIOUS WORK TYPE</Text>
-      <TextInput
-        style={styles.textArea}
-        placeholder="e.g. Construction, domestic, factory..."
-        placeholderTextColor={COLORS.textLight}
-        value={previousWork}
-        onChangeText={setPreviousWork}
-        multiline
+      <Stepper 
+        label="YEARS OF EXPERIENCE (0-60)"
+        value={experience}
+        min={0}
+        max={60}
+        onChange={setExperience}
       />
+      
+      <Stepper 
+        label="AGE (16-80) [Optional]"
+        value={age}
+        min={16}
+        max={80}
+        onChange={setAge}
+      />
+
+      <View style={styles.voiceRow}>
+        <VoiceButton
+          isRecording={voiceState === VOICE_STATE.RECORDING}
+          onPressIn={startRecording}
+          onPressOut={stopRecording}
+        />
+        <Text style={styles.voiceHint}>Hold mic and say: "I have been doing this for 8 years, I am 32 years old."</Text>
+      </View>
+      
+      {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.experience !== undefined || extractedProfile?.age !== undefined) ? (
+        <View style={styles.detectedBox}>
+          <Text style={styles.detectedText}>
+            Detected: {extractedProfile.experience !== undefined ? `${extractedProfile.experience} years` : ""} {extractedProfile.age !== undefined ? `| ${extractedProfile.age} yrs old` : ""}
+          </Text>
+          <TouchableOpacity onPress={confirmExtraction}>
+            <Text style={styles.useText}>? Use</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={rejectExtraction}>
+            <Text style={styles.rejectText}>?</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
     </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  textArea: {
+  stepperContainer: {
+    marginBottom: 30,
+  },
+  stepperRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 14,
-    padding: 16,
-    fontSize: 16,
-    color: COLORS.text,
-    minHeight: 80,
-    textAlignVertical: "top",
+    borderRadius: BORDER_RADIUS.md,
+    padding: 8,
   },
+  stepperBtn: {
+    backgroundColor: COLORS.primaryLight,
+    width: 48,
+    height: 48,
+    borderRadius: BORDER_RADIUS.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepperBtnText: {
+    fontSize: 24,
+    color: COLORS.primary,
+    fontWeight: "bold",
+  },
+  stepperInput: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: COLORS.text,
+    textAlign: "center",
+    flex: 1,
+  },
+  voiceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 20,
+  },
+  voiceHint: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
+  detectedBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: COLORS.accentLight,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  detectedText: { flex: 1, fontSize: 13, color: COLORS.text },
+  useText: { color: COLORS.success, fontWeight: "700" },
+  rejectText: { color: COLORS.textLight, fontSize: 18 },
 });

@@ -1,4 +1,5 @@
 const {
+  admin,
   db,
 } = require(
   "../config/firebase"
@@ -116,9 +117,10 @@ const createJob =
             Array.isArray(requiredSkills)
               ? requiredSkills.map(
                   (skill) =>
-                    skill.trim()
+                    String(skill).trim().toLowerCase()
                 )
               : [],
+          canonicalRole: (workerCategory || "professional").toLowerCase(),
 
           location:
             (location || "").trim(),
@@ -133,6 +135,12 @@ const createJob =
               : Number(salary || 0),
 
           experienceRequired:
+            experienceRequired !== undefined
+              ? (isNaN(Number(experienceRequired))
+                  ? 0
+                  : Number(experienceRequired))
+              : 0,
+          minimumExperience:
             experienceRequired !== undefined
               ? (isNaN(Number(experienceRequired))
                   ? 0
@@ -154,6 +162,7 @@ const createJob =
 
           updatedAt:
             new Date(),
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
         };
 
       /*
@@ -489,10 +498,13 @@ const updateJob =
       */
       const updateData = {};
       if (title !== undefined) updateData.title = title.trim();
-      if (workerCategory !== undefined) updateData.workerCategory = workerCategory;
+      if (workerCategory !== undefined) {
+        updateData.workerCategory = workerCategory;
+        updateData.canonicalRole = workerCategory.toLowerCase();
+      }
       if (requiredSkills !== undefined) {
         updateData.requiredSkills = Array.isArray(requiredSkills)
-          ? requiredSkills.map((s) => s.trim())
+          ? requiredSkills.map((s) => String(s).trim().toLowerCase())
           : [];
       }
       if (location !== undefined) updateData.location = location.trim();
@@ -502,14 +514,17 @@ const updateJob =
           : Number(salary || 0);
       }
       if (experienceRequired !== undefined) {
-        updateData.experienceRequired = isNaN(Number(experienceRequired))
+        const exp = isNaN(Number(experienceRequired))
           ? 0
           : Number(experienceRequired);
+        updateData.experienceRequired = exp;
+        updateData.minimumExperience = exp;
       }
       if (description !== undefined) updateData.description = description.trim();
       if (isDraft !== undefined) updateData.isDraft = isDraft;
       if (isActive !== undefined) updateData.isActive = isActive;
       updateData.updatedAt = new Date();
+      updateData.updated_at = admin.firestore.FieldValue.serverTimestamp();
 
       await jobRef.update(updateData);
 

@@ -2,10 +2,11 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { normalizeRole }      = require("../normalization/roleOntologyNormalizer");
 const { roleSkillMap }       = require("../../data/roleSkillMap");
 const { normalizeLocation }  = require("../normalization/locationNormalizer");
+const { geminiQueue }        = require("../aiService");
 const genAI = new GoogleGenerativeAI(
   process.env.GEMINI_API_KEY_PROFILE_EXTRACTION || process.env.GEMINI_API_KEY
 );
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
 const emptyProfile = () => ({
   rawRole:       "",
   skills:        [],
@@ -44,7 +45,7 @@ Format:
 `;
   let parsed = emptyProfile();
   try {
-    const result   = await model.generateContent(prompt);
+    const result   = await geminiQueue.add(() => model.generateContent(prompt));
     const response = result.response.text();
     let cleaned = response.replace(/```json/g, "").replace(/```/g, "").trim();
     const jsonStart = cleaned.indexOf("{");
@@ -55,11 +56,13 @@ Format:
     parsed = { ...emptyProfile(), ...JSON.parse(cleaned) };
   } catch (err) {
     console.warn("[profileExtractionService] extractProfileData failed:", err?.message);
-    const lower = transcript.toLowerCase();
-    if (lower.includes("driver"))      parsed.rawRole = "driver";
-    else if (lower.includes("electrician")) parsed.rawRole = "electrician";
-    else if (lower.includes("engineer"))    parsed.rawRole = "engineer";
-    else if (lower.includes("developer"))   parsed.rawRole = "developer";
+    return {
+      canonicalRole: 'other',
+      skills: [],
+      location: '',
+      availability: '',
+      error: true
+    };
   }
   const roleData = normalizeRole(parsed.rawRole);
   const inferredSkills = roleSkillMap[roleData.canonicalRole] || [];
