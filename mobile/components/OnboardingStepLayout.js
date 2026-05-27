@@ -36,6 +36,7 @@ export default function OnboardingStepLayout({
   subtitle,
   children,
   onContinue,
+  continueDisabled = false,
   continueLabel = "Continue →",
   scrollable = true,
   variant = "professional",
@@ -88,11 +89,23 @@ export default function OnboardingStepLayout({
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.continueBtn, isLabour && styles.continueBtnLabour]}
+          style={[
+            styles.continueBtn,
+            isLabour && styles.continueBtnLabour,
+            continueDisabled && styles.continueBtnDisabled,
+          ]}
           onPress={onContinue}
+          disabled={continueDisabled}
           activeOpacity={0.85}
         >
-          <Text style={styles.continueBtnText}>{continueLabel}</Text>
+          <Text
+            style={[
+              styles.continueBtnText,
+              continueDisabled && styles.continueBtnTextDisabled,
+            ]}
+          >
+            {continueLabel}
+          </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -127,7 +140,8 @@ export const onboardingStyles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: 14,
-    marginBottom: 4,
+    marginTop: 10,
+    marginBottom: 12,
   },
   inputIcon: { marginRight: 10 },
   inputFlex: {
@@ -141,6 +155,7 @@ export const onboardingStyles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
     marginTop: 4,
+    marginBottom: 6,
   },
   chip: {
     paddingVertical: 12,
@@ -272,9 +287,15 @@ const styles = StyleSheet.create({
   continueBtnLabour: {
     backgroundColor: COLORS.accent,
   },
+  continueBtnDisabled: {
+    backgroundColor: "#D1D5DB",
+  },
   continueBtnText: {
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "700",
+  },
+  continueBtnTextDisabled: {
+    color: "#6B7280",
   },
 });

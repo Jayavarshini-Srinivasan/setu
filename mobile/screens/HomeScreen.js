@@ -18,7 +18,9 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { auth, db } from "../services/firebase";
+import { db } from "../services/firebase";
+import { useAuth } from "../context/AuthContext";
+import { useOnboarding } from "../context/OnboardingContext";
 import API from "../services/api";
 import { useI18n } from "../context/I18nContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../constants/theme";
@@ -108,11 +110,25 @@ export default function HomeScreen({ navigation }) {
   const [appliedCount, setAppliedCount] = useState(0);
   const [shortlistedCount, setShortlistedCount] = useState(0);
   const { t, language } = useI18n();
+  const { user } = useAuth();
+  const { onboardingRefresh } = useOnboarding();
 
   useEffect(() => {
-    fetchProfile();
-    const user = auth.currentUser;
-    if (!user) return;
+    let cancelled = false;
+
+    setProfile(null);
+    setNotifications([]);
+    setTopJobs([]);
+    setAllJobs([]);
+    setMatchCount(0);
+    setLoading(true);
+
+    if (!user?.uid) {
+      setLoading(false);
+      return undefined;
+    }
+
+    fetchProfile(user, () => cancelled);
 
     const notifQuery = query(
       collection(db, "users", user.uid, "notifications"),
@@ -120,6 +136,7 @@ export default function HomeScreen({ navigation }) {
     );
 
     const unsubscribe = onSnapshot(notifQuery, (snapshot) => {
+      if (cancelled) return;
       const list = [];
       snapshot.forEach((docSnap) => {
         list.push({ id: docSnap.id, ...docSnap.data() });
@@ -131,12 +148,18 @@ export default function HomeScreen({ navigation }) {
       }
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user?.uid, language, onboardingRefresh]);
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    if (!user?.uid) {
+      setAppliedCount(0);
+      setShortlistedCount(0);
+      return undefined;
+    }
 
     const appsQuery = query(
       collection(db, "applications"),
@@ -156,12 +179,11 @@ export default function HomeScreen({ navigation }) {
     }, () => {});
 
     return () => unsubApps();
-  }, []);
+  }, [user?.uid]);
 
   const handleMarkAsRead = async (notifId) => {
     try {
-      const user = auth.currentUser;
-      if (!user) return;
+      if (!user?.uid) return;
       const notifRef = doc(db, "users", user.uid, "notifications", notifId);
       await updateDoc(notifRef, { status: "read" });
     } catch (err) {
@@ -171,10 +193,9 @@ export default function HomeScreen({ navigation }) {
 
   const getNotifTitle = () => t("notificationsTitle") || "Notifications";
 
-  const fetchTopMatches = async (userData) => {
+  const fetchTopMatches = async (userData, activeUser, isCancelled) => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!activeUser?.uid) return;
 
       const profileData = userData.profile || {};
       const isProfessional = userData.workerType === "professional";
@@ -189,7 +210,7 @@ export default function HomeScreen({ navigation }) {
         : (profileData.experience || 0);
 
       const response = await API.post("/match", {
-        workerId: currentUser.uid,
+        workerId: activeUser.uid,
         role,
         skills,
         location: profileData.location || "",
@@ -198,6 +219,7 @@ export default function HomeScreen({ navigation }) {
         language,
       });
       const jobs = response.data || [];
+      if (isCancelled()) return;
       setAllJobs(jobs);
       setMatchCount(jobs.length);
       setTopJobs(jobs.slice(0, 2));
@@ -206,23 +228,24 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (activeUser, isCancelled = () => false) => {
     try {
-      const user = auth.currentUser;
-      if (!user) {
+      if (!activeUser?.uid) {
         return;
       }
 
-      const snap = await getDoc(doc(db, "users", user.uid));
+      const snap = await getDoc(doc(db, "users", activeUser.uid));
       if (snap.exists()) {
+        if (isCancelled()) return;
         const data = snap.data();
         setProfile(data);
         // Do not block the home screen on /match (can be slow or offline)
-        fetchTopMatches(data);
+        fetchTopMatches(data, activeUser, isCancelled);
       }
     } catch (err) {
       console.log("HOME PROFILE FETCH:", err);
     } finally {
+      if (isCancelled()) return;
       setLoading(false);
     }
   };
@@ -245,8 +268,8 @@ export default function HomeScreen({ navigation }) {
 
   const isProfessional = profile.workerType === "professional";
   const p = profile.profile || {};
-  const emailName = auth.currentUser?.email?.split("@")[0] || "there";
-  const displayName = p.fullName || p.name || emailName.replace(/[._]/g, " ");
+  const emailName = user?.email?.split("@")[0] || "there";
+  const displayName = p.fullName || p.name || p.resumeSummary?.split("|")[0] || emailName.replace(/[._]/g, " ");
   const role = isProfessional ? p.professionalRole : (p.canonicalRole || p.role);
   const skills = isProfessional ? (p.professionalSkills || []) : (p.skills || []);
   const location = p.location || "—";

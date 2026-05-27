@@ -109,6 +109,8 @@ export default function SkillsQuestionScreen({ navigation }) {
     navigation.navigate("ExperienceQuestion");
   };
 
+  const isFormValid = selectedSkills.length > 0;
+
   return (
     <OnboardingStepLayout
       navigation={navigation}
@@ -117,6 +119,7 @@ export default function SkillsQuestionScreen({ navigation }) {
       title="Your Skills"
       subtitle="Select all that apply. आप क्या काम करते हैं?"
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
       variant="labour"
     >
       <View style={styles.skillGrid}>

@@ -318,7 +318,15 @@ function AppNavigator() {
   */
   useEffect(() => {
 
-    checkProfile();
+    let cancelled = false;
+
+    checkProfile(
+      () => cancelled
+    );
+
+    return () => {
+      cancelled = true;
+    };
 
   }, [
     user,
@@ -326,11 +334,18 @@ function AppNavigator() {
   ]);
 
   const checkProfile =
-    async () => {
+    async (isCancelled = () => false) => {
+
+      setLoading(true);
 
       try {
 
         if (!user) {
+
+          if (isCancelled()) return;
+
+          setWorkerType("");
+          setOnboardingCompleted(false);
 
           setLoading(false);
 
@@ -353,6 +368,8 @@ function AppNavigator() {
           userSnap.exists()
         ) {
 
+          if (isCancelled()) return;
+
           const userData =
             userSnap.data();
           setWorkerType(
@@ -361,6 +378,11 @@ function AppNavigator() {
           setOnboardingCompleted(
             userData.onboardingCompleted || false
           );
+        } else {
+          if (isCancelled()) return;
+
+          setWorkerType("");
+          setOnboardingCompleted(false);
         }
 
       } catch (error) {
@@ -368,6 +390,8 @@ function AppNavigator() {
         console.log(error);
 
       } finally {
+
+        if (isCancelled()) return;
 
         setLoading(false);
       }
@@ -482,16 +506,16 @@ function AppNavigator() {
         />
 
         <Stack.Screen
-          name="Education"
+          name="ProfessionalSkills"
           component={
-            EducationScreen
+            ProfessionalSkillsScreen
           }
         />
 
         <Stack.Screen
-          name="ProfessionalSkills"
+          name="Education"
           component={
-            ProfessionalSkillsScreen
+            EducationScreen
           }
         />
 
@@ -544,16 +568,31 @@ function AppNavigator() {
   ) {
 
     return (
-      <ProfessionalApp />
+      <ProfessionalApp key={user.uid} />
     );
   }
 
-  return <LabourApp />;
+  return <LabourApp key={user.uid} />;
 }
 
 /*
   ROOT APP
 */
+function UserScopedApp() {
+  const { user } = useAuth();
+  const userScopeKey = user?.uid || "signed-out";
+
+  return (
+    <AppliedJobsProvider key={`applied-${userScopeKey}`}>
+      <OnboardingProvider key={`onboarding-${userScopeKey}`}>
+        <NavigationContainer key={`navigation-${userScopeKey}`}>
+          <AppNavigator />
+        </NavigationContainer>
+      </OnboardingProvider>
+    </AppliedJobsProvider>
+  );
+}
+
 export default function App() {
 
   return (
@@ -561,13 +600,7 @@ export default function App() {
     <SafeAreaProvider>
       <I18nProvider>
         <AuthProvider>
-          <AppliedJobsProvider>
-            <OnboardingProvider>
-              <NavigationContainer>
-                <AppNavigator />
-              </NavigationContainer>
-            </OnboardingProvider>
-          </AppliedJobsProvider>
+          <UserScopedApp />
         </AuthProvider>
       </I18nProvider>
     </SafeAreaProvider>

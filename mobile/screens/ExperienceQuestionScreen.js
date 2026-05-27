@@ -31,16 +31,18 @@ export default function ExperienceQuestionScreen({ navigation }) {
   const { t } = useI18n();
 
   const [expBand, setExpBand] = useState(
-    EXP_OPTIONS.find((o) => o.value === Number(onboardingData.experience))?.label || "1-2 yr"
+    onboardingData.experience !== "" && onboardingData.experience != null
+      ? EXP_OPTIONS.find((o) => o.value === Number(onboardingData.experience))?.label || ""
+      : ""
   );
-  const [availability, setAvailability] = useState(onboardingData.availability || "full-time");
-  const [wage, setWage] = useState(onboardingData.expectedWage || "300-600");
+  const [availability, setAvailability] = useState(onboardingData.availability || "");
+  const [wage, setWage] = useState(onboardingData.expectedWage || "");
   const [previousWork, setPreviousWork] = useState(onboardingData.previousWorkType || "");
 
   const handleContinue = () => {
     const expVal = EXP_OPTIONS.find((o) => o.label === expBand)?.value ?? 0;
-    if (!availability) {
-      Alert.alert(t("required") || "Required", t("selectAvailabilityError") || "Please select your availability.");
+    if (!isFormValid) {
+      Alert.alert(t("required") || "Required", t("selectAvailabilityError") || "Please complete all required fields.");
       return;
     }
 
@@ -53,6 +55,12 @@ export default function ExperienceQuestionScreen({ navigation }) {
     navigation.navigate("LocationQuestion");
   };
 
+  const isFormValid =
+    Boolean(expBand) &&
+    Boolean(availability) &&
+    Boolean(wage) &&
+    Boolean(previousWork.trim());
+
   return (
     <OnboardingStepLayout
       navigation={navigation}
@@ -61,6 +69,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
       title={t("labourOnboarding.experienceStepTitle") || "Experience & Availability"}
       subtitle={t("experienceSubtitle") || "Tell us about your work history and preferences."}
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
       variant="labour"
     >
       <Text style={os.label}>YEARS OF EXPERIENCE</Text>

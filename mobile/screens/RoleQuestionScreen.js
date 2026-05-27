@@ -27,7 +27,7 @@ export default function RoleQuestionScreen({ navigation }) {
   const [age, setAge] = useState(onboardingData.age?.toString() || "");
   const [city, setCity] = useState(onboardingData.location || "");
   const [phone, setPhone] = useState(onboardingData.phoneNumber || "");
-  const [workRadius, setWorkRadius] = useState(onboardingData.workRadius || "5 km");
+  const [workRadius, setWorkRadius] = useState(onboardingData.workRadius || "");
   const [selectedRole, setSelectedRole] = useState(onboardingData.canonicalRole || "");
 
   const {
@@ -56,19 +56,11 @@ export default function RoleQuestionScreen({ navigation }) {
   };
 
   const handleContinue = () => {
-    if (!fullName.trim() || !city.trim() || !phone.trim()) {
+    if (!isFormValid) {
       Alert.alert(t("required") || "Required", t("labourOnboarding.fillRequiredFields") || "Please fill in your name, city, and phone number.");
       return;
     }
-    if (!selectedRole) {
-      Alert.alert(t("required") || "Required", t("labourOnboarding.selectRole") || "Please select or speak your role.");
-      return;
-    }
     const phoneDigits = phone.replace(/[^0-9]/g, "");
-    if (phoneDigits.length < 10) {
-      Alert.alert(t("required") || "Required", t("labourOnboarding.validPhone") || "Please enter a valid 10-digit phone number.");
-      return;
-    }
 
     updateField("resumeSummary", fullName.trim());
     if (age) updateField("age", age);
@@ -78,6 +70,13 @@ export default function RoleQuestionScreen({ navigation }) {
     navigation.navigate("SkillsQuestion");
   };
 
+  const isFormValid =
+    Boolean(fullName.trim()) &&
+    Boolean(city.trim()) &&
+    phone.replace(/[^0-9]/g, "").length >= 10 &&
+    Boolean(workRadius) &&
+    Boolean(selectedRole);
+
   return (
     <OnboardingStepLayout
       navigation={navigation}
@@ -86,6 +85,7 @@ export default function RoleQuestionScreen({ navigation }) {
       title="Basic Info"
       subtitle="कुछ बुनियादी जानकारी दें · Let's get started"
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
       variant="labour"
     >
       <View style={os.inputRow}>

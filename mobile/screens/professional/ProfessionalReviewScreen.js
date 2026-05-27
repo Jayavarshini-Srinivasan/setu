@@ -71,45 +71,19 @@ export default function ProfessionalReviewScreen({
             onboardingCompleted:
               true,
 
-            profile: {
-
-              professionalRole:
-                onboardingData.professionalRole,
-
-              education:
-                onboardingData.education,
-
-              professionalSkills:
-                onboardingData.professionalSkills,
-
-              experienceDetails:
-                onboardingData.experienceDetails,
-
-              linkedin:
-                onboardingData.linkedin,
-
-              github:
-                onboardingData.github,
-
-              portfolio:
-                onboardingData.portfolio,
-
-              email:
-                onboardingData.email || "",
-
-              /*
-                preferredRoles — keep for backward compat
-                careerGoal     — string, used by learningPathService
-              */
-              preferredRoles:
-                onboardingData.preferredRoles,
-
-              careerGoal:
-                (onboardingData.preferredRoles || [])[0] || "",
-
-              transcriptHistory:
-                onboardingData.transcriptHistory,
-            },
+            "profile.professionalRole": onboardingData.professionalRole,
+        "profile.education": onboardingData.education,
+        "profile.professionalSkills": onboardingData.professionalSkills,
+        "profile.experienceDetails": onboardingData.experienceDetails,
+        "profile.linkedin": onboardingData.linkedin,
+        "profile.github": onboardingData.github,
+        "profile.portfolio": onboardingData.portfolio,
+        "profile.email": onboardingData.email || "",
+        "profile.preferredRoles": onboardingData.preferredRoles,
+        "profile.careerGoal": (onboardingData.preferredRoles || [])[0] || "",
+        "profile.transcriptHistory": onboardingData.transcriptHistory,
+        "profile.resumeSummary": onboardingData.resumeSummary || "",
+        "profile.fullName": onboardingData.resumeSummary || "",
           }
         );
 

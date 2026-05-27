@@ -59,13 +59,15 @@ export default function LocationQuestionScreen({ navigation }) {
   };
 
   const handleContinue = () => {
-    if (!location) {
+    if (!isFormValid) {
       Alert.alert(t("required") || "Required", t("enterLocation") || "Please select or enter location");
       return;
     }
     updateField("location", location);
     navigation.navigate("PreferencesQuestion");
   };
+
+  const isFormValid = Boolean(location.trim());
 
   return (
     <OnboardingStepLayout
@@ -75,6 +77,7 @@ export default function LocationQuestionScreen({ navigation }) {
       title={t("whichCity") || "Which city do you work in?"}
       subtitle={t("citySubtitle") || "Type, select a city, or speak your location."}
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
       variant="labour"
     >
       <TextInput

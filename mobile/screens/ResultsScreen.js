@@ -14,9 +14,10 @@ import API from "../services/api";
 
 import { doc, getDoc } from "firebase/firestore";
 import { useAppliedJobs } from "../context/AppliedJobsContext";
+import { useAuth } from "../context/AuthContext";
 import { getJobId } from "../utils/jobId";
 import { submitJobApplication, ApplyJobError } from "../utils/applyToJob";
-import { auth, db } from "../services/firebase";
+import { db } from "../services/firebase";
 import { useI18n } from "../context/I18nContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,10 +36,11 @@ export default function ResultsScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const topInset = insets.top + 12;
   const { appliedCount, markApplied, isApplied } = useAppliedJobs();
+  const { user } = useAuth();
 
   const loadMatches = async () => {
 
-    const currentUser = auth.currentUser;
+    const currentUser = user;
     if (!currentUser) return [];
 
     /* ── Profile ── */
@@ -92,7 +94,7 @@ export default function ResultsScreen({ navigation }) {
   };
 
   /* ── Async state ── */
-  const { data, loading, error } = useAsync(loadMatches, []);
+  const { data, loading, error } = useAsync(loadMatches, [user?.uid, language]);
 
   const jobs          = data?.jobs || [];
   const isProfessional = data?.isProfessional || false;

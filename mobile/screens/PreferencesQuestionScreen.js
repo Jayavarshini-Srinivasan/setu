@@ -11,19 +11,21 @@ export default function PreferencesQuestionScreen({ navigation }) {
   const { t } = useI18n();
 
   const [preferredShift, setPreferredShift] = useState(
-    onboardingData.preferredShift || "day"
+    onboardingData.preferredShift || ""
   );
 
   const shiftOptions = ["day", "night", "flexible"];
 
   const handleContinue = () => {
-    if (!preferredShift) {
+    if (!isFormValid) {
       Alert.alert(t("required") || "Required", t("selectShiftError") || "Please select your preferred shift.");
       return;
     }
     updateField("preferredShift", preferredShift);
     navigation.navigate("ContactQuestion");
   };
+
+  const isFormValid = Boolean(preferredShift);
 
   return (
     <OnboardingStepLayout
@@ -33,6 +35,7 @@ export default function PreferencesQuestionScreen({ navigation }) {
       title={t("workPreferences") || "Work Preferences"}
       subtitle={t("workPrefSubtitle") || "Select your preferred shift."}
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
       variant="labour"
     >
       <Text style={os.label}>PREFERRED SHIFT</Text>

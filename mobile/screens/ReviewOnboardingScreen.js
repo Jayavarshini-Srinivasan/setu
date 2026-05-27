@@ -66,45 +66,17 @@ export default function ReviewOnboardingScreen({
             onboardingCompleted:
               true,
 
-            profile: {
-
-              role:
-                onboardingData.role,
-
-              canonicalRole:
-                onboardingData
-                  .canonicalRole,
-
-              skills:
-                onboardingData.skills,
-
-              experience:
-                onboardingData
-                  .experience,
-
-              location:
-                onboardingData
-                  .location,
-
-              phoneNumber:
-                onboardingData
-                  .phoneNumber || "",
-
-              labourData: {
-
-                availability:
-                  onboardingData
-                    .availability,
-
-                preferredShift:
-                  onboardingData
-                    .preferredShift,
-              },
-
-              transcriptHistory:
-                onboardingData
-                  .transcriptHistory,
-            },
+            "profile.role": onboardingData.role,
+        "profile.canonicalRole": onboardingData.canonicalRole,
+        "profile.skills": onboardingData.skills,
+        "profile.experience": onboardingData.experience,
+        "profile.location": onboardingData.location,
+        "profile.phoneNumber": onboardingData.phoneNumber || "",
+        "profile.labourData.availability": onboardingData.availability,
+        "profile.labourData.preferredShift": onboardingData.preferredShift,
+        "profile.transcriptHistory": onboardingData.transcriptHistory,
+        "profile.resumeSummary": onboardingData.resumeSummary || "",
+        "profile.fullName": onboardingData.resumeSummary || "",
           }
         );
 

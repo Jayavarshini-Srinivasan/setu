@@ -119,7 +119,7 @@ export default function CareerGoalsScreen({
   const handleContinue =
     () => {
 
-      if (selectedGoals.length === 0) {
+      if (!isFormValid) {
         Alert.alert(
           t("required") || "Required",
           t("selectCareerGoalError") || "Please select at least one career goal"
@@ -132,6 +132,8 @@ export default function CareerGoalsScreen({
         "ContactQuestion"
       );
     };
+
+  const isFormValid = selectedGoals.length > 0;
 
   return (
 
@@ -201,9 +203,11 @@ export default function CareerGoalsScreen({
       </ScrollView>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, !isFormValid && styles.buttonDisabled]}
 
         onPress={handleContinue}
+
+        disabled={!isFormValid}
       >
 
         <Text style={styles.buttonText}>
@@ -299,6 +303,11 @@ const styles =
         "center",
 
       marginBottom: 30,
+    },
+
+    buttonDisabled: {
+      backgroundColor:
+        "#D1D5DB",
     },
 
     buttonText: {

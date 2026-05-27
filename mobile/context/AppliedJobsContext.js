@@ -8,7 +8,7 @@ import {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { auth, db } from "../services/firebase";
+import { db } from "../services/firebase";
 import { getJobId } from "../utils/jobId";
 import { useAuth } from "./AuthContext";
 
@@ -22,11 +22,12 @@ export function AppliedJobsProvider({ children }) {
   const { user } = useAuth();
   const [appliedJobIds, setAppliedJobIds] = useState(() => new Set());
   const [hydrated, setHydrated] = useState(false);
+  const [cacheUid, setCacheUid] = useState(null);
 
-  /* Restore cached ids so UI survives screen unmounts if Firestore is slow */
+  /* Start clean for each uid; Firestore is the source of truth for applied jobs. */
   useEffect(() => {
-    let cancelled = false;
     setHydrated(false);
+    setCacheUid(null);
     setAppliedJobIds(new Set());
 
     if (!user?.uid) {
@@ -34,26 +35,11 @@ export function AppliedJobsProvider({ children }) {
       return undefined;
     }
 
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(storageKey(user.uid));
-        if (cancelled || !raw) return;
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAppliedJobIds((prev) => {
-            const next = new Set(prev);
-            parsed.forEach((id) => next.add(String(id)));
-            return next;
-          });
-        }
-      } catch (e) {
-        console.log("APPLIED JOBS CACHE READ:", e);
-      } finally {
-        if (!cancelled) setHydrated(true);
-      }
-    })();
+    setCacheUid(user.uid);
+    setHydrated(true);
+
     return () => {
-      cancelled = true;
+      setCacheUid(null);
     };
   }, [user?.uid]);
 
@@ -71,8 +57,8 @@ export function AppliedJobsProvider({ children }) {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        setAppliedJobIds((prev) => {
-          const next = new Set(prev);
+        setAppliedJobIds(() => {
+          const next = new Set();
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const jobId = data.jobId ?? data.job?.id;
@@ -91,12 +77,12 @@ export function AppliedJobsProvider({ children }) {
 
   /* Persist whenever the set grows */
   useEffect(() => {
-    if (!hydrated || !user?.uid) return;
+    if (!hydrated || !user?.uid || cacheUid !== user.uid) return;
     const ids = [...appliedJobIds];
     AsyncStorage.setItem(storageKey(user.uid), JSON.stringify(ids)).catch((e) => {
       console.log("APPLIED JOBS CACHE WRITE:", e);
     });
-  }, [appliedJobIds, hydrated, user?.uid]);
+  }, [appliedJobIds, cacheUid, hydrated, user?.uid]);
 
   const markApplied = useCallback((jobId) => {
     if (jobId == null || jobId === "") return;
@@ -107,23 +93,27 @@ export function AppliedJobsProvider({ children }) {
     });
   }, []);
 
+  const hasCurrentUserData =
+    Boolean(user?.uid && cacheUid === user.uid && hydrated);
+
   const isApplied = useCallback(
     (job) => {
+      if (!hasCurrentUserData) return false;
       const id = getJobId(job);
       if (!id) return false;
       return appliedJobIds.has(id);
     },
-    [appliedJobIds]
+    [appliedJobIds, hasCurrentUserData]
   );
 
   const value = useMemo(
     () => ({
-      appliedJobIds,
-      appliedCount: appliedJobIds.size,
+      appliedJobIds: hasCurrentUserData ? appliedJobIds : new Set(),
+      appliedCount: hasCurrentUserData ? appliedJobIds.size : 0,
       markApplied,
       isApplied,
     }),
-    [appliedJobIds, markApplied, isApplied]
+    [appliedJobIds, hasCurrentUserData, markApplied, isApplied]
   );
 
   return (

@@ -100,8 +100,10 @@ export default function ProfessionalSkillsScreen({ navigation }) {
       );
       return;
     }
-    navigation.navigate("ProfessionalExperience");
+    navigation.navigate("Education");
   };
+
+  const isFormValid = selectedSkills.length > 0;
 
   return (
     <OnboardingStepLayout
@@ -115,6 +117,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
         "Select your strongest skills. AI will suggest more."
       }
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
     >
       <View style={styles.searchRow}>
         <Ionicons name="search-outline" size={18} color={COLORS.textLight} />

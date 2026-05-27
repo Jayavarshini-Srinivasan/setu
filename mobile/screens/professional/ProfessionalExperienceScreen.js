@@ -1,7 +1,4 @@
-import {
-  useState,
-} from "react";
-
+import { useState } from "react";
 import {
   View,
   Text,
@@ -9,13 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ScrollView,
 } from "react-native";
 
-import {
-  useOnboarding,
-} from "../../context/OnboardingContext";
+import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
+import OnboardingStepLayout from "../../components/OnboardingStepLayout";
 
 export default function ProfessionalExperienceScreen({
   navigation,
@@ -60,6 +55,14 @@ export default function ProfessionalExperienceScreen({
   const existingExperience =
     onboardingData.experienceDetails || [];
 
+  const canAddExperience =
+    Boolean(company.trim()) &&
+    Boolean(role.trim()) &&
+    Boolean(years.trim()) &&
+    Boolean(achievements.trim());
+
+  const canContinue = existingExperience.length > 0;
+
   /*
     ADD EXPERIENCE
   */
@@ -67,9 +70,7 @@ export default function ProfessionalExperienceScreen({
     () => {
 
       if (
-        !company ||
-        !role ||
-        !years
+        !canAddExperience
       ) {
 
         Alert.alert(
@@ -82,13 +83,13 @@ export default function ProfessionalExperienceScreen({
 
       const newExperience = {
 
-        company,
+        company: company.trim(),
 
-        role,
+        role: role.trim(),
 
-        years,
+        years: years.trim(),
 
-        achievements,
+        achievements: achievements.trim(),
       };
 
       const updatedExperience = [
@@ -147,20 +148,16 @@ export default function ProfessionalExperienceScreen({
     };
 
   return (
-
-    <ScrollView
-      contentContainerStyle={
-        styles.container
-      }
+    <OnboardingStepLayout
+      navigation={navigation}
+      screenTitle="Experience (4/4)"
+      step={4}
+      badge="PROFESSIONAL"
+      title={t("experienceOnboarding.title") || "Add your work experience"}
+      subtitle={t("experienceOnboarding.subtitle") || "This helps generate professional resumes and career insights."}
+      onContinue={handleContinue}
+      continueDisabled={!canContinue}
     >
-
-      <Text style={styles.title}>
-        {t("experienceOnboarding.title") || "Add your work experience"}
-      </Text>
-
-      <Text style={styles.subtitle}>
-        {t("experienceOnboarding.subtitle") || "This helps generate professional resumes and career insights."}
-      </Text>
 
       <TextInput
         style={styles.input}
@@ -212,9 +209,11 @@ export default function ProfessionalExperienceScreen({
       />
 
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, !canAddExperience && styles.addButtonDisabled]}
 
         onPress={handleAddExperience}
+
+        disabled={!canAddExperience}
       >
 
         <Text style={styles.buttonText}>
@@ -263,19 +262,7 @@ export default function ProfessionalExperienceScreen({
         )
       }
 
-      <TouchableOpacity
-        style={styles.continueButton}
-
-        onPress={handleContinue}
-      >
-
-        <Text style={styles.buttonText}>
-          {t("continue") || "Continue"}
-        </Text>
-
-      </TouchableOpacity>
-
-    </ScrollView>
+    </OnboardingStepLayout>
   );
 }
 
@@ -343,6 +330,11 @@ const styles =
         "center",
 
       marginBottom: 30,
+    },
+
+    addButtonDisabled: {
+      backgroundColor:
+        "#D1D5DB",
     },
 
     continueButton: {

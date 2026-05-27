@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 
 import {
@@ -58,6 +59,13 @@ export default function ProfessionalLinksScreen({
   */
   const handleContinue =
     () => {
+      if (!isFormValid) {
+        Alert.alert(
+          t("required") || "Required",
+          t("links.addOneLinkError") || "Please add at least one professional link"
+        );
+        return;
+      }
 
       /*
         SAVE LINKS
@@ -81,6 +89,11 @@ export default function ProfessionalLinksScreen({
         "CareerGoals"
       );
     };
+
+  const isFormValid =
+    Boolean(linkedin.trim()) ||
+    Boolean(github.trim()) ||
+    Boolean(portfolio.trim());
 
   return (
 
@@ -131,9 +144,11 @@ export default function ProfessionalLinksScreen({
       />
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, !isFormValid && styles.buttonDisabled]}
 
         onPress={handleContinue}
+
+        disabled={!isFormValid}
       >
 
         <Text style={styles.buttonText}>
@@ -204,6 +219,11 @@ const styles =
         "center",
 
       marginTop: 20,
+    },
+
+    buttonDisabled: {
+      backgroundColor:
+        "#D1D5DB",
     },
 
     buttonText: {

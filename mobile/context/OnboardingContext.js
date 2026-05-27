@@ -1,15 +1,111 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
 } from "react";
+
+import { useAuth } from "./AuthContext";
 
 const OnboardingContext =
   createContext();
 
+const getInitialOnboardingData = () => ({
+
+  /*
+    GLOBAL
+  */
+  workerType: "",
+
+  language:
+    "english",
+
+  transcriptHistory:
+    [],
+
+  /*
+    LABOUR
+  */
+  role: "",
+
+  canonicalRole:
+    "",
+
+  skills: [],
+
+  experience: "",
+
+  age: "",
+
+  phoneNumber: "",
+
+  workRadius: "",
+
+  expectedWage: "",
+
+  previousWorkType: "",
+
+  location: "",
+
+  availability:
+    "",
+
+  preferredShift:
+    "",
+
+  /*
+    PROFESSIONAL
+  */
+  professionalRole:
+    "",
+
+  email: "",
+
+  experienceBand: "",
+
+  education: {
+
+    degree: "",
+
+    institution:
+      "",
+
+    graduationYear:
+      "",
+
+    fieldOfStudy:
+      "",
+  },
+
+  professionalSkills:
+    [],
+
+  experienceDetails:
+    [],
+
+  linkedin: "",
+
+  github: "",
+
+  portfolio: "",
+
+  careerGoals:
+    "",
+
+  resumeSummary:
+    "",
+
+  certifications:
+    [],
+
+  preferredRoles:
+    [],
+});
+
 export function OnboardingProvider({
   children,
 }) {
+  const { user } = useAuth();
 
   const [
     onboardingRefresh,
@@ -19,80 +115,7 @@ export function OnboardingProvider({
   const [
     onboardingData,
     setOnboardingData,
-  ] = useState({
-
-    /*
-      GLOBAL
-    */
-    workerType: "",
-
-    language:
-      "english",
-
-    transcriptHistory:
-      [],
-
-    /*
-      LABOUR
-    */
-    role: "",
-
-    canonicalRole:
-      "",
-
-    skills: [],
-
-    experience: 0,
-
-    location: "",
-
-    availability:
-      "",
-
-    preferredShift:
-      "",
-
-    /*
-      PROFESSIONAL
-    */
-    professionalRole:
-      "",
-
-    education: {
-
-      degree: "",
-
-      institution:
-        "",
-
-      graduationYear:
-        "",
-    },
-
-    professionalSkills:
-      [],
-
-    experienceDetails:
-      [],
-
-    linkedin: "",
-
-    github: "",
-
-    portfolio: "",
-
-    careerGoals:
-      "",
-
-    resumeSummary:
-      "",
-
-    certifications:
-      [],
-
-    preferredRoles:
-      [],
-  });
+  ] = useState(getInitialOnboardingData);
 
   /*
     UPDATE FIELD
@@ -150,73 +173,14 @@ export function OnboardingProvider({
   const resetOnboarding =
     () => {
 
-      setOnboardingData({
-
-        workerType:
-          "",
-
-        language:
-          "english",
-
-        transcriptHistory:
-          [],
-
-        role: "",
-
-        canonicalRole:
-          "",
-
-        skills: [],
-
-        experience: 0,
-
-        location: "",
-
-        availability:
-          "",
-
-        preferredShift:
-          "",
-
-        professionalRole:
-          "",
-
-        education: {
-
-          degree: "",
-
-          institution:
-            "",
-
-          graduationYear:
-            "",
-        },
-
-        professionalSkills:
-          [],
-
-        experienceDetails:
-          [],
-
-        linkedin: "",
-
-        github: "",
-
-        portfolio: "",
-
-        careerGoals:
-          "",
-
-        resumeSummary:
-          "",
-
-        certifications:
-          [],
-
-        preferredRoles:
-          [],
-      });
+      setOnboardingData(
+        getInitialOnboardingData()
+      );
     };
+
+  useEffect(() => {
+    resetOnboarding();
+  }, [user?.uid]);
 
   return (
 

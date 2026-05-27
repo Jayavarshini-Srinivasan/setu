@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -15,17 +16,22 @@ import OnboardingStepLayout, { onboardingStyles as os } from "../../components/O
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
 
 const DEGREES = ["B.Com", "BBA", "B.Tech", "B.Sc", "MBA", "M.Com", "Diploma", "Other"];
-const GRAD_YEARS = ["2020", "2021", "2022", "2023", "2024"];
+const QUICK_YEARS = ["2026", "2027", "2028"];
+const ALL_YEARS = [];
+for (let y = 2030; y >= 1950; y--) {
+  ALL_YEARS.push(String(y));
+}
 
 export default function EducationScreen({ navigation }) {
   const { onboardingData, updateField } = useOnboarding();
   const { t } = useI18n();
 
-  const [degree, setDegree] = useState(onboardingData.education?.degree || "B.Com");
+  const [degree, setDegree] = useState(onboardingData.education?.degree || "");
   const [institution, setInstitution] = useState(onboardingData.education?.institution || "");
   const [graduationYear, setGraduationYear] = useState(
-    onboardingData.education?.graduationYear || "2022"
+    onboardingData.education?.graduationYear || ""
   );
+  const [showYearPicker, setShowYearPicker] = useState(false);
   const [fieldOfStudy, setFieldOfStudy] = useState(
     onboardingData.education?.fieldOfStudy || ""
   );
@@ -35,10 +41,10 @@ export default function EducationScreen({ navigation }) {
   const [showDegreePicker, setShowDegreePicker] = useState(false);
 
   const handleContinue = () => {
-    if (!degree || !institution || !graduationYear) {
+    if (!isFormValid) {
       Alert.alert(
         t("required") || "Required",
-        t("educationOnboarding.completeAllFieldsError") || "Please complete all education fields"
+        t("educationOnboarding.completeAllFieldsError") || "Please complete all required education fields"
       );
       return;
     }
@@ -57,13 +63,19 @@ export default function EducationScreen({ navigation }) {
       );
     }
 
-    navigation.navigate("ProfessionalSkills");
+    navigation.navigate("ProfessionalExperience");
   };
+
+  const isFormValid =
+    Boolean(degree) &&
+    Boolean(institution.trim()) &&
+    Boolean(graduationYear) &&
+    Boolean(fieldOfStudy.trim());
 
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle={t("educationOnboarding.title") || "Education"}
+      screenTitle="Education (3/4)"
       step={3}
       title={t("education") || "Education"}
       subtitle={
@@ -71,6 +83,7 @@ export default function EducationScreen({ navigation }) {
         "Your educational background helps us match you better."
       }
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
     >
       <Text style={os.label}>HIGHEST DEGREE</Text>
       <TouchableOpacity
@@ -78,7 +91,9 @@ export default function EducationScreen({ navigation }) {
         onPress={() => setShowDegreePicker(!showDegreePicker)}
         activeOpacity={0.8}
       >
-        <Text style={styles.dropdownText}>{degree}</Text>
+        <Text style={[styles.dropdownText, !degree && styles.placeholderText]}>
+          {degree || "Select degree"}
+        </Text>
         <Ionicons name="chevron-down" size={20} color={COLORS.textSecondary} />
       </TouchableOpacity>
       {showDegreePicker && (
@@ -111,18 +126,81 @@ export default function EducationScreen({ navigation }) {
 
       <Text style={os.label}>GRADUATION YEAR</Text>
       <View style={os.chipRow}>
-        {GRAD_YEARS.map((y) => (
+        {QUICK_YEARS.map((y) => (
           <TouchableOpacity
             key={y}
-            style={[os.chip, graduationYear === y && os.chipSelected]}
-            onPress={() => setGraduationYear(y)}
+            style={[
+              os.chip,
+              graduationYear === y && !showYearPicker && os.chipSelected,
+            ]}
+            onPress={() => {
+              setGraduationYear(y);
+              setShowYearPicker(false);
+            }}
           >
-            <Text style={[os.chipText, graduationYear === y && os.chipTextSelected]}>{y}</Text>
+            <Text style={[os.chipText, graduationYear === y && !showYearPicker && os.chipTextSelected]}>{y}</Text>
           </TouchableOpacity>
         ))}
+        <TouchableOpacity
+          style={[
+            os.chip,
+            (!QUICK_YEARS.includes(graduationYear) || showYearPicker) && os.chipSelected,
+          ]}
+          onPress={() => setShowYearPicker(!showYearPicker)}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text
+              style={[
+                os.chipText,
+                (!QUICK_YEARS.includes(graduationYear) || showYearPicker) && os.chipTextSelected,
+                { marginRight: 4 },
+              ]}
+            >
+              {!QUICK_YEARS.includes(graduationYear) && graduationYear ? graduationYear : "Other"}
+            </Text>
+            <Ionicons
+              name={showYearPicker ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={
+                (!QUICK_YEARS.includes(graduationYear) || showYearPicker)
+                  ? "#FFFFFF"
+                  : COLORS.textSecondary
+              }
+            />
+          </View>
+        </TouchableOpacity>
       </View>
 
-      <View style={os.inputRow}>
+      {showYearPicker && (
+        <View style={[styles.pickerList, { maxHeight: 200, marginTop: 8 }]}>
+          <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
+            {ALL_YEARS.map((y) => (
+              <TouchableOpacity
+                key={y}
+                style={[
+                  styles.pickerItem,
+                  graduationYear === y && { backgroundColor: COLORS.primaryLight },
+                ]}
+                onPress={() => {
+                  setGraduationYear(y);
+                  setShowYearPicker(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.pickerItemText,
+                    graduationYear === y && { color: COLORS.primary, fontWeight: "bold" },
+                  ]}
+                >
+                  {y}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      <View style={[os.inputRow, { marginTop: 16 }]}>
         <Text style={styles.fieldIcon}>🎨</Text>
         <TextInput
           style={os.inputFlex}
@@ -140,7 +218,7 @@ export default function EducationScreen({ navigation }) {
         </Text>
       </View>
 
-      <View style={os.inputRow}>
+      <View style={[os.inputRow, { marginTop: 16 }]}>
         <Text style={styles.fieldIcon}>🏆</Text>
         <TextInput
           style={os.inputFlex}
@@ -171,6 +249,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.text,
     fontWeight: "500",
+  },
+  placeholderText: {
+    color: COLORS.textLight,
+    fontWeight: "400",
   },
   pickerList: {
     backgroundColor: COLORS.surface,

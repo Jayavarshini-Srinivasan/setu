@@ -26,7 +26,7 @@ export default function ProfessionalRoleScreen({ navigation }) {
   const [email, setEmail] = useState(onboardingData.email || "");
   const [location, setLocation] = useState(onboardingData.location || "");
   const [jobTitle, setJobTitle] = useState(onboardingData.professionalRole || "");
-  const [expBand, setExpBand] = useState(onboardingData.experienceBand || "1-3");
+  const [expBand, setExpBand] = useState(onboardingData.experienceBand || "");
 
   const {
     voiceState,
@@ -52,10 +52,10 @@ export default function ProfessionalRoleScreen({ navigation }) {
   });
 
   const handleContinue = () => {
-    if (!jobTitle.trim()) {
+    if (!isFormValid) {
       Alert.alert(
         t("required") || "Required",
-        t("selectRoleError") || "Please enter your current or last job title."
+        t("selectRoleError") || "Please complete all profile fields."
       );
       return;
     }
@@ -69,8 +69,16 @@ export default function ProfessionalRoleScreen({ navigation }) {
     }
     updateField("experienceBand", expBand);
 
-    navigation.navigate("Education");
+    navigation.navigate("ProfessionalSkills");
   };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isFormValid =
+    Boolean(fullName.trim()) &&
+    emailRegex.test(email.trim()) &&
+    Boolean(location.trim()) &&
+    Boolean(jobTitle.trim()) &&
+    Boolean(expBand);
 
   const isRecording = voiceState === VOICE_STATE.RECORDING;
 
@@ -83,6 +91,7 @@ export default function ProfessionalRoleScreen({ navigation }) {
       title="Your Profile"
       subtitle="We'll use this to match you to top roles."
       onContinue={handleContinue}
+      continueDisabled={!isFormValid}
     >
       <View style={os.inputRow}>
         <Ionicons name="person-outline" size={20} color={COLORS.textLight} style={os.inputIcon} />

@@ -9,8 +9,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { collection, query, where, getDoc, doc, onSnapshot } from "firebase/firestore";
-import { auth, db } from "../services/firebase";
+import { db } from "../services/firebase";
 import { useI18n } from "../context/I18nContext";
+import { useAuth } from "../context/AuthContext";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +27,7 @@ const TAB_KEYS = ["all", "pending", "reviewed", "shortlisted", "rejected"];
 
 export default function AppliedScreen({ navigation }) {
   const { t } = useI18n();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const topInset = insets.top + 12;
   const [applications, setApplications] = useState([]);
@@ -55,11 +57,16 @@ export default function AppliedScreen({ navigation }) {
   };
 
   useEffect(() => {
-    const user = auth.currentUser;
     if (!user) {
+      setApplications([]);
+      setJobs({});
       setLoading(false);
       return;
     }
+
+    setApplications([]);
+    setJobs({});
+    setLoading(true);
 
     const q = query(
       collection(db, "applications"),
@@ -116,7 +123,7 @@ export default function AppliedScreen({ navigation }) {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [user?.uid]);
 
   const formatAppliedTime = (appliedAt) => {
     if (!appliedAt) return "";

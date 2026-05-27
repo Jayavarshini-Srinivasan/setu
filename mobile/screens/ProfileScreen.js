@@ -76,7 +76,7 @@ function computeProfileReadiness(p, isProfessional, matchScore) {
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
-  const { setFullOnboardingData, refreshOnboarding } = useOnboarding();
+  const { onboardingRefresh, refreshOnboarding, setFullOnboardingData } = useOnboarding();
   const { t, language, changeLanguage } = useI18n();
 
   const [profile, setProfile] = useState(null);
@@ -92,7 +92,7 @@ export default function ProfileScreen() {
   const [jobAlerts, setJobAlerts] = useState(true);
 
   /* ── Load Firestore profile ── */
-  useEffect(() => { fetchProfile(); }, []);
+  useEffect(() => { fetchProfile(); }, [onboardingRefresh]);
 
   const fetchProfile = async () => {
     try {
@@ -150,63 +150,97 @@ export default function ProfileScreen() {
     try { await signOut(auth); } catch (err) { console.log(err); }
   };
 
-  /* ── Edit profile (re-enter onboarding) ── */
+  /* ── Create fresh profile (re-enter onboarding blank) ── */
+  const getDisplayName = () => {
+    const p = profile?.profile || {};
+    const emailName = auth.currentUser?.email?.split("@")[0] || "User";
+    const rawName = p.fullName || p.name || p.resumeSummary?.split("|")[0] || emailName;
+    return rawName
+      .split(/[._-]/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  const getInitials = (displayName) => {
+    const parts = displayName.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    if (displayName.length >= 2) {
+      return displayName.slice(0, 2).toUpperCase();
+    }
+    if (displayName.length === 1) {
+      return (displayName + "S").toUpperCase();
+    }
+    return "PS";
+  };
+
+  const mapUserDocToOnboardingData = (userData) => {
+    const profileData = userData?.profile || {};
+    const workerType = userData?.workerType || "labour";
+    const nameValue = profileData.fullName || profileData.name || profileData.resumeSummary || "";
+
+    return {
+      workerType,
+      language: userData?.language || "english",
+      transcriptHistory: profileData.transcriptHistory || [],
+      role: profileData.role || "",
+      canonicalRole: profileData.canonicalRole || "",
+      skills: profileData.skills || [],
+      experience: profileData.experience || "",
+      age: profileData.age?.toString() || "",
+      phoneNumber: profileData.phoneNumber || "",
+      workRadius: profileData.workRadius || "",
+      expectedWage: profileData.expectedWage || "",
+      previousWorkType: profileData.previousWorkType || "",
+      location: profileData.location || "",
+      availability: profileData.labourData?.availability || profileData.availability || "",
+      preferredShift: profileData.labourData?.preferredShift || profileData.preferredShift || "",
+      professionalRole: profileData.professionalRole || "",
+      email: profileData.email || userData?.email || auth.currentUser?.email || "",
+      experienceBand: profileData.experienceBand || "",
+      education: profileData.education || {
+        degree: "",
+        institution: "",
+        graduationYear: "",
+        fieldOfStudy: "",
+      },
+      professionalSkills: profileData.professionalSkills || [],
+      experienceDetails: profileData.experienceDetails || [],
+      linkedin: profileData.linkedin || "",
+      github: profileData.github || "",
+      portfolio: profileData.portfolio || "",
+      careerGoals: profileData.careerGoal || "",
+      preferredRoles: profileData.preferredRoles || [],
+      resumeSummary: nameValue,
+      certifications: profileData.certifications || [],
+    };
+  };
+
   const handleEditProfile = async () => {
     try {
       setLoading(true);
       const user = auth.currentUser;
       if (!user) return;
-      await updateDoc(doc(db, "users", user.uid), { onboardingCompleted: false });
 
-      const p = profile.profile || {};
-      setFullOnboardingData({
-        workerType: profile.workerType || "",
-        language: "english",
-        transcriptHistory: p.transcriptHistory || [],
-        role: p.role || "",
-        canonicalRole: p.canonicalRole || "",
-        skills: p.skills || [],
-        experience: p.experience || 0,
-        location: p.location || "",
-        availability: p.availability || "",
-        preferredShift: p.preferredShift || "",
-        professionalRole: p.professionalRole || "",
-        education: p.education || { degree: "", institution: "", graduationYear: "" },
-        professionalSkills: p.professionalSkills || [],
-        experienceDetails: p.experienceDetails || [],
-        linkedin: p.linkedin || "",
-        github: p.github || "",
-        portfolio: p.portfolio || "",
-        careerGoal: p.careerGoal || "",
-        preferredRoles: p.preferredRoles || [],
-      });
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const userData = snap.data();
+        setFullOnboardingData(mapUserDocToOnboardingData(userData));
+      }
+      await updateDoc(userRef, { onboardingCompleted: false });
       refreshOnboarding();
     } catch (err) {
       console.log(err);
+    } finally {
       setLoading(false);
     }
   };
 
   /* ── Get Name & Initials ── */
-  const getInitialsAndName = () => {
-    const email = auth.currentUser?.email || "";
-    const namePart = email.split("@")[0] || "User";
-    const formattedName = namePart
-      .split(/[._-]/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-
-    const parts = namePart.split(/[._-]/);
-    let initials = "PS";
-    if (parts.length >= 2) {
-      initials = (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
-    } else if (parts[0].length >= 2) {
-      initials = parts[0].slice(0, 2).toUpperCase();
-    } else if (parts[0].length === 1) {
-      initials = (parts[0] + "S").toUpperCase();
-    }
-    return { name: formattedName, initials };
-  };
+  const name = getDisplayName();
+  const initials = getInitials(name);
 
   const getLanguageLabel = () => {
     if (language === "en") return "English";
@@ -256,7 +290,6 @@ export default function ProfileScreen() {
   const skills = isProfessional ? (p.professionalSkills || []) : (p.skills || []);
   const aiSummary = buildAiSummary(p, isProfessional, matchScore, topJob, t);
   const readiness = computeProfileReadiness(p, isProfessional, matchScore);
-  const { name, initials } = getInitialsAndName();
   const subtitleInfo = isProfessional ? (p.education?.degree || "Professional") : (t("roles." + role) || role || "Worker");
 
   return (
@@ -300,7 +333,9 @@ export default function ProfileScreen() {
           activeOpacity={0.8}
         >
           <Ionicons name="create-outline" size={18} color="#E85D04" style={{ marginRight: 6 }} />
-          <Text style={styles.editOutlineText}>{t("editProfile") || "Edit Profile"}</Text>
+          <Text style={styles.editOutlineText}>
+            {t("editProfile") || "Edit Profile"}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -795,4 +830,4 @@ const styles = StyleSheet.create({
     fontSize: 15, 
     fontWeight: "700",
   },
-});
+});

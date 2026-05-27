@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 
 import { useOnboarding } from "../context/OnboardingContext";
@@ -23,11 +25,17 @@ export default function ContactQuestionScreen({ navigation }) {
       : onboardingData.phoneNumber || ""
   );
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneDigits = contactVal.replace(/[^0-9]/g, "");
+  const isFormValid = isProfessional
+    ? emailRegex.test(contactVal.trim())
+    : /^[0-9]{10}$/.test(phoneDigits);
+
   /*
     CONTINUE
   */
   const handleContinue = () => {
-    if (!contactVal.trim()) {
+    if (!isFormValid) {
       Alert.alert(
         t("required") || "Required",
         isProfessional
@@ -38,28 +46,19 @@ export default function ContactQuestionScreen({ navigation }) {
     }
 
     if (isProfessional) {
-      // Basic Email Regex
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(contactVal.trim())) {
-        Alert.alert(t("error") || "Error", t("enterValidEmail") || "Please enter a valid email address.");
-        return;
-      }
       updateField("email", contactVal.trim());
       navigation.navigate("ProfessionalReview");
     } else {
-      // Basic Phone Regex (10 digits)
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(contactVal.replace(/[^0-9]/g, ""))) {
-        Alert.alert(t("error") || "Error", t("enterValidPhone") || "Please enter a valid 10-digit phone number.");
-        return;
-      }
-      updateField("phoneNumber", contactVal.replace(/[^0-9]/g, ""));
+      updateField("phoneNumber", phoneDigits);
       navigation.navigate("ReviewOnboarding");
     }
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <Text style={styles.title}>
         {t("contactInfoTitle") || "Contact Information"}
       </Text>
@@ -91,10 +90,14 @@ export default function ContactQuestionScreen({ navigation }) {
         autoCorrect={false}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleContinue}>
+      <TouchableOpacity
+        style={[styles.button, !isFormValid && styles.buttonDisabled]}
+        onPress={handleContinue}
+        disabled={!isFormValid}
+      >
         <Text style={styles.buttonText}>{t("continue") || "Continue"}</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -132,6 +135,7 @@ const styles = StyleSheet.create({
     padding: 18,
     fontSize: 18,
     color: "#111827",
+    marginTop: 16,
     marginBottom: 40,
     backgroundColor: "#F9FAFB",
   },
@@ -140,6 +144,9 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     alignItems: "center",
+  },
+  buttonDisabled: {
+    backgroundColor: "#D1D5DB",
   },
   buttonText: {
     color: "#fff",

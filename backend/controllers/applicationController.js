@@ -8,10 +8,11 @@ const applyToJob =
         REQUEST DATA
       */
       const {
-        workerId,
         jobId,
         matchScore,
       } = req.body;
+
+      const workerId = req.user.uid;
 
       /*
         FETCH WORKER
