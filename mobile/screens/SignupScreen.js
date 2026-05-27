@@ -46,9 +46,13 @@ export default function SignupScreen({ navigation }) {
         profile: {
           fullName: fullName.trim() || undefined,
           phoneNumber: phone.replace(/[^0-9]/g, "") || undefined,
+          skills: [],
+          experience: 0,
+          canonicalRole: "",
         },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        updated_at: serverTimestamp(),
       });
 
       await changeLanguage(langCode);

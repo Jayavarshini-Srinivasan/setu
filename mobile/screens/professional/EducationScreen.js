@@ -1,51 +1,71 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
+import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
+import VoiceButton from "../../components/VoiceButton";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
 
-const DEGREES = ["B.Com", "BBA", "B.Tech", "B.Sc", "MBA", "M.Com", "Diploma", "Other"];
-const QUICK_YEARS = ["2026", "2027", "2028"];
-const ALL_YEARS = [];
-for (let y = 2030; y >= 1950; y--) {
-  ALL_YEARS.push(String(y));
-}
+const DEGREES = ["10th", "12th", "Diploma", "BA", "BCom", "BSc", "BTech", "MBA", "MCom", "Other"];
+const FIELDS = ["Commerce", "Science", "Arts", "Engineering", "Business Administration", "Computer Science", "Finance", "Accounting"];
+
+const Stepper = ({ value, min, max, onChange, label }) => (
+  <View style={styles.stepperContainer}>
+    <Text style={os.label}>{label}</Text>
+    <View style={styles.stepperRow}>
+      <TouchableOpacity style={styles.stepperBtn} onPress={() => onChange(Math.max(min, Number(value) - 1))}>
+        <Text style={styles.stepperBtnText}>-</Text>
+      </TouchableOpacity>
+      <TextInput 
+        style={styles.stepperInput}
+        value={String(value)}
+        onChangeText={val => {
+          const num = Number(val.replace(/[^0-9]/g, ""));
+          onChange(Math.min(max, Math.max(min, num)));
+        }}
+        keyboardType="numeric"
+      />
+      <TouchableOpacity style={styles.stepperBtn} onPress={() => onChange(Math.min(max, Number(value) + 1))}>
+        <Text style={styles.stepperBtnText}>+</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 
 export default function EducationScreen({ navigation }) {
-  const { onboardingData, updateField } = useOnboarding();
+  const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
   const [degree, setDegree] = useState(onboardingData.education?.degree || "");
   const [institution, setInstitution] = useState(onboardingData.education?.institution || "");
-  const [graduationYear, setGraduationYear] = useState(
-    onboardingData.education?.graduationYear || ""
-  );
-  const [showYearPicker, setShowYearPicker] = useState(false);
-  const [fieldOfStudy, setFieldOfStudy] = useState(
-    onboardingData.education?.fieldOfStudy || ""
-  );
-  const [certifications, setCertifications] = useState(
-    (onboardingData.certifications || []).join(", ")
-  );
-  const [showDegreePicker, setShowDegreePicker] = useState(false);
+  const [graduationYear, setGraduationYear] = useState(onboardingData.education?.graduationYear ? Number(onboardingData.education.graduationYear) : new Date().getFullYear());
+  const [fieldOfStudy, setFieldOfStudy] = useState(onboardingData.education?.fieldOfStudy || "");
+  const [showFieldSuggestions, setShowFieldSuggestions] = useState(false);
+
+  const {
+    voiceState,
+    extractedProfile,
+    startRecording,
+    stopRecording,
+    confirmExtraction,
+    rejectExtraction,
+  } = useVoiceRecorder({
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
+      if (tx) addTranscript(tx);
+      if (ep?.education?.degree) setDegree(ep.education.degree);
+      if (ep?.education?.institution) setInstitution(ep.education.institution);
+      if (ep?.education?.graduationYear) setGraduationYear(Number(ep.education.graduationYear));
+      if (ep?.education?.fieldOfStudy) setFieldOfStudy(ep.education.fieldOfStudy);
+    },
+  });
+
+  const filteredFields = FIELDS.filter(f => f.toLowerCase().includes(fieldOfStudy.toLowerCase()) && f.toLowerCase() !== fieldOfStudy.toLowerCase());
 
   const handleContinue = () => {
-    if (!isFormValid) {
-      Alert.alert(
-        t("required") || "Required",
-        t("educationOnboarding.completeAllFieldsError") || "Please complete all required education fields"
-      );
+    if (!degree || !institution.trim() || !fieldOfStudy.trim()) {
+      Alert.alert(t("required") || "Required", "Please complete all required education fields");
       return;
     }
 
@@ -56,219 +76,121 @@ export default function EducationScreen({ navigation }) {
       fieldOfStudy,
     });
 
-    if (certifications.trim()) {
-      updateField(
-        "certifications",
-        certifications.split(",").map((c) => c.trim()).filter(Boolean)
-      );
-    }
-
     navigation.navigate("ProfessionalExperience");
   };
 
-  const isFormValid =
-    Boolean(degree) &&
-    Boolean(institution.trim()) &&
-    Boolean(graduationYear) &&
-    Boolean(fieldOfStudy.trim());
+  const isFormValid = Boolean(degree) && Boolean(institution.trim()) && Boolean(fieldOfStudy.trim());
 
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Education (3/4)"
+      screenTitle="Education (3/6)"
       step={3}
-      title={t("education") || "Education"}
-      subtitle={
-        t("educationOnboarding.subtitle") ||
-        "Your educational background helps us match you better."
-      }
+      badge="PROFESSIONAL"
+      title="Education"
+      subtitle="Where did you study?"
       onContinue={handleContinue}
       continueDisabled={!isFormValid}
     >
-      <Text style={os.label}>HIGHEST DEGREE</Text>
-      <TouchableOpacity
-        style={styles.dropdown}
-        onPress={() => setShowDegreePicker(!showDegreePicker)}
-        activeOpacity={0.8}
-      >
-        <Text style={[styles.dropdownText, !degree && styles.placeholderText]}>
-          {degree || "Select degree"}
-        </Text>
-        <Ionicons name="chevron-down" size={20} color={COLORS.textSecondary} />
-      </TouchableOpacity>
-      {showDegreePicker && (
-        <View style={styles.pickerList}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        
+        <Text style={os.label}>DEGREE</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
           {DEGREES.map((d) => (
             <TouchableOpacity
               key={d}
-              style={styles.pickerItem}
-              onPress={() => {
-                setDegree(d);
-                setShowDegreePicker(false);
-              }}
+              style={[styles.degreeCard, degree === d && styles.degreeCardSelected]}
+              onPress={() => setDegree(d)}
             >
-              <Text style={styles.pickerItemText}>{d}</Text>
+              <Text style={[styles.degreeText, degree === d && styles.degreeTextSelected]}>{d}</Text>
             </TouchableOpacity>
           ))}
+        </ScrollView>
+
+        <View style={os.inputRow}>
+          <Ionicons name="business-outline" size={20} color={COLORS.textLight} style={os.inputIcon} />
+          <TextInput
+            style={os.inputFlex}
+            placeholder="Institution / College name"
+            placeholderTextColor={COLORS.textLight}
+            value={institution}
+            onChangeText={setInstitution}
+          />
         </View>
-      )}
 
-      <View style={os.inputRow}>
-        <Ionicons name="business-outline" size={20} color={COLORS.textLight} style={os.inputIcon} />
-        <TextInput
-          style={os.inputFlex}
-          placeholder={t("educationOnboarding.institutionPlaceholder") || "Institution / College name"}
-          placeholderTextColor={COLORS.textLight}
-          value={institution}
-          onChangeText={setInstitution}
-        />
-      </View>
+        <View style={{ marginTop: 16 }}>
+          <Stepper 
+            label="GRADUATION YEAR"
+            value={graduationYear}
+            min={1950}
+            max={2030}
+            onChange={setGraduationYear}
+          />
+        </View>
 
-      <Text style={os.label}>GRADUATION YEAR</Text>
-      <View style={os.chipRow}>
-        {QUICK_YEARS.map((y) => (
-          <TouchableOpacity
-            key={y}
-            style={[
-              os.chip,
-              graduationYear === y && !showYearPicker && os.chipSelected,
-            ]}
-            onPress={() => {
-              setGraduationYear(y);
-              setShowYearPicker(false);
-            }}
-          >
-            <Text style={[os.chipText, graduationYear === y && !showYearPicker && os.chipTextSelected]}>{y}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity
-          style={[
-            os.chip,
-            (!QUICK_YEARS.includes(graduationYear) || showYearPicker) && os.chipSelected,
-          ]}
-          onPress={() => setShowYearPicker(!showYearPicker)}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text
-              style={[
-                os.chipText,
-                (!QUICK_YEARS.includes(graduationYear) || showYearPicker) && os.chipTextSelected,
-                { marginRight: 4 },
-              ]}
-            >
-              {!QUICK_YEARS.includes(graduationYear) && graduationYear ? graduationYear : "Other"}
-            </Text>
-            <Ionicons
-              name={showYearPicker ? "chevron-up" : "chevron-down"}
-              size={16}
-              color={
-                (!QUICK_YEARS.includes(graduationYear) || showYearPicker)
-                  ? "#FFFFFF"
-                  : COLORS.textSecondary
-              }
-            />
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {showYearPicker && (
-        <View style={[styles.pickerList, { maxHeight: 200, marginTop: 8 }]}>
-          <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-            {ALL_YEARS.map((y) => (
-              <TouchableOpacity
-                key={y}
-                style={[
-                  styles.pickerItem,
-                  graduationYear === y && { backgroundColor: COLORS.primaryLight },
-                ]}
-                onPress={() => {
-                  setGraduationYear(y);
-                  setShowYearPicker(false);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.pickerItemText,
-                    graduationYear === y && { color: COLORS.primary, fontWeight: "bold" },
-                  ]}
-                >
-                  {y}
-                </Text>
+        <View style={[os.inputRow, { marginTop: 16, zIndex: 10 }]}>
+          <Ionicons name="book-outline" size={20} color={COLORS.textLight} style={os.inputIcon} />
+          <TextInput
+            style={os.inputFlex}
+            placeholder="Field of study (e.g. Commerce)"
+            placeholderTextColor={COLORS.textLight}
+            value={fieldOfStudy}
+            onChangeText={(v) => { setFieldOfStudy(v); setShowFieldSuggestions(true); }}
+            onFocus={() => setShowFieldSuggestions(true)}
+          />
+        </View>
+        
+        {showFieldSuggestions && fieldOfStudy.trim().length > 0 && filteredFields.length > 0 && (
+          <View style={styles.autocompleteBox}>
+            {filteredFields.map(f => (
+              <TouchableOpacity key={f} style={styles.suggestionItem} onPress={() => { setFieldOfStudy(f); setShowFieldSuggestions(false); }}>
+                <Text style={styles.suggestionText}>{f}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
+        )}
+
+        <View style={styles.voiceSection}>
+          <View style={styles.voiceRow}>
+            <VoiceButton isRecording={voiceState === VOICE_STATE.RECORDING} onPressIn={startRecording} onPressOut={stopRecording} />
+            <Text style={styles.voiceHint}>Hold mic and say: "I did BCom from Madras University in 2018."</Text>
+          </View>
+          
+          {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.education?.degree || extractedProfile?.education?.institution) ? (
+            <View style={styles.detectedBox}>
+              <Text style={styles.detectedText}>{extractedProfile.education.degree} - {extractedProfile.education.institution}</Text>
+              <View style={styles.detectedActions}>
+                <TouchableOpacity onPress={confirmExtraction}><Text style={styles.confirmText}>✓ Keep</Text></TouchableOpacity>
+                <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>✕</Text></TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
         </View>
-      )}
 
-      <View style={[os.inputRow, { marginTop: 16 }]}>
-        <Text style={styles.fieldIcon}>🎨</Text>
-        <TextInput
-          style={os.inputFlex}
-          placeholder="Field of study / Specialization"
-          placeholderTextColor={COLORS.textLight}
-          value={fieldOfStudy}
-          onChangeText={setFieldOfStudy}
-        />
-      </View>
-
-      <View style={os.tipBox}>
-        <Text style={styles.tipIcon}>✏️</Text>
-        <Text style={os.tipText}>
-          Add certifications — they boost your match score significantly!
-        </Text>
-      </View>
-
-      <View style={[os.inputRow, { marginTop: 16 }]}>
-        <Text style={styles.fieldIcon}>🏆</Text>
-        <TextInput
-          style={os.inputFlex}
-          placeholder="Certifications (optional)"
-          placeholderTextColor={COLORS.textLight}
-          value={certifications}
-          onChangeText={setCertifications}
-        />
-      </View>
+      </ScrollView>
     </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  dropdown: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: BORDER_RADIUS.md,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 4,
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: COLORS.text,
-    fontWeight: "500",
-  },
-  placeholderText: {
-    color: COLORS.textLight,
-    fontWeight: "400",
-  },
-  pickerList: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: BORDER_RADIUS.md,
-    marginBottom: 8,
-    overflow: "hidden",
-  },
-  pickerItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  pickerItemText: { fontSize: 16, color: COLORS.text },
-  fieldIcon: { fontSize: 18, marginRight: 10 },
-  tipIcon: { fontSize: 16 },
+  degreeCard: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, marginRight: 8 },
+  degreeCardSelected: { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary },
+  degreeText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: "500" },
+  degreeTextSelected: { color: COLORS.primary, fontWeight: "700" },
+  stepperContainer: { marginBottom: 16 },
+  stepperRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 8 },
+  stepperBtn: { backgroundColor: COLORS.primaryLight, width: 48, height: 48, borderRadius: BORDER_RADIUS.sm, alignItems: "center", justifyContent: "center" },
+  stepperBtnText: { fontSize: 24, color: COLORS.primary, fontWeight: "bold" },
+  stepperInput: { fontSize: 24, fontWeight: "bold", color: COLORS.text, textAlign: "center", flex: 1 },
+  autocompleteBox: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderTopWidth: 0, borderBottomLeftRadius: BORDER_RADIUS.md, borderBottomRightRadius: BORDER_RADIUS.md, maxHeight: 150, zIndex: 10, marginTop: -4 },
+  suggestionItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  suggestionText: { fontSize: 15, color: COLORS.text },
+  voiceSection: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: COLORS.border },
+  voiceHint: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
+  voiceRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  detectedBox: { marginTop: 16, backgroundColor: COLORS.primaryLight, padding: 14, borderRadius: 12, flexDirection: "row", alignItems: "center" },
+  detectedText: { fontSize: 13, fontWeight: "600", color: COLORS.text, flex: 1 },
+  detectedActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  confirmText: { color: COLORS.success, fontWeight: "700" },
+  rejectText: { color: COLORS.textLight, fontSize: 18 },
 });

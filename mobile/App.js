@@ -548,6 +548,12 @@ function AppNavigator() {
         />
 
         <Stack.Screen
+          name="Resume"
+          component={ResumePreviewScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
           name="ContactQuestion"
           component={
             ContactQuestionScreen

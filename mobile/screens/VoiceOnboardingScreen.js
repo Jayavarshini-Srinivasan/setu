@@ -18,7 +18,7 @@ import SecondaryButton from "../components/SecondaryButton";
 import { useOnboarding } from "../context/OnboardingContext";
 
 export default function VoiceOnboardingScreen({ navigation }) {
-  const { updateField } = useOnboarding();
+  const { updateField, onboardingData } = useOnboarding();
 
   const [status, setStatus] = useState("IDLE"); // IDLE, RECORDING, RECORDED, PROCESSING, RESULT
   const [recording, setRecording] = useState(null);
@@ -120,6 +120,7 @@ export default function VoiceOnboardingScreen({ navigation }) {
         name: "voice-recording.m4a",
         type: "audio/m4a",
       });
+      formData.append("context", JSON.stringify(onboardingData));
 
       const response = await fetch(`${API_BASE_URL}/voice/upload-audio`, {
         method: "POST",

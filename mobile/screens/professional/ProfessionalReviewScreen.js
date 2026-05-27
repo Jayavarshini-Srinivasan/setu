@@ -1,418 +1,163 @@
-import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from "react-native";
-
-import {
-  doc,
-  updateDoc,
-} from "firebase/firestore";
-
-import {
-  auth,
-  db,
-} from "../../services/firebase";
-
-import {useOnboarding,} from "../../context/OnboardingContext";
+import { useState } from "react";
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "../../services/firebase";
+import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
+import { COLORS, BORDER_RADIUS } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function ProfessionalReviewScreen({
-  navigation,
-}) {
-
-  /*
-    CONTEXT
-  */
-  const {
-    onboardingData,
-
-    resetOnboarding,
-
-    refreshOnboarding,
-  } = useOnboarding();
-
+export default function ProfessionalReviewScreen({ navigation }) {
+  const { onboardingData } = useOnboarding();
   const { t } = useI18n();
+  const [loading, setLoading] = useState(false);
 
-  /*
-    COMPLETE ONBOARDING
-  */
-  const handleComplete =
-    async () => {
+  const missingFields = [];
+  if (!onboardingData.fullName && !onboardingData.resumeSummary) missingFields.push({ name: "Name", route: "ProfessionalRole" });
+  if (!onboardingData.professionalRole) missingFields.push({ name: "Role", route: "ProfessionalRole" });
+  if (!onboardingData.professionalSkills || onboardingData.professionalSkills.length === 0) missingFields.push({ name: "Skills", route: "ProfessionalSkills" });
+  if (!onboardingData.education?.degree) missingFields.push({ name: "Education", route: "Education" });
+  if (!onboardingData.experienceDetails || onboardingData.experienceDetails.length === 0) missingFields.push({ name: "Experience", route: "ProfessionalExperience" });
+  if (!onboardingData.expectedSalary?.min) missingFields.push({ name: "Salary Goals", route: "CareerGoals" });
+  if (!onboardingData.linkedin) missingFields.push({ name: "LinkedIn", route: "ProfessionalLinks" });
 
-      try {
+  const handleComplete = async () => {
+    if (missingFields.length > 0) {
+      Alert.alert(t("missingInfo") || "Missing Information", t("fillRequiredFields") || "Please fill in all required fields before generating your resume.");
+      return;
+    }
 
-        const uid =
-          auth.currentUser.uid;
+    setLoading(true);
+    try {
+      const uid = auth.currentUser.uid;
+      const userRef = doc(db, "users", uid);
 
-        /*
-          USER REF
-        */
-        const userRef =
-          doc(
-            db,
-            "users",
-            uid
-          );
-
-        /*
-          SAVE PROFILE
-        */
-        await updateDoc(
-          userRef,
-          {
-
-            workerType:
-              "professional",
-
-            onboardingCompleted:
-              true,
-
-            "profile.professionalRole": onboardingData.professionalRole,
+      await updateDoc(userRef, {
+        workerType: "professional",
+        onboardingCompleted: false, // Set to true only after Resume Approve
+        "profile.professionalRole": onboardingData.professionalRole,
+        "profile.canonicalRole": onboardingData.professionalRole,
         "profile.education": onboardingData.education,
-        "profile.professionalSkills": onboardingData.professionalSkills,
+        "profile.skills": (onboardingData.professionalSkills || []).map(s => String(s).toLowerCase()),
+        "profile.professionalSkills": (onboardingData.professionalSkills || []).map(s => String(s).toLowerCase()),
+        "profile.experience": Number(onboardingData.experience || 0),
         "profile.experienceDetails": onboardingData.experienceDetails,
         "profile.linkedin": onboardingData.linkedin,
-        "profile.github": onboardingData.github,
-        "profile.portfolio": onboardingData.portfolio,
+        "profile.github": onboardingData.github || "",
+        "profile.portfolio": onboardingData.portfolio || "",
+        "profile.certifications": onboardingData.certifications || [],
         "profile.email": onboardingData.email || "",
-        "profile.preferredRoles": onboardingData.preferredRoles,
-        "profile.careerGoal": (onboardingData.preferredRoles || [])[0] || "",
-        "profile.transcriptHistory": onboardingData.transcriptHistory,
+        "profile.preferredRoles": onboardingData.preferredRoles || [],
+        "profile.expectedSalary": onboardingData.expectedSalary || null,
+        "profile.careerGoal": onboardingData.careerGoal || "",
+        "profile.transcriptHistory": onboardingData.transcriptHistory || [],
         "profile.resumeSummary": onboardingData.resumeSummary || "",
-        "profile.fullName": onboardingData.resumeSummary || "",
-          }
-        );
+        "profile.fullName": onboardingData.fullName || onboardingData.resumeSummary?.split("|")[0] || "",
+        updatedAt: serverTimestamp(),
+      });
 
-        /*
-          REFRESH APP STATE — triggers App.js to navigate to ProfessionalApp
-        */
-        refreshOnboarding();
-        resetOnboarding();
+      setLoading(false);
+      navigation.navigate("Resume");
 
-      } catch (error) {
+    } catch (error) {
+      console.log(error);
+      Alert.alert(t("error") || "Error", "Failed to save profile data. Please try again.");
+      setLoading(false);
+    }
+  };
 
-        console.log(error);
-
-        Alert.alert(
-          t("error") || "Error",
-          t("failedToSaveProfile") || "Failed to save profile. Please try again."
-        );
-      }
-    };
+  const SummaryCard = ({ title, value, route }) => (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>{title}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate(route)}>
+          <Text style={styles.editLink}>{t("edit") || "Edit"}</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.cardValue}>{value || "�"}</Text>
+    </View>
+  );
 
   return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>{t("reviewProfile") || "Review Profile"}</Text>
+      <Text style={styles.subtitle}>{t("reviewSubtitlePro") || "Check your details before generating your AI resume."}</Text>
 
-    <ScrollView
-      contentContainerStyle={
-        styles.container
-      }
-    >
+      {missingFields.length > 0 && (
+        <View style={styles.warningBox}>
+          <Ionicons name="warning" size={24} color="#B45309" />
+          <View style={styles.warningTextContainer}>
+            <Text style={styles.warningTitle}>{t("missingInformation") || "Missing Information"}</Text>
+            <Text style={styles.warningText}>You haven't added your {missingFields[0].name.toLowerCase()} yet. Add it to complete your profile.</Text>
+            <TouchableOpacity onPress={() => navigation.navigate(missingFields[0].route)} style={styles.fillInBtn}>
+              <Text style={styles.fillInText}>{t("fillIn") || "Fill in"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
-      <Text style={styles.title}>
-        {t("reviewProProfile") || "Review Your Professional Profile"}
-      </Text>
-
-      <Text style={styles.subtitle}>
-        {t("confirmDetails") || "Confirm your details before continuing."}
-      </Text>
-
-      {/* ROLE */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.label}>
-          {t("professionalRoleLabel") || "Professional Role"}
-        </Text>
-
-        <Text style={styles.value}>
-          {
-            t("roles." + onboardingData.professionalRole) || onboardingData.professionalRole
-          }
-        </Text>
-
-      </View>
-
-      {/* EDUCATION */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.label}>
-          {t("education") || "Education"}
-        </Text>
-
-        <Text style={styles.value}>
-          {
-            onboardingData.education?.degree
-          }
-        </Text>
-
-        <Text style={styles.secondary}>
-          {
-            onboardingData.education?.institution
-          }
-        </Text>
-
-        <Text style={styles.secondary}>
-          {t("graduation") || "Graduation"}:
-          {" "}
-          {
-            onboardingData.education?.graduationYear
-          }
-        </Text>
-
-      </View>
-
-      {/* SKILLS */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.label}>
-          {t("professionalSkillsLabel") || "Professional Skills"}
-        </Text>
-
-        <Text style={styles.value}>
-          {
-            (
-              onboardingData.professionalSkills || []
-            ).map(s => t("skills." + s) || s).join(", ")
-          }
-        </Text>
-
-      </View>
-
-      {/* EXPERIENCE */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.label}>
-          {t("experienceLabel") || "Experience"}
-        </Text>
-
-        {
-          (
-            onboardingData.experienceDetails || []
-          ).map(
-            (
-              item,
-              index
-            ) => (
-
-              <View
-                key={index}
-                style={styles.experienceItem}
-              >
-
-                <Text style={styles.value}>
-                  {item.role}
-                </Text>
-
-                <Text style={styles.secondary}>
-                  {item.company}
-                </Text>
-
-                <Text style={styles.secondary}>
-                  {item.years} {t("experienceOnboarding.yearsSuffix") || "years"}
-                </Text>
-
-              </View>
-            )
-          )
-        }
-
-      </View>
-
-      {/* LINKS */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.label}>
-          {t("professionalLinks") || "Professional Links"}
-        </Text>
-
-        {
-          onboardingData.linkedin ? (
-            <Text style={styles.secondary}>
-              LinkedIn:
-              {" "}
-              {
-                onboardingData.linkedin
-              }
-            </Text>
-          ) : null
-        }
-
-        {
-          onboardingData.github ? (
-            <Text style={styles.secondary}>
-              GitHub:
-              {" "}
-              {
-                onboardingData.github
-              }
-            </Text>
-          ) : null
-        }
-
-        {
-          onboardingData.portfolio ? (
-            <Text style={styles.secondary}>
-              Portfolio:
-              {" "}
-              {
-                onboardingData.portfolio
-              }
-            </Text>
-          ) : null
-        }
-
-      </View>
-
-      {/* GOALS */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.label}>
-          {t("careerGoalsLabel") || "Career Goals"}
-        </Text>
-
-        <Text style={styles.value}>
-          {
-            (
-              onboardingData.preferredRoles || []
-            ).map(g => t("goals." + g.replace(/\s+/g, "_")) || g).join(", ")
-          }
-        </Text>
-
-      </View>
-
-      {/* EMAIL */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.label}>
-          {t("emailAddressLabel") || "Email Address"}
-        </Text>
-
-        <Text style={styles.value}>
-          {
-            onboardingData.email || "—"
-          }
-        </Text>
-
-      </View>
-
-      {/* COMPLETE */}
+      <SummaryCard 
+        title="Basic Info" 
+        value={`${onboardingData.fullName || "No name"} � ${onboardingData.professionalRole || "No role"}`} 
+        route="ProfessionalRole" 
+      />
+      <SummaryCard 
+        title="Skills" 
+        value={(onboardingData.professionalSkills || []).join(", ") || "None"} 
+        route="ProfessionalSkills" 
+      />
+      <SummaryCard 
+        title="Education" 
+        value={onboardingData.education ? `${onboardingData.education.degree} - ${onboardingData.education.institution} (${onboardingData.education.graduationYear})` : "None"} 
+        route="Education" 
+      />
+      <SummaryCard 
+        title="Experience" 
+        value={onboardingData.experienceDetails ? `${onboardingData.experienceDetails.length} roles added (${onboardingData.experience || 0} yrs total)` : "None"} 
+        route="ProfessionalExperience" 
+      />
+      <SummaryCard 
+        title="Goals" 
+        value={`Salary: ${onboardingData.expectedSalary?.min || "�"} ${onboardingData.expectedSalary?.currency || ""}\nRoles: ${(onboardingData.preferredRoles || []).join(", ") || "�"}`} 
+        route="CareerGoals" 
+      />
+      <SummaryCard 
+        title="Links" 
+        value={`LinkedIn: ${onboardingData.linkedin || "�"}\nCertifications: ${onboardingData.certifications?.length || 0}`} 
+        route="ProfessionalLinks" 
+      />
 
       <TouchableOpacity
-        style={styles.button}
-
+        style={[styles.completeButton, (missingFields.length > 0 || loading) && styles.completeButtonDisabled]}
         onPress={handleComplete}
+        disabled={missingFields.length > 0 || loading}
       >
-
-        <Text style={styles.buttonText}>
-          {t("completeProfessionalOnboarding") || "Complete Professional Onboarding"}
-        </Text>
-
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.completeText}>{t("saveGenerateResume") || "Save & Generate Resume"}</Text>
+        )}
       </TouchableOpacity>
-
     </ScrollView>
   );
 }
 
-const styles =
-  StyleSheet.create({
-
-    container: {
-      flexGrow: 1,
-
-      backgroundColor:
-        "#fff",
-
-      padding: 24,
-    },
-
-    title: {
-      fontSize: 30,
-
-      fontWeight: "bold",
-
-      marginTop: 40,
-
-      marginBottom: 12,
-    },
-
-    subtitle: {
-      fontSize: 16,
-
-      color: "#666",
-
-      marginBottom: 30,
-    },
-
-    card: {
-      backgroundColor:
-        "#F8FAFC",
-
-      padding: 18,
-
-      borderRadius: 18,
-
-      marginBottom: 18,
-    },
-
-    label: {
-      fontSize: 14,
-
-      color: "#666",
-
-      marginBottom: 8,
-    },
-
-    value: {
-      fontSize: 18,
-
-      fontWeight: "bold",
-
-      marginBottom: 4,
-    },
-
-    secondary: {
-      fontSize: 15,
-
-      color: "#555",
-
-      marginBottom: 2,
-    },
-
-    experienceItem: {
-      marginBottom: 16,
-    },
-
-    button: {
-      backgroundColor:
-        "#000",
-
-      padding: 20,
-
-      borderRadius: 16,
-
-      alignItems:
-        "center",
-
-      marginTop: 20,
-
-      marginBottom: 40,
-    },
-
-    buttonText: {
-      color: "#fff",
-
-      fontSize: 18,
-
-      fontWeight: "bold",
-    },
-  });
+const styles = StyleSheet.create({
+  container: { flexGrow: 1, padding: 24, backgroundColor: COLORS.background, paddingBottom: 40 },
+  title: { fontSize: 28, fontWeight: "bold", color: COLORS.navy, marginTop: 40, marginBottom: 8 },
+  subtitle: { fontSize: 16, color: COLORS.textSecondary, marginBottom: 24 },
+  warningBox: { flexDirection: "row", backgroundColor: "#FEF3C7", padding: 16, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: "#FCD34D", marginBottom: 20 },
+  warningTextContainer: { marginLeft: 12, flex: 1 },
+  warningTitle: { fontSize: 16, fontWeight: "bold", color: "#92400E", marginBottom: 4 },
+  warningText: { fontSize: 14, color: "#92400E", marginBottom: 12 },
+  fillInBtn: { backgroundColor: "#D97706", paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, alignSelf: "flex-start" },
+  fillInText: { color: "#FFF", fontWeight: "bold", fontSize: 14 },
+  card: { backgroundColor: COLORS.surface, padding: 16, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.border, marginBottom: 12 },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  cardTitle: { fontSize: 14, fontWeight: "600", color: COLORS.textSecondary },
+  editLink: { fontSize: 14, fontWeight: "bold", color: COLORS.primary },
+  cardValue: { fontSize: 16, color: COLORS.text, fontWeight: "500", lineHeight: 22 },
+  completeButton: { backgroundColor: COLORS.primary, padding: 18, borderRadius: BORDER_RADIUS.md, alignItems: "center", marginTop: 24 },
+  completeButtonDisabled: { backgroundColor: COLORS.textLight },
+  completeText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+});

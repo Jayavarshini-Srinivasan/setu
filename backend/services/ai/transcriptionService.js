@@ -1,6 +1,7 @@
 const fs   = require("fs");
 const mime = require("mime-types");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { geminiQueue } = require("../aiService");
 
 const genAI = new GoogleGenerativeAI(
   process.env.GEMINI_API_KEY_TRANSCRIPTION || process.env.GEMINI_API_KEY
@@ -21,7 +22,7 @@ const transcribeAudio = async (filePath) => {
     const audioBuffer = fs.readFileSync(filePath);
     const mimeType    = mime.lookup(filePath) || "audio/m4a";
 
-    const result = await model.generateContent([
+    const result = await geminiQueue.add(() => model.generateContent([
       {
         inlineData: {
           data:     audioBuffer.toString("base64"),
@@ -40,7 +41,7 @@ The speaker may use:
 If the audio is completely silent, contains only background noise, or has no discernible speech, return the exact word "SILENCE".
 Do NOT hallucinate or make up phrases.
 Return ONLY the transcript text.`,
-    ]);
+    ]));
 
     const text = result.response.text().trim();
     return text === "SILENCE" ? "" : text;

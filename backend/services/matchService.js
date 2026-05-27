@@ -156,98 +156,66 @@ const checkRoleCompatibility = (workerRoleRaw, jobRoleRaw) => {
  * the job is removed BEFORE scoring.
  */
 const calculateMatchScore = (workerProfile, jobs) => {
-  const workerRole = (workerProfile.canonicalRole || "").toLowerCase();
-  const workerSkills = (workerProfile.skills || []).map((skill) =>
-    (skill || "").toString().toLowerCase()
-  );
   const workerLocation = (workerProfile.location || "").toLowerCase();
   const workerExperience = parseInt(workerProfile.experience || 0);
+  const workerExpectedSalary = workerProfile.expectedSalary?.min || parseInt(workerProfile.expectedWage) || 0;
+  const workerSkills = (workerProfile.skills || workerProfile.professionalSkills || []).map((skill) =>
+    (skill || "").toString().toLowerCase()
+  );
+  const workerRole = workerProfile.canonicalRole || workerProfile.role || workerProfile.professionalRole || "";
 
   const matchedJobs = jobs
     .map((job) => {
-      const jobRole = (job.canonicalRole || "").toLowerCase();
-      const jobTitle = (job.title || "").toLowerCase();
+      const jobRole = job.canonicalRole || job.role || job.title || "";
+      const roleMatch = checkRoleCompatibility(workerRole, jobRole);
+      
       const jobSkills = (job.requiredSkills || []).map((skill) =>
         (skill || "").toString().toLowerCase()
       );
-      const requiredExperience = parseInt(job.experienceRequired || 0);
+      const requiredExperience = parseInt(job.minimumExperience || job.experienceRequired || 0);
       const jobLocation = (job.location || "").toLowerCase();
+      
+      const matchedSkills = workerSkills.filter((skill) => jobSkills.includes(skill));
+      const missingSkills = jobSkills.filter((skill) => !workerSkills.includes(skill));
 
-      // Skill overlap
-      const matchedSkills = workerSkills.filter((skill) =>
-        jobSkills.includes(skill)
-      );
-      const missingSkills = jobSkills.filter(
-        (skill) => !workerSkills.includes(skill)
-      );
-      const skillCoverage =
-        jobSkills.length > 0 ? matchedSkills.length / jobSkills.length : 0;
-      const skillMatchPercentage = Math.round(skillCoverage * 100);
-
-      // 1. Semantic compatibility check
-      const compResult = checkRoleCompatibility(workerRole, jobRole);
-
-      // 2. Ontological filtering: Remove completely if compatibility is weak AND skill match is 0%
-      if (compResult.compatibility === "weak" && skillMatchPercentage === 0) {
+      const skillOverlapPercentage = jobSkills.length > 0 ? (matchedSkills.length / jobSkills.length) : 0;
+      
+      if (roleMatch.compatibility === "weak" && skillOverlapPercentage === 0) {
         return null;
       }
 
-      // 3. Weighted scoring
-      let score = 0;
-
-      // Skills represent 50% of the total score weight
-      score += Math.round(skillCoverage * 50);
-
-      // Role compatibility represents 20% of the total score weight
-      if (compResult.compatibility === "exact") {
-        score += 20;
-      } else if (compResult.compatibility === "compatible") {
-        score += 12;
-      } else if (
-        jobRole.includes(workerRole) ||
-        workerRole.includes(jobRole) ||
-        jobTitle.includes(workerRole) ||
-        workerRole.includes(jobTitle)
-      ) {
-        score += 12;
-      } else {
-        // Severe penalty for weak compatibility (multiplied by 0.1)
-        score = Math.round(score * 0.1);
+      const roleScore = roleMatch.score * 20; // up to 20 points
+      const skillOverlap = skillOverlapPercentage * 30; // up to 30 points
+      const experienceScore = requiredExperience > 0 ? Math.min(workerExperience / requiredExperience, 1) * 20 : (workerExperience > 0 ? 20 : 0);
+      const locationScore = workerLocation === jobLocation ? 15 : 5;
+      
+      let salaryScore = 5;
+      const jobMin = job.salary?.min || 0;
+      const jobMax = job.salary?.max || 0;
+      if (workerExpectedSalary >= jobMin && workerExpectedSalary <= jobMax) {
+        salaryScore = 15;
+      } else if (workerExpectedSalary < jobMin) {
+        salaryScore = 15;
       }
 
-      // Location represents 15% of the total score weight
-      if (workerLocation === jobLocation) {
-        score += 15;
-      }
-
-      // Experience represents 15% of the total score weight
-      if (workerExperience >= requiredExperience) {
-        score += 15;
-      }
-
-      // Cap final scores between 0 and 100
-      score = Math.max(0, Math.min(100, score));
-
-      const experienceScore = workerExperience >= requiredExperience ? 95 : 60;
-      const locationScore = workerLocation === jobLocation ? 95 : 70;
+      const total = roleScore + skillOverlap + experienceScore + locationScore + salaryScore;
+      const score = Math.round(Math.min(100, total));
 
       return {
         ...job,
         matchScore: score,
         analysis: {
-          skillMatch: skillMatchPercentage,
+          skillMatch: jobSkills.length > 0 ? Math.round((matchedSkills.length / jobSkills.length) * 100) : 0,
           matchedSkills,
           missingSkills,
-          experienceScore,
-          locationScore,
+          experienceScore: Math.round((experienceScore / 25) * 100),
+          locationScore: locationScore === 20 ? 100 : 50,
         },
       };
     })
     .filter((job) => job !== null);
 
-  // Sort by descending matchScore
   matchedJobs.sort((a, b) => b.matchScore - a.matchScore);
-
   return matchedJobs;
 };
 

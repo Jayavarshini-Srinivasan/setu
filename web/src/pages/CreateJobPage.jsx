@@ -189,15 +189,6 @@ export default function CreateJobPage() {
                 style={{ resize:"vertical", flex:1 }} />
             </div>
 
-            {/* AI Estimate banner */}
-            <div style={{ background:"#EEF2FF", border:"1.5px solid #A5B4FC", borderRadius:10, padding:"12px 16px" }}>
-              <p style={{ margin:0, fontSize:12, fontWeight:700, color:"#6366F1" }}>
-                🤖 AI Estimate: ~47 matching candidates found
-              </p>
-              <p style={{ margin:"4px 0 0", fontSize:11, color:"#6B7280" }}>
-                Top match score: 94% · Location match: Bangalore region
-              </p>
-            </div>
           </div>
         </div>
 

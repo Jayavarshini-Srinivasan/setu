@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
-
 import VoiceButton from "../components/VoiceButton";
 import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
 import { useOnboarding } from "../context/OnboardingContext";
@@ -9,25 +8,33 @@ import OnboardingStepLayout, { onboardingStyles as os } from "../components/Onbo
 import { COLORS, BORDER_RADIUS } from "../constants/theme";
 
 const ROLE_OPTIONS = [
-  "auto_driver",
-  "cab_driver",
-  "delivery_rider",
-  "electrician",
-  "construction",
-  "delivery",
+  { id: "Electrician", icon: "?" },
+  { id: "Plumber", icon: "??" },
+  { id: "Welder", icon: "??" },
+  { id: "Driver", icon: "??" },
+  { id: "Tailor", icon: "??" },
+  { id: "Helper", icon: "??" },
+  { id: "Carpenter", icon: "??" },
+  { id: "Mason", icon: "??" },
+  { id: "Painter", icon: "??" },
+  { id: "Mechanic", icon: "??" },
+  { id: "Delivery", icon: "??" },
+  { id: "Security", icon: "???" },
+  { id: "Cook", icon: "??" },
+  { id: "Factory Operator", icon: "??" },
+  { id: "Cleaner", icon: "??" },
+  { id: "Gardener", icon: "??" },
+  { id: "AC Technician", icon: "??" },
+  { id: "Tiler", icon: "??" },
+  { id: "Fabricator", icon: "??" },
+  { id: "Other", icon: "?" }
 ];
-
-const RADIUS_OPTIONS = ["2 km", "5 km", "10 km", "Any"];
 
 export default function RoleQuestionScreen({ navigation }) {
   const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
   const [fullName, setFullName] = useState(onboardingData.resumeSummary?.split("|")[0] || "");
-  const [age, setAge] = useState(onboardingData.age?.toString() || "");
-  const [city, setCity] = useState(onboardingData.location || "");
-  const [phone, setPhone] = useState(onboardingData.phoneNumber || "");
-  const [workRadius, setWorkRadius] = useState(onboardingData.workRadius || "");
   const [selectedRole, setSelectedRole] = useState(onboardingData.canonicalRole || "");
 
   const {
@@ -46,6 +53,9 @@ export default function RoleQuestionScreen({ navigation }) {
         updateField("canonicalRole", role);
         updateField("role", role);
       }
+      if (profile?.fullName) {
+        setFullName(profile.fullName);
+      }
     },
   });
 
@@ -57,39 +67,29 @@ export default function RoleQuestionScreen({ navigation }) {
 
   const handleContinue = () => {
     if (!isFormValid) {
-      Alert.alert(t("required") || "Required", t("labourOnboarding.fillRequiredFields") || "Please fill in your name, city, and phone number.");
+      Alert.alert(t("required") || "Required", t("labourOnboarding.fillRequiredFields") || "Please fill in your name and select a role.");
       return;
     }
-    const phoneDigits = phone.replace(/[^0-9]/g, "");
-
     updateField("resumeSummary", fullName.trim());
-    if (age) updateField("age", age);
-    updateField("location", city.trim());
-    updateField("phoneNumber", phoneDigits);
-    updateField("workRadius", workRadius);
+    updateField("fullName", fullName.trim());
     navigation.navigate("SkillsQuestion");
   };
 
-  const isFormValid =
-    Boolean(fullName.trim()) &&
-    Boolean(city.trim()) &&
-    phone.replace(/[^0-9]/g, "").length >= 10 &&
-    Boolean(workRadius) &&
-    Boolean(selectedRole);
+  const isFormValid = Boolean(fullName.trim()) && Boolean(selectedRole);
 
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Your Details (1/4)"
+      screenTitle="Role (1/5)"
       step={1}
-      title="Basic Info"
-      subtitle="कुछ बुनियादी जानकारी दें · Let's get started"
+      title="What do you do?"
+      subtitle="Speak or select your role"
       onContinue={handleContinue}
       continueDisabled={!isFormValid}
       variant="labour"
     >
       <View style={os.inputRow}>
-        <Text style={styles.fieldIcon}>👤</Text>
+        <Text style={styles.fieldIcon}>??</Text>
         <TextInput
           style={os.inputFlex}
           placeholder="Your full name"
@@ -99,68 +99,21 @@ export default function RoleQuestionScreen({ navigation }) {
         />
       </View>
 
-      <View style={os.inputRow}>
-        <Text style={styles.fieldIcon}>📅</Text>
-        <TextInput
-          style={os.inputFlex}
-          placeholder="Age"
-          placeholderTextColor={COLORS.textLight}
-          value={age}
-          onChangeText={setAge}
-          keyboardType="numeric"
-        />
-      </View>
-
-      <View style={os.inputRow}>
-        <Text style={styles.fieldIcon}>📍</Text>
-        <TextInput
-          style={os.inputFlex}
-          placeholder="Current city / area"
-          placeholderTextColor={COLORS.textLight}
-          value={city}
-          onChangeText={setCity}
-        />
-      </View>
-
-      <Text style={os.label}>PREFERRED WORK RADIUS</Text>
-      <View style={os.chipRow}>
-        {RADIUS_OPTIONS.map((r) => (
+      <Text style={[os.label, { marginTop: 24, marginBottom: 12 }]}>YOUR ROLE</Text>
+      <View style={styles.gridContainer}>
+        {ROLE_OPTIONS.map((item) => (
           <TouchableOpacity
-            key={r}
-            style={[os.chip, workRadius === r && os.chipSelectedLabour]}
-            onPress={() => setWorkRadius(r)}
+            key={item.id}
+            style={[styles.gridCard, selectedRole === item.id && styles.gridCardSelected]}
+            onPress={() => handleSelectRole(item.id)}
           >
-            <Text style={[os.chipText, workRadius === r && os.chipTextSelected]}>{r}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={os.inputRow}>
-        <Text style={styles.fieldIcon}>📱</Text>
-        <TextInput
-          style={os.inputFlex}
-          placeholder="Phone number"
-          placeholderTextColor={COLORS.textLight}
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-      </View>
-
-      <Text style={[os.label, { marginTop: 24 }]}>YOUR WORK TYPE</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.roleScroll}>
-        {ROLE_OPTIONS.map((role) => (
-          <TouchableOpacity
-            key={role}
-            style={[styles.roleChip, selectedRole === role && styles.roleChipSelected]}
-            onPress={() => handleSelectRole(role)}
-          >
-            <Text style={[styles.roleChipText, selectedRole === role && styles.roleChipTextSelected]}>
-              {t(`roles.${role}`) || role}
+            <Text style={styles.gridIcon}>{item.icon}</Text>
+            <Text style={[styles.gridText, selectedRole === item.id && styles.gridTextSelected]} numberOfLines={1}>
+              {item.id}
             </Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
       <View style={styles.voiceRow}>
         <VoiceButton
@@ -168,19 +121,19 @@ export default function RoleQuestionScreen({ navigation }) {
           onPressIn={startRecording}
           onPressOut={stopRecording}
         />
-        <Text style={styles.voiceHint}>{t("holdToSpeak") || "Hold to speak your role"}</Text>
+        <Text style={styles.voiceHint}>Hold mic and say: "My name is Rajan, I am an electrician."</Text>
       </View>
 
-      {voiceState === VOICE_STATE.CONFIRMED && extractedProfile?.canonicalRole ? (
+      {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.canonicalRole || extractedProfile?.fullName) ? (
         <View style={styles.detectedBox}>
           <Text style={styles.detectedText}>
-            {extractedProfile.canonicalRole || extractedProfile.role}
+            {extractedProfile.fullName ? extractedProfile.fullName + " - " : ""}{extractedProfile.canonicalRole || extractedProfile.role}
           </Text>
           <TouchableOpacity onPress={confirmExtraction}>
-            <Text style={styles.useText}>✓ Use</Text>
+            <Text style={styles.useText}>? Use</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={rejectExtraction}>
-            <Text style={styles.rejectText}>✕</Text>
+            <Text style={styles.rejectText}>?</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -190,38 +143,33 @@ export default function RoleQuestionScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   fieldIcon: { fontSize: 18, marginRight: 10 },
-  roleScroll: { marginBottom: 12 },
-  roleChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  gridCard: {
+    width: "31%",
+    aspectRatio: 1,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-    marginRight: 8,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    padding: 8,
   },
-  roleChipSelected: {
+  gridCardSelected: {
     backgroundColor: COLORS.accentLight,
     borderColor: COLORS.accent,
   },
-  roleChipText: { fontSize: 13, fontWeight: "600", color: COLORS.textSecondary },
-  roleChipTextSelected: { color: COLORS.accent },
-  voiceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 8,
-  },
+  gridIcon: { fontSize: 24, marginBottom: 8 },
+  gridText: { fontSize: 12, color: COLORS.textSecondary, textAlign: "center", fontWeight: "500" },
+  gridTextSelected: { color: COLORS.accent, fontWeight: "700" },
+  voiceRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 16 },
   voiceHint: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
-  detectedBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: COLORS.accentLight,
-    borderRadius: BORDER_RADIUS.md,
-  },
+  detectedBox: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12, padding: 12, backgroundColor: COLORS.accentLight, borderRadius: BORDER_RADIUS.md },
   detectedText: { flex: 1, fontWeight: "600", color: COLORS.text },
   useText: { color: COLORS.success, fontWeight: "700" },
   rejectText: { color: COLORS.textLight, fontSize: 18 },

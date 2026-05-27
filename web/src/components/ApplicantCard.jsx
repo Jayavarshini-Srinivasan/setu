@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
-import { formatStatus, formatExperience, formatSkills } from "../utils/formatters";
+import { formatStatus, formatExperience, formatSkills, getDisplayName } from "../utils/formatters";
 import { APPLICATION_STATUS } from "../constants/applicationStatus";
 
 export default function ApplicantCard({ app, jobId, updatingId, updateStatus, formatDate }) {
@@ -8,6 +8,7 @@ export default function ApplicantCard({ app, jobId, updatingId, updateStatus, fo
   const profile = app.worker?.profile || {};
   const isShortlisted = app.status === APPLICATION_STATUS.SHORTLISTED;
   const candidateRole = profile.professionalRole || profile.canonicalRole || profile.role || "N/A";
+  const name = getDisplayName(profile, app.worker);
   
   return (
     <div className="glass-card" style={{ padding: '28px', position: 'relative', overflow: 'hidden', marginBottom: '24px' }}>
@@ -28,7 +29,7 @@ export default function ApplicantCard({ app, jobId, updatingId, updateStatus, fo
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
               <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: 'var(--text-h)' }}>
-                {profile.name || "Unknown Candidate"}
+                {name}
               </h3>
               <StatusBadge status={formatStatus(app.status)} />
             </div>

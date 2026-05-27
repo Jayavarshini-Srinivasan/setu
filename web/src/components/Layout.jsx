@@ -25,7 +25,6 @@ const NAV = [
   { name: "Dashboard",  path: "/dashboard",   icon: "📊" },
   { name: "Post Job",   path: "/jobs/create", icon: "➕" },
   { name: "My Jobs",    path: "/jobs/my-jobs",icon: "💼" },
-  { name: "Applicants", path: "/jobs/my-jobs",icon: "👥", matchPrefix: "/jobs" },
   { name: "AI Insights",path: "/insights",    icon: "🤖" },
   { name: "Settings",   path: "/profile",     icon: "⚙️" },
 ];
@@ -63,9 +62,7 @@ export default function Layout() {
           {/* Nav */}
           <nav className="sidebar-nav">
             {NAV.map(item => {
-              const isActive = item.matchPrefix
-                ? location.pathname.startsWith(item.matchPrefix)
-                : location.pathname === item.path || location.pathname.startsWith(item.path + "/");
+              const isActive = location.pathname === item.path || (item.path !== "/dashboard" && location.pathname.startsWith(item.path + "/"));
               return (
                 <Link
                   key={item.path + item.name}

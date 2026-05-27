@@ -1,4 +1,4 @@
-const { db } = require("../config/firebase");
+const { db, admin } = require("../config/firebase");
 const { calculateMatchScore } = require("../services/matchService");
 const { generateApplicantSummary } = require("../services/aiService");
 
@@ -143,7 +143,9 @@ const applyToJob =
             "pending",
 
           appliedAt:
-            new Date(),
+            admin.firestore.FieldValue.serverTimestamp(),
+          updated_at:
+            admin.firestore.FieldValue.serverTimestamp(),
         };
 
       /*
@@ -341,7 +343,10 @@ const updateApplicationStatus = async (req, res) => {
     if (!applicationDoc.exists) return res.status(404).json({ error: "Application not found" });
     if (applicationDoc.data().recruiterId !== recruiterId) return res.status(403).json({ error: "Unauthorized" });
 
-    await applicationRef.update({ status, updatedAt: new Date() });
+    await applicationRef.update({ 
+      status, 
+      updated_at: admin.firestore.FieldValue.serverTimestamp() 
+    });
 
     // Send localized notification to candidate upon shortlisting (accepting)
     if (status === "shortlisted") {
@@ -382,7 +387,8 @@ const updateApplicationStatus = async (req, res) => {
               message: notifMessage,
               jobId,
               status: "unread",
-              createdAt: new Date(),
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              updated_at: admin.firestore.FieldValue.serverTimestamp(),
             });
         }
       } catch (err) {

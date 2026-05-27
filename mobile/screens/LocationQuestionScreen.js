@@ -1,208 +1,203 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
-
-import VoiceButton from "../components/VoiceButton";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
+import VoiceButton from "../components/VoiceButton";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../components/OnboardingStepLayout";
 import { COLORS, BORDER_RADIUS } from "../constants/theme";
 
-const LOCATION_OPTIONS = [
-  "Chennai",
-  "Bangalore",
-  "Hyderabad",
-  "Mumbai",
-  "Delhi",
-  "Pune",
-  "Coimbatore",
-  "Noida",
-];
+const COMMON_CITIES = ["Mumbai", "Delhi", "Bengaluru", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat", "Pune", "Jaipur"];
+const RADIUS_OPTIONS = ["Within 2km", "Within 5km", "Within 10km", "Within 25km", "Open to relocation"];
 
 export default function LocationQuestionScreen({ navigation }) {
   const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
-  const [location, setLocation] = useState(onboardingData.location || "");
+  const [city, setCity] = useState(onboardingData.location || "");
+  const [workRadius, setWorkRadius] = useState(onboardingData.workRadius || "");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const {
     voiceState,
-    transcript,
+    extractedProfile,
     startRecording,
     stopRecording,
-    playRecording,
-    retakeRecording,
-    submitRecording,
+    confirmExtraction,
+    rejectExtraction,
   } = useVoiceRecorder({
-    onResult: ({ transcript: tx, extractedProfile }) => {
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
       if (tx) addTranscript(tx);
-      const loc = extractedProfile?.location || "";
-      if (loc) {
-        setLocation(loc);
-        updateField("location", loc);
-      }
+      if (ep?.location) setCity(ep.location);
+      if (ep?.workRadius) setWorkRadius(ep.workRadius);
     },
   });
 
-  const selectLocation = (city) => {
-    setLocation(city);
-    updateField("location", city);
-  };
+  const filteredCities = COMMON_CITIES.filter(c => c.toLowerCase().includes(city.toLowerCase()) && c.toLowerCase() !== city.toLowerCase());
 
   const handleContinue = () => {
-    if (!isFormValid) {
-      Alert.alert(t("required") || "Required", t("enterLocation") || "Please select or enter location");
+    if (!city.trim() || !workRadius) {
+      Alert.alert(t("required") || "Required", "Please provide your city and work radius.");
       return;
     }
-    updateField("location", location);
+    updateField("location", city.trim());
+    updateField("workRadius", workRadius);
     navigation.navigate("PreferencesQuestion");
   };
-
-  const isFormValid = Boolean(location.trim());
 
   return (
     <OnboardingStepLayout
       navigation={navigation}
-      screenTitle="Location (4/4)"
+      screenTitle="Location (4/5)"
       step={4}
-      title={t("whichCity") || "Which city do you work in?"}
-      subtitle={t("citySubtitle") || "Type, select a city, or speak your location."}
+      title="Where do you live?"
+      subtitle="This helps us find jobs near you"
       onContinue={handleContinue}
-      continueDisabled={!isFormValid}
+      continueDisabled={!city.trim() || !workRadius}
       variant="labour"
     >
-      <TextInput
-        style={styles.input}
-        placeholder={t("enterCity") || "Enter city"}
-        placeholderTextColor={COLORS.textLight}
-        value={location}
-        onChangeText={setLocation}
-      />
-
-      <View style={styles.voiceRow}>
-        {voiceState === VOICE_STATE.PROCESSING ? (
-          <ActivityIndicator size="large" color={COLORS.accent} />
-        ) : (
-          <>
-            <VoiceButton
-              isRecording={voiceState === VOICE_STATE.RECORDING}
-              onPressIn={startRecording}
-              onPressOut={stopRecording}
-            />
-            <Text style={styles.voiceHint}>{t("holdToSpeak") || "Hold to speak"}</Text>
-          </>
+      <Text style={os.label}>CITY / AREA</Text>
+      <View style={{ zIndex: 10 }}>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. Chennai"
+          placeholderTextColor={COLORS.textLight}
+          value={city}
+          onChangeText={(v) => { setCity(v); setShowSuggestions(true); }}
+          onFocus={() => setShowSuggestions(true)}
+        />
+        {showSuggestions && city.trim().length > 0 && filteredCities.length > 0 && (
+          <View style={styles.autocompleteBox}>
+            {filteredCities.map(c => (
+              <TouchableOpacity key={c} style={styles.suggestionItem} onPress={() => { setCity(c); setShowSuggestions(false); }}>
+                <Text style={styles.suggestionText}>{c}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
       </View>
 
-      {voiceState === VOICE_STATE.RECORDED && (
-        <View style={styles.voiceActions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={playRecording}>
-            <Text style={styles.actionBtnText}>▶ Play</Text>
+      <Text style={[os.label, { marginTop: 24, marginBottom: 12 }]}>HOW FAR CAN YOU TRAVEL?</Text>
+      <View style={styles.cardList}>
+        {RADIUS_OPTIONS.map((opt) => (
+          <TouchableOpacity
+            key={opt}
+            style={[styles.cardRow, workRadius === opt && styles.cardRowSelected]}
+            onPress={() => setWorkRadius(opt)}
+          >
+            <View style={styles.radioOuter}>
+              {workRadius === opt && <View style={styles.radioInner} />}
+            </View>
+            <Text style={[styles.cardText, workRadius === opt && styles.cardTextSelected]}>{opt}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={retakeRecording}>
-            <Text style={styles.actionBtnText}>🔄 Retake</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, styles.submitBtn]} onPress={submitRecording}>
-            <Text style={styles.actionBtnText}>✅ Submit</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        ))}
+      </View>
 
-      {transcript ? (
-        <View style={styles.transcriptBox}>
-          <Text style={styles.transcriptLabel}>{t("transcript") || "Transcript"}</Text>
-          <Text style={styles.transcriptText}>{transcript}</Text>
+      <View style={styles.voiceRow}>
+        <VoiceButton
+          isRecording={voiceState === VOICE_STATE.RECORDING}
+          onPressIn={startRecording}
+          onPressOut={stopRecording}
+        />
+        <Text style={styles.voiceHint}>Hold mic and say: "I live in Chennai, I can travel up to 10 km."</Text>
+      </View>
+      
+      {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.location || extractedProfile?.workRadius) ? (
+        <View style={styles.detectedBox}>
+          <Text style={styles.detectedText}>
+            Detected: {extractedProfile.location ? `${extractedProfile.location}` : ""} {extractedProfile.workRadius ? `| ${extractedProfile.workRadius}` : ""}
+          </Text>
+          <TouchableOpacity onPress={confirmExtraction}>
+            <Text style={styles.useText}>? Keep</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={rejectExtraction}>
+            <Text style={styles.rejectText}>?</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.cityRow}
-      >
-        {LOCATION_OPTIONS.map((city) => {
-          const isSelected = location === city;
-          return (
-            <TouchableOpacity
-              key={city}
-              style={[styles.cityChip, isSelected && styles.cityChipSelected]}
-              onPress={() => selectLocation(city)}
-            >
-              <Text style={[styles.cityChipText, isSelected && styles.cityChipTextSelected]}>
-                {t("cities." + city) || city}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
     </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,
     padding: 16,
-    fontSize: 17,
+    fontSize: 16,
+    backgroundColor: COLORS.surface,
     color: COLORS.text,
-    marginBottom: 16,
   },
+  autocompleteBox: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: BORDER_RADIUS.md,
+    borderBottomRightRadius: BORDER_RADIUS.md,
+    maxHeight: 150,
+  },
+  suggestionItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  suggestionText: {
+    fontSize: 15,
+    color: COLORS.text,
+  },
+  cardList: {
+    gap: 12,
+  },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  cardRowSelected: {
+    backgroundColor: COLORS.accentLight,
+    borderColor: COLORS.accent,
+  },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: COLORS.textLight,
+    marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.accent,
+  },
+  cardText: { fontSize: 16, color: COLORS.textSecondary, fontWeight: "500" },
+  cardTextSelected: { color: COLORS.accent, fontWeight: "700" },
   voiceRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 16,
+    marginTop: 20,
   },
   voiceHint: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
-  voiceActions: { flexDirection: "row", gap: 8, marginBottom: 16, flexWrap: "wrap" },
-  actionBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: COLORS.primaryLight,
-  },
-  submitBtn: { backgroundColor: COLORS.successLight },
-  actionBtnText: { fontSize: 13, fontWeight: "600", color: COLORS.text },
-  transcriptBox: {
-    backgroundColor: COLORS.surface,
-    padding: 14,
-    borderRadius: BORDER_RADIUS.md,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  transcriptLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: COLORS.textLight,
-    marginBottom: 6,
-  },
-  transcriptText: { fontSize: 14, color: COLORS.text, fontStyle: "italic" },
-  cityRow: { gap: 10, paddingVertical: 8 },
-  cityChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-  },
-  cityChipSelected: {
+  detectedBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 12,
+    padding: 12,
     backgroundColor: COLORS.accentLight,
-    borderColor: COLORS.accent,
+    borderRadius: BORDER_RADIUS.md,
   },
-  cityChipText: { fontSize: 14, fontWeight: "600", color: COLORS.textSecondary },
-  cityChipTextSelected: { color: COLORS.accent },
+  detectedText: { flex: 1, fontSize: 13, color: COLORS.text },
+  useText: { color: COLORS.success, fontWeight: "700" },
+  rejectText: { color: COLORS.textLight, fontSize: 18 },
 });

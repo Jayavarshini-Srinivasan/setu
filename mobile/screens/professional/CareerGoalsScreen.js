@@ -1,321 +1,175 @@
-import {
-  useState,
-} from "react";
-
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from "react-native";
-
-import {
-  useOnboarding,
-} from "../../context/OnboardingContext";
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
+import VoiceButton from "../../components/VoiceButton";
+import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
-import { COLORS } from "../../constants/theme";
+import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
+import { COLORS, BORDER_RADIUS } from "../../constants/theme";
 
-export default function CareerGoalsScreen({
-  navigation,
-}) {
+const CURRENCIES = ["INR", "GBP", "USD"];
+const TARGET_ROLES = ["Finance Manager", "Senior Accountant", "Auditor", "Tax Consultant", "Financial Analyst", "Operations Manager", "HR Director", "Project Manager", "Software Architect", "Data Scientist", "Marketing Head", "Sales Director"];
 
-  /*
-    CONTEXT
-  */
-  const {
-    onboardingData,
-
-    updateField,
-  } = useOnboarding();
-
+export default function CareerGoalsScreen({ navigation }) {
+  const { onboardingData, updateField, addTranscript } = useOnboarding();
   const { t } = useI18n();
 
-  /*
-    GOAL OPTIONS
-  */
-  const goalOptions = [
+  const [minSalary, setMinSalary] = useState(onboardingData.expectedSalary?.min ? String(onboardingData.expectedSalary.min) : "");
+  const [maxSalary, setMaxSalary] = useState(onboardingData.expectedSalary?.max ? String(onboardingData.expectedSalary.max) : "");
+  const [currency, setCurrency] = useState(onboardingData.expectedSalary?.currency || "INR");
+  
+  const [careerGoal, setCareerGoal] = useState(onboardingData.careerGoal || "");
+  const [preferredRoles, setPreferredRoles] = useState(onboardingData.preferredRoles || []);
 
-    "Get my first job",
-
-    "Switch careers",
-
-    "Become a senior professional",
-
-    "Increase salary",
-
-    "Work at a top company",
-
-    "Improve technical skills",
-
-    "Become a manager",
-
-    "Work remotely",
-
-    "Build my portfolio",
-
-    "Get international opportunities",
-  ];
-
-  /*
-    LOCAL STATE
-  */
-  const [
-    selectedGoals,
-    setSelectedGoals,
-  ] = useState(
-    onboardingData.preferredRoles || []
-  );
-
-  /*
-    TOGGLE GOAL
-  */
-  const toggleGoal =
-    (goal) => {
-
-      let updatedGoals = [];
-
-      /*
-        REMOVE
-      */
-      if (
-        selectedGoals.includes(
-          goal
-        )
-      ) {
-
-        updatedGoals =
-          selectedGoals.filter(
-            (item) =>
-              item !== goal
-          );
-
-      } else {
-
-        /*
-          ADD
-        */
-        updatedGoals = [
-
-          ...selectedGoals,
-
-          goal,
-        ];
+  const {
+    voiceState,
+    extractedProfile,
+    startRecording,
+    stopRecording,
+    confirmExtraction,
+    rejectExtraction,
+  } = useVoiceRecorder({
+    onResult: ({ transcript: tx, extractedProfile: ep }) => {
+      if (tx) addTranscript(tx);
+      if (ep?.expectedSalary) {
+        if (ep.expectedSalary.min) setMinSalary(String(ep.expectedSalary.min));
+        if (ep.expectedSalary.max) setMaxSalary(String(ep.expectedSalary.max));
+        if (ep.expectedSalary.currency) setCurrency(ep.expectedSalary.currency);
       }
+      if (ep?.careerGoal) setCareerGoal(ep.careerGoal);
+    },
+  });
 
-      setSelectedGoals(
-        updatedGoals
-      );
+  const toggleRole = (role) => {
+    const updated = preferredRoles.includes(role)
+      ? preferredRoles.filter((r) => r !== role)
+      : [...preferredRoles, role];
+    setPreferredRoles(updated);
+  };
 
-      updateField(
-        "preferredRoles",
-        updatedGoals
-      );
-    };
+  const isFormValid = Boolean(minSalary) && Boolean(careerGoal.trim()) && preferredRoles.length > 0;
 
-  /*
-    CONTINUE
-  */
-  const handleContinue =
-    () => {
+  const handleContinue = () => {
+    if (!isFormValid) {
+      Alert.alert(t("required") || "Required", "Please provide your salary expectation, career goal, and select at least one preferred role.");
+      return;
+    }
 
-      if (!isFormValid) {
-        Alert.alert(
-          t("required") || "Required",
-          t("selectCareerGoalError") || "Please select at least one career goal"
-        );
+    updateField("expectedSalary", { min: Number(minSalary), max: Number(maxSalary) || Number(minSalary), currency });
+    updateField("careerGoal", careerGoal.trim());
+    updateField("preferredRoles", preferredRoles);
 
-        return;
-      }
-
-      navigation.navigate(
-        "ContactQuestion"
-      );
-    };
-
-  const isFormValid = selectedGoals.length > 0;
+    navigation.navigate("ProfessionalLinks");
+  };
 
   return (
+    <OnboardingStepLayout
+      navigation={navigation}
+      screenTitle="Goals (5/6)"
+      step={5}
+      badge="PROFESSIONAL"
+      title="Salary & Career Goals"
+      subtitle="What are you aiming for?"
+      onContinue={handleContinue}
+      continueDisabled={!isFormValid}
+    >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        
+        <Text style={os.label}>EXPECTED SALARY / MONTH</Text>
+        
+        <View style={styles.currencyToggle}>
+          {CURRENCIES.map(curr => (
+            <TouchableOpacity key={curr} style={[styles.currencyBtn, currency === curr && styles.currencyBtnActive]} onPress={() => setCurrency(curr)}>
+              <Text style={[styles.currencyText, currency === curr && styles.currencyTextActive]}>{curr}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-    <View style={styles.container}>
+        <View style={styles.salaryRow}>
+          <TextInput
+            style={styles.salaryInput}
+            placeholder="Min"
+            placeholderTextColor={COLORS.textLight}
+            value={minSalary}
+            onChangeText={setMinSalary}
+            keyboardType="numeric"
+          />
+          <Text style={{ marginHorizontal: 12, color: COLORS.textLight }}>to</Text>
+          <TextInput
+            style={styles.salaryInput}
+            placeholder="Max"
+            placeholderTextColor={COLORS.textLight}
+            value={maxSalary}
+            onChangeText={setMaxSalary}
+            keyboardType="numeric"
+          />
+        </View>
 
-      <Text style={styles.title}>
-        {t("careerGoalsTitle") || "What are your career goals?"}
-      </Text>
+        <Text style={[os.label, { marginTop: 24 }]}>YOUR CAREER GOAL</Text>
+        <TextInput
+          style={[styles.input, { height: 80, textAlignVertical: "top" }]}
+          placeholder="e.g. I want to become a Finance Manager within the next 3 years..."
+          placeholderTextColor={COLORS.textLight}
+          multiline
+          value={careerGoal}
+          onChangeText={setCareerGoal}
+        />
 
-      <Text style={styles.subtitle}>
-        {t("careerGoalsSubtitle") || "This helps Setu personalize learning paths and job recommendations."}
-      </Text>
+        <Text style={[os.label, { marginTop: 24 }]}>TARGET ROLES</Text>
+        <View style={os.chipRow}>
+          {TARGET_ROLES.map((role) => {
+            const isSelected = preferredRoles.includes(role);
+            return (
+              <TouchableOpacity
+                key={role}
+                style={[os.chip, isSelected && os.chipSelected]}
+                onPress={() => toggleRole(role)}
+              >
+                <Text style={[os.chipText, isSelected && os.chipTextSelected]}>
+                  {role}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-      <ScrollView
-        contentContainerStyle={
-          styles.goalsContainer
-        }
-      >
-
-        {
-          goalOptions.map(
-            (goal) => {
-
-              const isSelected =
-                selectedGoals.includes(
-                  goal
-                );
-
-              return (
-
-                <TouchableOpacity
-                  key={goal}
-
-                  style={[
-
-                    styles.goalChip,
-
-                    isSelected &&
-                      styles.selectedChip,
-                  ]}
-
-                  onPress={() =>
-                    toggleGoal(
-                      goal
-                    )
-                  }
-                >
-
-                  <Text
-                    style={[
-
-                      styles.goalText,
-
-                      isSelected &&
-                        styles.selectedText,
-                    ]}
-                  >
-                    {t(`goals.${goal.replace(/\s+/g, '_')}`) || goal}
-                  </Text>
-
-                </TouchableOpacity>
-              );
-            }
-          )
-        }
+        <View style={styles.voiceSection}>
+          <View style={styles.voiceRow}>
+            <VoiceButton isRecording={voiceState === VOICE_STATE.RECORDING} onPressIn={startRecording} onPressOut={stopRecording} />
+            <Text style={styles.voiceHint}>Hold mic and say: "I want at least ?35,000 per month and my goal is to become a finance manager."</Text>
+          </View>
+          
+          {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.expectedSalary || extractedProfile?.careerGoal) ? (
+            <View style={styles.detectedBox}>
+              <Text style={styles.detectedText}>{extractedProfile.expectedSalary ? `Salary: ${extractedProfile.expectedSalary.min}` : ""} {extractedProfile.careerGoal ? `| Goal: ${extractedProfile.careerGoal}` : ""}</Text>
+              <View style={styles.detectedActions}>
+                <TouchableOpacity onPress={confirmExtraction}><Text style={styles.confirmText}>? Keep</Text></TouchableOpacity>
+                <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>?</Text></TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
+        </View>
 
       </ScrollView>
-
-      <TouchableOpacity
-        style={[styles.button, !isFormValid && styles.buttonDisabled]}
-
-        onPress={handleContinue}
-
-        disabled={!isFormValid}
-      >
-
-        <Text style={styles.buttonText}>
-          {t("continue") || "Continue"}
-        </Text>
-
-      </TouchableOpacity>
-
-    </View>
+    </OnboardingStepLayout>
   );
 }
 
-const styles =
-  StyleSheet.create({
-
-    container: {
-      flex: 1,
-
-      backgroundColor:
-        COLORS.background,
-
-      padding: 24,
-    },
-
-    title: {
-      fontSize: 30,
-
-      fontWeight: "bold",
-
-      marginTop: 50,
-
-      marginBottom: 12,
-    },
-
-    subtitle: {
-      fontSize: 16,
-
-      color: "#666",
-
-      marginBottom: 30,
-    },
-
-    goalsContainer: {
-      flexDirection: "row",
-
-      flexWrap: "wrap",
-
-      gap: 12,
-
-      paddingBottom: 40,
-    },
-
-    goalChip: {
-      borderWidth: 1,
-
-      borderColor:
-        "#ccc",
-
-      borderRadius: 30,
-
-      paddingVertical: 14,
-
-      paddingHorizontal: 18,
-    },
-
-    selectedChip: {
-      backgroundColor:
-        COLORS.primary,
-
-      borderColor:
-        COLORS.primary,
-    },
-
-    goalText: {
-      fontSize: 16,
-    },
-
-    selectedText: {
-      color: "#fff",
-
-      fontWeight: "bold",
-    },
-
-    button: {
-      backgroundColor:
-        COLORS.primary,
-
-      padding: 20,
-
-      borderRadius: 16,
-
-      alignItems:
-        "center",
-
-      marginBottom: 30,
-    },
-
-    buttonDisabled: {
-      backgroundColor:
-        "#D1D5DB",
-    },
-
-    buttonText: {
-      color: "#fff",
-
-      fontSize: 18,
-
-      fontWeight: "bold",
-    },
-  });
+const styles = StyleSheet.create({
+  currencyToggle: { flexDirection: "row", backgroundColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 4, marginBottom: 12 },
+  currencyBtn: { flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: BORDER_RADIUS.sm },
+  currencyBtnActive: { backgroundColor: COLORS.surface },
+  currencyText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: "600" },
+  currencyTextActive: { color: COLORS.text, fontWeight: "700" },
+  salaryRow: { flexDirection: "row", alignItems: "center" },
+  salaryInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 16, fontSize: 16, backgroundColor: COLORS.surface, color: COLORS.text },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md, padding: 12, backgroundColor: COLORS.surface, marginTop: 8, fontSize: 15 },
+  voiceSection: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: COLORS.border },
+  voiceHint: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
+  voiceRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  detectedBox: { marginTop: 16, backgroundColor: COLORS.primaryLight, padding: 14, borderRadius: 12, flexDirection: "row", alignItems: "center" },
+  detectedText: { fontSize: 13, fontWeight: "600", color: COLORS.text, flex: 1 },
+  detectedActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  confirmText: { color: COLORS.success, fontWeight: "700" },
+  rejectText: { color: COLORS.textLight, fontSize: 18 },
+});
