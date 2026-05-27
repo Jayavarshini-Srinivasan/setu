@@ -36,9 +36,27 @@ const matchJobs = async (req, res) => {
       console.log(`Using local jobs fallback (${availableJobs.length})`);
     }
     const targetCategory = isProfessional ? "professional" : "labour";
+    const workerRole = (workerProfile.canonicalRole || workerProfile.role || "").toLowerCase();
+    
     const categoryJobs   = availableJobs.filter((j) => {
       const jobCat = (j.category || j.workerCategory || "").toLowerCase();
-      return !jobCat || jobCat === targetCategory;
+      const isCorrectCategory = (!jobCat || jobCat === targetCategory);
+      
+      const jobTitle = (j.title || j.role || "").toLowerCase();
+      
+      let isRoleMatch = false;
+      if (!workerRole || !jobTitle) {
+        isRoleMatch = true; // Fallback if undefined
+      } else if (jobTitle.includes(workerRole) || workerRole.includes(jobTitle)) {
+        isRoleMatch = true;
+      } else {
+        // Token intersection (e.g. "Software Engineer" vs "Senior Software Developer")
+        const workerTokens = workerRole.split(/\s+/).filter(t => t.length > 3);
+        const jobTokens = jobTitle.split(/\s+/).filter(t => t.length > 3);
+        isRoleMatch = workerTokens.some(wt => jobTokens.some(jt => jt.includes(wt) || wt.includes(jt)));
+      }
+
+      return isCorrectCategory && isRoleMatch;
     });
     const matchedJobs = calculateMatchScore(workerProfile, categoryJobs);
     const MIN_SCORE  = isProfessional ? 5 : 10;

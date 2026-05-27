@@ -1,411 +1,216 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createJob } from "../services/jobsService";
+import { isRequiredString, normalizeSkills } from "../utils/validators";
 
-import { createJob,} from "../services/jobsService";
-import { isRequiredString,normalizeSkills,} from "../utils/validators";
-import "../styles/CreateJobPage.css";
+const EXP_OPTIONS = ["Any", "0-2 yr", "2-5 yr", "5+ yr"];
 
 export default function CreateJobPage() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [category, setCategory]   = useState("labour");
+  const [experience, setExperience] = useState("Any");
+  const [skillInput, setSkillInput] = useState("");
+  const [skills, setSkills]         = useState([]);
+  const [salaryMin, setSalaryMin]   = useState("");
+  const [salaryMax, setSalaryMax]   = useState("");
 
-  const [loading,
-    setLoading] =
-    useState(false);
+  const [formData, setFormData] = useState({
+    title: "", location: "", description: "",
+  });
 
-  const [formData,
-    setFormData] =
-    useState({
-      title: "",
+  const handleChange = (e) =>
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-      workerCategory:
-        "labour",
-
-      requiredSkills:
-        "",
-
-      location: "",
-
-      salary: "",
-
-      experienceRequired:
-        "",
-
-      description: "",
-    });
-
-  /*
-    HANDLE INPUT CHANGE
-  */
-  const handleChange =
-    (e) => {
-      const {
-        name,
-        value,
-      } = e.target;
-
-      setFormData(
-        (prev) => ({
-          ...prev,
-
-          [name]:
-            value,
-        })
-      );
-    };
-
-  /*
-    CREATE JOB
-  */
-  const handleSubmit =
-    async (e) => {
+  const addSkill = (e) => {
+    if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
+      const s = skillInput.trim();
+      if (s && !skills.includes(s)) setSkills(prev => [...prev, s]);
+      setSkillInput("");
+    }
+  };
+  const removeSkill = (s) => setSkills(prev => prev.filter(x => x !== s));
 
-      try {
-        setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      if (!isRequiredString(formData.title))    { alert("Job title is required"); return; }
+      if (!isRequiredString(formData.location)) { alert("Location is required"); return; }
 
-        /*
-          CLEAN PAYLOAD
-        */
-       if (
-  !isRequiredString(
-    formData.title
-  )
-) {
-  alert(
-    "Job title is required"
-  );
+      const payload = {
+        title:              formData.title.trim(),
+        workerCategory:     category,
+        requiredSkills:     skills,
+        location:           formData.location.trim(),
+        salary:             parseInt(salaryMin) || 0,
+        salaryMax:          parseInt(salaryMax) || 0,
+        experienceRequired: experience,
+        description:        formData.description.trim(),
+        isDraft:            false,
+        isActive:           true,
+      };
 
-  return;
-}
+      await createJob(payload);
+      alert("Job created successfully!");
+      navigate("/jobs/my-jobs");
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to create job");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (
-          !isRequiredString(
-            formData.location
-          )
-        ) {
-          alert(
-            "Location is required"
-          );
-
-          return;
-        }
-        const payload = {
-          title:
-            formData.title.trim(),
-
-          workerCategory:
-            formData.workerCategory,
-
-          requiredSkills:
-          normalizeSkills(
-            formData.requiredSkills
-          ),
-
-          location:
-            formData.location.trim(),
-
-          /*
-            STORE NUMERIC
-            VALUE
-          */
-          salary:
-            parseInt(
-              formData.salary
-            ),
-
-          /*
-            STORE NUMERIC
-            VALUE
-          */
-          experienceRequired:
-            parseInt(
-              formData
-                .experienceRequired
-            ),
-
-          description:
-            formData.description.trim(),
-        };
-
-        /*
-          VALIDATION
-        */
-        if (
-          isNaN(
-            payload.salary
-          )
-        ) {
-          alert(
-            "Salary must be a number"
-          );
-
-          return;
-        }
-
-        if (
-          isNaN(
-            payload
-              .experienceRequired
-          )
-        ) {
-          alert(
-            "Experience must be a number"
-          );
-
-          return;
-        }
-
-        /*
-          API REQUEST
-        */
-        await createJob(payload);
-
-        alert(
-          "Job created successfully!"
-        );
-
-        navigate(
-          "/jobs/my-jobs"
-        );
-      } catch (error) {
-        console.error(
-          error
-        );
-
-        console.log(
-  error.response?.data
-);
-
-alert(
-  error.response?.data?.error ||
-  "Failed to create job"
-);
-      } finally {
-        setLoading(false);
+  const handleSaveDraft = async () => {
+    try {
+      setLoading(true);
+      if (!isRequiredString(formData.title)) {
+        alert("Job title is required to save a draft");
+        return;
       }
-    };
+
+      const payload = {
+        title:              formData.title.trim(),
+        workerCategory:     category,
+        requiredSkills:     skills,
+        location:           formData.location.trim() || "Remote",
+        salary:             parseInt(salaryMin) || 0,
+        salaryMax:          parseInt(salaryMax) || 0,
+        experienceRequired: experience,
+        description:        formData.description.trim() || "Draft job description.",
+        isDraft:            true,
+        isActive:           false,
+      };
+
+      await createJob(payload);
+      alert("Draft saved successfully!");
+      navigate("/jobs/my-jobs");
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to save draft");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="create-job-page">
-      <h2 className="create-job-heading">
-        Create a New Job
-      </h2>
+    <div style={{ width:"100%" }}>
+      {/* Header */}
+      <div style={{ marginBottom:20 }}>
+        <h1 style={{ marginBottom:2 }}>Post a Job</h1>
+        <p style={{ color:"#6B7280", fontSize:13, margin:0 }}>
+          AI will auto-match your job to the best candidates.
+        </p>
+      </div>
 
-      <form
+      <form onSubmit={handleSubmit}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 32px" }}>
 
-      className="create-job-form"
-        onSubmit={
-          handleSubmit
-        }
-        style={{
-          display: "flex",
+          {/* ── LEFT COLUMN ── */}
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            {/* Job Title */}
+            <div>
+              <label>Job Title</label>
+              <input name="title" placeholder="Accounts Executive"
+                value={formData.title} onChange={handleChange} required />
+            </div>
 
-          flexDirection:
-            "column",
+            {/* Worker Category */}
+            <div>
+              <label>Worker Category</label>
+              <div className="toggle-group">
+                <button type="button" className={`toggle-btn${category==="labour" ? " active" : ""}`}
+                  onClick={() => setCategory("labour")}>Labour</button>
+                <button type="button" className={`toggle-btn${category==="professional" ? " active" : ""}`}
+                  onClick={() => setCategory("professional")}>Professional</button>
+              </div>
+            </div>
 
-          gap: "15px",
-        }}
-      >
-        <input
-          type="text"
-          name="title"
-          placeholder="Job Title"
-          value={
-            formData.title
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
+            {/* Location */}
+            <div>
+              <label>Location</label>
+              <input name="location" placeholder="MG Road, Bangalore"
+                value={formData.location} onChange={handleChange} required />
+            </div>
 
-            borderRadius:
-              "4px",
+            {/* Experience */}
+            <div>
+              <label>Experience Required</label>
+              <div className="exp-group">
+                {EXP_OPTIONS.map(opt => (
+                  <button key={opt} type="button"
+                    className={`exp-btn${experience===opt ? " active":""}`}
+                    onClick={() => setExperience(opt)}>{opt}</button>
+                ))}
+              </div>
+            </div>
 
-            border:
-              "1px solid #ccc",
-          }}
-        />
+            {/* Salary Range */}
+            <div>
+              <label>Salary Range</label>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <input type="number" placeholder="₹4,00,000" value={salaryMin}
+                  onChange={e => setSalaryMin(e.target.value)} style={{ flex:1 }} />
+                <span style={{ color:"#6B7280", fontSize:16, flexShrink:0 }}>–</span>
+                <input type="number" placeholder="₹5,00,000" value={salaryMax}
+                  onChange={e => setSalaryMax(e.target.value)} style={{ flex:1 }} />
+              </div>
+            </div>
+          </div>
 
-        <select
-          name="workerCategory"
-          value={
-            formData.workerCategory
-          }
-          onChange={
-            handleChange
-          }
-          style={{
-            padding:
-              "10px",
+          {/* ── RIGHT COLUMN ── */}
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            {/* Required Skills */}
+            <div>
+              <label>Required Skills</label>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:8 }}>
+                {skills.map(s => (
+                  <span key={s} className="skill-tag">
+                    {s}
+                    <button type="button" onClick={() => removeSkill(s)}>×</button>
+                  </span>
+                ))}
+              </div>
+              <input
+                placeholder="Add skill... (press Enter)"
+                value={skillInput}
+                onChange={e => setSkillInput(e.target.value)}
+                onKeyDown={addSkill}
+              />
+            </div>
 
-            borderRadius:
-              "4px",
+            {/* Description */}
+            <div style={{ flex:1, display:"flex", flexDirection:"column" }}>
+              <label>Job Description</label>
+              <textarea name="description"
+                placeholder="We are looking for an experienced..."
+                value={formData.description} onChange={handleChange}
+                rows={7}
+                style={{ resize:"vertical", flex:1 }} />
+            </div>
 
-            border:
-              "1px solid #ccc",
-          }}
-        >
-          <option value="labour">
-            Labour
-          </option>
+            {/* AI Estimate banner */}
+            <div style={{ background:"#EEF2FF", border:"1.5px solid #A5B4FC", borderRadius:10, padding:"12px 16px" }}>
+              <p style={{ margin:0, fontSize:12, fontWeight:700, color:"#6366F1" }}>
+                🤖 AI Estimate: ~47 matching candidates found
+              </p>
+              <p style={{ margin:"4px 0 0", fontSize:11, color:"#6B7280" }}>
+                Top match score: 94% · Location match: Bangalore region
+              </p>
+            </div>
+          </div>
+        </div>
 
-          <option value="professional">
-            Professional
-          </option>
-        </select>
-
-        <input
-          type="text"
-          name="requiredSkills"
-          placeholder="Required Skills (comma separated)"
-          value={
-            formData.requiredSkills
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          value={
-            formData.location
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <input
-          type="number"
-          name="salary"
-          placeholder="Salary (Example: 15000)"
-          value={
-            formData.salary
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <input
-          type="number"
-          name="experienceRequired"
-          placeholder="Experience Required (Example: 2)"
-          value={
-            formData
-              .experienceRequired
-          }
-          onChange={
-            handleChange
-          }
-          required
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <textarea
-          name="description"
-          placeholder="Job Description"
-          value={
-            formData.description
-          }
-          onChange={
-            handleChange
-          }
-          required
-          rows={5}
-          style={{
-            padding:
-              "10px",
-
-            borderRadius:
-              "4px",
-
-            border:
-              "1px solid #ccc",
-          }}
-        />
-
-        <button
-          type="submit"
-          disabled={
-            loading
-          }
-          style={{
-            padding:
-              "12px",
-
-            backgroundColor:
-              "#2ecc71",
-
-            color:
-              "white",
-
-            border:
-              "none",
-
-            borderRadius:
-              "4px",
-
-            cursor:
-              "pointer",
-
-            fontWeight:
-              "bold",
-          }}
-        >
-          {loading
-            ? "Creating..."
-            : "Create Job"}
-        </button>
+        {/* Action buttons */}
+        <div style={{ display:"flex", gap:12, marginTop:24 }}>
+          <button type="button" disabled={loading} className="secondary"
+            style={{ flex:1, padding:"11px" }}
+            onClick={handleSaveDraft}>Save Draft</button>
+          <button type="submit" disabled={loading} className="primary"
+            style={{ flex:1, padding:"11px" }}>
+            {loading ? "Publishing..." : "Publish Job →"}
+          </button>
+        </div>
       </form>
     </div>
   );

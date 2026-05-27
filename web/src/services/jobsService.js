@@ -104,3 +104,16 @@ export async function toggleJobStatus(
     throw error;
   }
 }
+
+/*
+  DELETE JOB
+*/
+export async function deleteJob(jobId) {
+  try {
+    const response = await API.delete(`/jobs/${jobId}`);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

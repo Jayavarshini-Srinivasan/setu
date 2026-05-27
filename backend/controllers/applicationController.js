@@ -1,5 +1,6 @@
 const { db } = require("../config/firebase");
 const { calculateMatchScore } = require("../services/matchService");
+const { generateApplicantSummary } = require("../services/aiService");
 
 const applyToJob =
   async (req, res) => {
@@ -98,6 +99,18 @@ const applyToJob =
       }
 
       /*
+        GENERATE AI SUMMARY
+      */
+      let aiSummary = "";
+      try {
+        if (workerData.profile) {
+          aiSummary = await generateApplicantSummary(workerData.profile, jobData);
+        }
+      } catch (err) {
+        console.warn("Failed to generate AI summary during application", err);
+      }
+
+      /*
         CREATE APPLICATION
       */
       const applicationRef =
@@ -123,6 +136,8 @@ const applyToJob =
             workerData.workerType,
 
           matchScore,
+          
+          aiSummary,
 
           status:
             "pending",

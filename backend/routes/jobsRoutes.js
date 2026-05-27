@@ -13,6 +13,7 @@ const {
   toggleJobStatus,
   getSingleJob,
   updateJob,
+  deleteJob,
 } = require(
   "../controllers/jobController"
 );
@@ -62,6 +63,13 @@ router.put(
   authMiddleware,
   recruiterMiddleware,
   updateJob
+);
+
+router.delete(
+  "/:jobId",
+  authMiddleware,
+  recruiterMiddleware,
+  deleteJob
 );
 
 module.exports =

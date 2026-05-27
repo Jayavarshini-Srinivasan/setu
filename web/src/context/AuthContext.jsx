@@ -6,6 +6,7 @@ import {
 
 import {
   onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 
 import {
@@ -69,46 +70,49 @@ export const AuthProvider =
               }
 
               /*
-                FETCH FIRESTORE USER
+                FETCH USER PROFILE FROM BACKEND WITH RETRY
+                This bypasses client-side Firestore security rules and handles signup race conditions.
               */
-              const userRef =
-                doc(
-                  db,
-                  "users",
-                  firebaseUser.uid
-                );
+              const fetchProfileWithRetry = async (token, retries = 3, delay = 600) => {
+                try {
+                  const response = await fetch("http://localhost:5000/auth/profile", {
+                    headers: {
+                      Authorization: `Bearer ${token}`
+                    }
+                  });
+                  
+                  if (response.ok) {
+                    return await response.json();
+                  }
+                  
+                  if (response.status === 404 && retries > 0) {
+                    console.log(`Profile not found, retrying... (${retries} retries left)`);
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+                    return await fetchProfileWithRetry(token, retries - 1, delay);
+                  }
+                  
+                  throw new Error(`Profile fetch failed with status: ${response.status}`);
+                } catch (err) {
+                  if (retries > 0) {
+                    console.log(`Error fetching profile, retrying... (${retries} retries left)`, err);
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+                    return await fetchProfileWithRetry(token, retries - 1, delay);
+                  }
+                  throw err;
+                }
+              };
 
-              const userSnap =
-                await getDoc(
-                  userRef
-                );
-
-              console.log(
-                "FIRESTORE SNAP:",
-                userSnap.exists()
-              );
-
-              /*
-                USER PROFILE MISSING
-              */
-              if (
-                !userSnap.exists()
-              ) {
-                console.log(
-                  "PROFILE MISSING"
-                );
-
+              let userData;
+              try {
+                const token = await firebaseUser.getIdToken();
+                userData = await fetchProfileWithRetry(token);
+              } catch (err) {
+                console.log("Final error fetching profile, signing out", err);
+                await signOut(auth);
                 setUser(null);
-
-                setLoading(
-                  false
-                );
-
+                setLoading(false);
                 return;
               }
-
-              const userData =
-                userSnap.data();
 
               console.log(
                 "USER DATA:",
@@ -123,15 +127,13 @@ export const AuthProvider =
                 "recruiter"
               ) {
                 console.log(
-                  "NOT RECRUITER"
+                  "NOT RECRUITER, signing out"
                 );
-
+                await signOut(auth);
                 setUser(null);
-
                 setLoading(
                   false
                 );
-
                 return;
               }
 
@@ -160,7 +162,11 @@ export const AuthProvider =
                 "AUTH ERROR:",
                 error
               );
-
+              try {
+                await signOut(auth);
+              } catch (signoutError) {
+                console.log("Error signing out in catch block", signoutError);
+              }
               setUser(null);
 
               setLoading(

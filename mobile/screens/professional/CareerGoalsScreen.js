@@ -15,6 +15,7 @@ import {
   useOnboarding,
 } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
+import { COLORS } from "../../constants/theme";
 
 export default function CareerGoalsScreen({
   navigation,
@@ -227,7 +228,7 @@ const styles =
       flex: 1,
 
       backgroundColor:
-        "#fff",
+        COLORS.background,
 
       padding: 24,
     },
@@ -275,10 +276,10 @@ const styles =
 
     selectedChip: {
       backgroundColor:
-        "#2563EB",
+        COLORS.primary,
 
       borderColor:
-        "#2563EB",
+        COLORS.primary,
     },
 
     goalText: {
@@ -293,7 +294,7 @@ const styles =
 
     button: {
       backgroundColor:
-        "#000",
+        COLORS.primary,
 
       padding: 20,
 

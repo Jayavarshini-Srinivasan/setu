@@ -3,98 +3,117 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import useAuth from "../hooks/useAuth";
 
+const PAGE_META = {
+  "/dashboard":         { title: "Dashboard",   sub: "Recruiter · Web Dashboard" },
+  "/jobs/create":       { title: "Post a Job",   sub: "Recruiter · Web Dashboard" },
+  "/jobs/my-jobs":      { title: "My Jobs",      sub: "Recruiter · Web Dashboard" },
+  "/insights":          { title: "AI Insights",  sub: "Recruiter · Web Dashboard" },
+  "/profile":           { title: "Settings",     sub: "Recruiter · Web Dashboard" },
+};
+
+function getPageMeta(pathname) {
+  if (pathname.endsWith("/applicants") || pathname.includes("/applicants/")) {
+    return { title: "Applicants", sub: "Recruiter · Web Dashboard" };
+  }
+  if (pathname.includes("/edit")) {
+    return { title: "Edit Job", sub: "Recruiter · Web Dashboard" };
+  }
+  return PAGE_META[pathname] || { title: "Dashboard", sub: "Recruiter · Web Dashboard" };
+}
+
+const NAV = [
+  { name: "Dashboard",  path: "/dashboard",   icon: "📊" },
+  { name: "Post Job",   path: "/jobs/create", icon: "➕" },
+  { name: "My Jobs",    path: "/jobs/my-jobs",icon: "💼" },
+  { name: "Applicants", path: "/jobs/my-jobs",icon: "👥", matchPrefix: "/jobs" },
+  { name: "AI Insights",path: "/insights",    icon: "🤖" },
+  { name: "Settings",   path: "/profile",     icon: "⚙️" },
+];
+
 export default function Layout() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const meta      = getPageMeta(location.pathname);
+
+  const initials = user?.contactName
+    ? user.contactName.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()
+    : (user?.email?.[0] || "R").toUpperCase();
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+    try { await signOut(auth); navigate("/login"); }
+    catch (e) { console.error(e); }
   };
 
-  const navItems = [
-    { name: "Dashboard", path: "/dashboard", icon: "📊" },
-    { name: "My Jobs", path: "/jobs/my-jobs", icon: "💼" },
-    { name: "Create Job", path: "/jobs/create", icon: "➕" },
-    { name: "AI Insights", path: "/insights", icon: "🧠" },
-    { name: "Profile", path: "/profile", icon: "⚙️" },
-  ];
-
   return (
-    <div className="app-layout">
-      {/* SIDEBAR */}
-      <aside style={{
-        background: 'var(--sidebar-bg)',
-        color: 'var(--sidebar-text)',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '24px 16px',
-        borderRight: '1px solid var(--border)',
-        height: '100svh',
-        position: 'sticky',
-        top: 0
-      }}>
-        <div style={{ marginBottom: '40px', padding: '0 12px' }}>
-          <h2 style={{ color: '#fff', fontSize: '20px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--accent)' }}>✦</span> Setu ATS
-          </h2>
-        </div>
-
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-          {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 12px',
-                  borderRadius: '6px',
-                  color: isActive ? 'var(--sidebar-text-active)' : 'var(--sidebar-text)',
-                  background: isActive ? 'var(--sidebar-hover)' : 'transparent',
-                  fontWeight: isActive ? 600 : 500,
-                  textDecoration: 'none',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span>{item.icon}</span>
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', paddingLeft: '12px' }}>
-          <div style={{ fontSize: '13px', color: 'var(--sidebar-text)', marginBottom: '16px' }}>
-            {user?.email}
+    <div className="page-shell">
+      {/* White rounded app card */}
+      <div className="app-card">
+        {/* ── SIDEBAR ── */}
+        <aside className="sidebar">
+          {/* Brand */}
+          <div className="sidebar-brand">
+            <div className="sidebar-brand-icon">🧱</div>
+            <div className="sidebar-brand-text">
+              <h3>Kaam</h3>
+              <p>Recruiter Portal</p>
+            </div>
           </div>
-          <button 
-            onClick={handleLogout}
-            style={{
-              background: 'transparent',
-              color: 'var(--danger)',
-              padding: 0,
-              fontSize: '14px',
-              fontWeight: 500,
-            }}
-          >
-            Sign Out
-          </button>
-        </div>
-      </aside>
 
-      {/* MAIN CONTENT */}
-      <main className="main-content" style={{ padding: '32px 40px', overflowY: 'auto' }}>
-        <Outlet />
-      </main>
+          {/* Nav */}
+          <nav className="sidebar-nav">
+            {NAV.map(item => {
+              const isActive = item.matchPrefix
+                ? location.pathname.startsWith(item.matchPrefix)
+                : location.pathname === item.path || location.pathname.startsWith(item.path + "/");
+              return (
+                <Link
+                  key={item.path + item.name}
+                  to={item.path}
+                  className={`sidebar-link${isActive ? " active" : ""}`}
+                >
+                  <span className="icon">{item.icon}</span>
+                  {item.name}
+                </Link>
+              );
+            })}
+            <button
+              onClick={handleLogout}
+              className="sidebar-link logout-link"
+              style={{
+                background: "none",
+                border: "none",
+                width: "100%",
+                padding: "9px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "13px",
+                fontWeight: "500",
+                cursor: "pointer",
+                textAlign: "left"
+              }}
+            >
+              <span className="icon">🚪</span>
+              Logout
+            </button>
+          </nav>
+
+          {/* User */}
+          <div className="sidebar-user" style={{ cursor: "pointer" }} onClick={handleLogout} title="Sign Out">
+            <div className="sidebar-avatar">{initials}</div>
+            <div className="sidebar-user-info">
+              <h4>{user?.contactName || "Recruiter"}</h4>
+              <p>{user?.companyName || user?.email || ""}</p>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── CONTENT ── */}
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

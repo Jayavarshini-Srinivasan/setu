@@ -10,18 +10,24 @@ const {
   SALARY SCORE
 */
 function calculateSalaryScore(
-  salary
+  salary,
+  category
 ) {
   if (!salary) {
     return 50;
   }
 
-  return Math.min(
-    100,
-    Math.round(
-      salary / 1000
-    )
-  );
+  let monthlySalary = salary;
+  if (salary > 100000) {
+    monthlySalary = salary / 12;
+  }
+
+  const isLabour = (category || "").toLowerCase() === "labour";
+  if (isLabour) {
+    return Math.min(100, Math.max(30, Math.round((monthlySalary / 35000) * 100)));
+  } else {
+    return Math.min(100, Math.max(30, Math.round((monthlySalary / 120000) * 100)));
+  }
 }
 
 /*
@@ -154,7 +160,8 @@ const analyzeMatchedJob =
     */
     const salaryScore =
       calculateSalaryScore(
-        matchedJob.salary
+        matchedJob.salary,
+        matchedJob.workerCategory || matchedJob.category
       );
 
     const growthScore =

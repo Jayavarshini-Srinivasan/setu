@@ -1,122 +1,134 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../firebase";
-import { useNavigate, Link } from "react-router-dom";
+import { auth } from "../firebase";
+import { Link } from "react-router-dom";
+import API from "../services/api";
+
+const DOTS = 6;
 
 export default function SignupPage() {
-  const navigate = useNavigate();
-  
   const [contactName, setContactName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail]             = useState("");
+  const [phone, setPhone]             = useState("");
+  const [companyType, setCompanyType] = useState("Startup");
+  const [password, setPassword]       = useState("");
+  const [loading, setLoading]         = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-      
-      const recruiterData = {
-        uid,
-        role: "recruiter",
-        companyName,
-        contactName,
-        email,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      await setDoc(doc(db, "users", uid), recruiterData);
-      await setDoc(doc(db, "recruiters", uid), recruiterData);
-      
-      navigate("/dashboard");
+      await createUserWithEmailAndPassword(auth, email, password);
+      const recruiterData = { role: "recruiter", companyName, contactName, email };
+      await API.post("/auth/onboard-recruiter", recruiterData);
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("SIGNUP ERROR:", error);
-      alert(error.message || "Signup failed");
+      alert(error.response?.data?.error || error.message || "Signup failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 20 }}>
-      <div className="glass-card" style={{ width: '100%', maxWidth: 400, textAlign: 'left' }}>
-        <h1 style={{ fontSize: 28, textAlign: 'center', marginBottom: 8 }}>Create Account</h1>
-        <p style={{ textAlign: 'center', color: 'var(--text)', marginBottom: 24 }}>Join as a Setu Recruiter</p>
-        
-        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>Full Name</label>
-            <input 
-              type="text" 
-              placeholder="Jaya Sharma" 
-              value={contactName} 
-              onChange={(e) => setContactName(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </div>
-          
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>Company Name</label>
-            <input 
-              type="text" 
-              placeholder="Acme Logistics" 
-              value={companyName} 
-              onChange={(e) => setCompanyName(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </div>
+    <div className="auth-shell">
+      {/* Top title */}
+      <div className="auth-top">
+        <h2>Recruiter Signup</h2>
+        <p>Auth · Web Dashboard</p>
+      </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>Work Email</label>
-            <input 
-              type="email" 
-              placeholder="jaya@acme.com" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
+      {/* Split card */}
+      <div className="auth-card">
+        {/* Left dark panel */}
+        <div className="auth-left">
+          <div className="auth-left-icon">🧱</div>
+          <h2>Hire smarter with <span>AI-powered matching</span></h2>
+          <p>Access thousands of verified workers. Let AI find your perfect candidates.</p>
+          <div className="auth-features">
+            <div className="auth-feature">
+              <div className="auth-feature-dot">✓</div>
+              AI match explanations
+            </div>
+            <div className="auth-feature">
+              <div className="auth-feature-dot">✓</div>
+              Skill gap analytics
+            </div>
+            <div className="auth-feature">
+              <div className="auth-feature-dot">✓</div>
+              Multilingual candidates
+            </div>
           </div>
+        </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>Password</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
+        {/* Right form */}
+        <div className="auth-right">
+          <h1>Create recruiter account</h1>
+          <form onSubmit={handleSignup}>
+            <div className="auth-row">
+              <div className="auth-field">
+                <label>Full Name</label>
+                <input type="text" placeholder="Full name" value={contactName}
+                  onChange={e => setContactName(e.target.value)} required />
+              </div>
+              <div className="auth-field">
+                <label>Company Name</label>
+                <input type="text" placeholder="Company name" value={companyName}
+                  onChange={e => setCompanyName(e.target.value)} required />
+              </div>
+            </div>
+            <div className="auth-row">
+              <div className="auth-field">
+                <label>Business Email</label>
+                <input type="email" placeholder="Business email" value={email}
+                  onChange={e => setEmail(e.target.value)} required />
+              </div>
+              <div className="auth-field">
+                <label>Phone Number</label>
+                <input type="tel" placeholder="Phone number" value={phone}
+                  onChange={e => setPhone(e.target.value)} />
+              </div>
+            </div>
+            <div className="auth-field">
+              <label>Company Type</label>
+              <select value={companyType} onChange={e => setCompanyType(e.target.value)}>
+                <option>Startup</option>
+                <option>SME</option>
+                <option>Enterprise</option>
+                <option>MNC</option>
+              </select>
+            </div>
+            <div className="auth-field">
+              <label>Password</label>
+              <input type="password" placeholder="Minimum 8 characters" value={password}
+                onChange={e => setPassword(e.target.value)} required minLength={8} />
+            </div>
+            <button type="submit" disabled={loading} className="primary"
+              style={{ width:"100%", padding:"12px", fontSize:14, marginTop:8 }}>
+              {loading ? "Creating account..." : "Create Recruiter Account →"}
+            </button>
+            <p style={{ textAlign:"center", marginTop:16, fontSize:13, color:"#6B7280" }}>
+              Already have an account?{" "}
+              <Link to="/login" style={{ fontWeight:700, color:"#E85D04" }}>Sign in</Link>
+            </p>
+          </form>
+
+          {/* Bottom pagination — inside auth-right, pinned to bottom */}
+          <div className="auth-bottom" style={{ marginTop:"auto", paddingTop:24 }}>
+            <div className="auth-dots">
+              {Array.from({ length: DOTS }).map((_, i) => (
+                <div key={i} className={`auth-dot${i === 0 ? " active" : ""}`} />
+              ))}
+            </div>
+            <div className="auth-nav">
+              <button className="secondary" style={{ padding:"8px 20px" }} disabled>← Prev</button>
+              <Link to="/login">
+                <button className="primary" style={{ padding:"8px 20px" }}>Next →</button>
+              </Link>
+            </div>
           </div>
-
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={{ 
-              background: 'var(--accent)', 
-              color: '#fff', 
-              padding: '12px', 
-              fontSize: 16, 
-              marginTop: 8,
-              boxShadow: '0 4px 14px 0 var(--accent-border)'
-            }}
-          >
-            {loading ? "Creating account..." : "Sign Up"}
-          </button>
-        </form>
-        
-        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 14 }}>
-          Already have an account? <Link to="/login">Log in</Link>
-        </p>
+        </div>
       </div>
     </div>
   );

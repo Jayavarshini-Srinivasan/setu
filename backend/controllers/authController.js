@@ -2,6 +2,32 @@ const { admin, db } = require(
   "../config/firebase"
 );
 
+const onboardRecruiter = async (req, res) => {
+  try {
+    const { companyName, contactName, email, role } = req.body;
+    const uid = req.user.uid;
+
+    const recruiterData = {
+      uid,
+      role: role || "recruiter",
+      companyName,
+      contactName,
+      email,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    // Use admin SDK to bypass client-side Firestore security rules
+    await db.collection("users").doc(uid).set(recruiterData);
+    await db.collection("recruiters").doc(uid).set(recruiterData);
+
+    res.status(200).json({ message: "Recruiter profile created successfully" });
+  } catch (error) {
+    console.error("ONBOARD ERROR:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const signup = async (req, res) => {
   try {
     const {
@@ -125,4 +151,5 @@ const getProfile = async (
 module.exports = {
   signup,
   getProfile,
+  onboardRecruiter,
 };

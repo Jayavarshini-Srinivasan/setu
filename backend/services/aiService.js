@@ -119,7 +119,86 @@ Requirements:
   const fallback = `Professional with ${totalYears} year${totalYears !== 1 ? "s" : ""} of experience in ${role} and skills in ${skills.slice(0, 4).join(", ")}.`;
   return safeGenerate(prompt, fallback);
 };
+const generateApplicantSummary = async (workerProfile, job) => {
+  const prompt = `
+You are an expert technical recruiter AI.
+Write ONE concise, professional sentence (max 15 words) summarizing why this candidate is a fit for this job based on their skills and experience. Do not mention missing skills.
+Candidate Role: ${workerProfile.role || workerProfile.jobRole || "Professional"}
+Candidate Skills: ${(workerProfile.skills || []).join(", ")}
+Candidate Experience: ${workerProfile.experience || 0} years
+Job Title: ${job.title}
+Job Required Skills: ${(job.requiredSkills || []).join(", ")}
+`;
+  const fallback = `A candidate with ${workerProfile.experience || 0} years of experience matching some required skills.`;
+  return safeGenerate(prompt, fallback);
+};
+
+const generateInsightsRecommendations = async (stats) => {
+  const prompt = `
+You are an expert HR Data Analyst and AI Recruiter. 
+Analyze the following recruiter pipeline stats and provide exactly 3 actionable hiring recommendations or insights for this specific recruiter.
+For each recommendation, provide:
+1. An icon (a single emoji suitable for the recommendation, e.g., 📉, 🌐, ⏰, 💼, 💡, 📊, 🚀).
+2. A short title (2-4 words, e.g., "Shortlist now", "Skills gap in Python", "Attract blue collar").
+3. A description (1-2 sentences, detailing the recommendation and referencing the actual stats if relevant).
+
+Provide the output STRICTLY in a JSON array format where each element is an object having keys "icon", "title", and "desc".
+Example:
+[
+  {
+    "icon": "📉",
+    "title": "Lower experience bar",
+    "desc": "Consider lowering experience requirements to attract more of the ${stats.totalApplicants || 0} candidates in the pipeline."
+  }
+]
+
+Stats for this Recruiter:
+Total Pipeline Applicants: ${stats.totalApplicants || 0}
+Professional Candidates: ${stats.workerTypeCounts?.professional || 0}
+Blue Collar/Labour Candidates: ${stats.workerTypeCounts?.labour || 0}
+Top Skills Present in Pipeline: ${stats.topSkills?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
+Top Skill Gaps (missing from applicants): ${stats.topSkillGaps?.slice(0, 5).map(s => s.skill).join(", ") || "None"}
+`;
+  const fallback = JSON.stringify([
+    {
+      icon: "💼",
+      title: "Engage Top Candidates",
+      desc: `You have ${stats.totalApplicants || 0} candidates in your pipeline. Reach out to the highest-scoring candidates within 48 hours to secure them.`
+    },
+    {
+      icon: "📊",
+      title: "Address Skill Gaps",
+      desc: stats.topSkillGaps && stats.topSkillGaps.length > 0 
+        ? `A significant portion of your applicants lack "${stats.topSkillGaps[0].skill}". Consider providing training or modifying job descriptions.`
+        : "Ensure your active jobs clearly specify required skills to attract the most compatible talent."
+    },
+    {
+      icon: "🚀",
+      title: "Pipeline Composition",
+      desc: `Your talent pool consists of ${stats.workerTypeCounts?.professional || 0} professional and ${stats.workerTypeCounts?.labour || 0} blue-collar candidates. Optimize your posting channels accordingly.`
+    }
+  ]);
+  
+  try {
+    let result = await safeGenerate(prompt, fallback);
+    // Strip markdown formatting if Gemini returns ```json ... ```
+    if (result.includes("```")) {
+      result = result.replace(/```json/g, "").replace(/```/g, "").trim();
+    }
+    const parsed = JSON.parse(result);
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title && parsed[0].desc) {
+      return parsed;
+    }
+    return JSON.parse(fallback);
+  } catch(e) {
+    console.error("[aiService] Error parsing insights recommendations", e);
+    return JSON.parse(fallback);
+  }
+};
+
 module.exports = {
   generateMatchExplanation,
   generateProfessionalSummary,
+  generateApplicantSummary,
+  generateInsightsRecommendations,
 };

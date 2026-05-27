@@ -15,7 +15,7 @@ const extractionRoutes = require("./routes/extractionRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
 const learningRoutes = require("./routes/learningRoutes");
 const insightsRoutes = require("./routes/insightsRoutes");
-
+const notificationsRoutes = require("./routes/notificationsRoutes");
 const PORT = 5000;
 
 /*
@@ -43,7 +43,7 @@ app.use("/ai",extractionRoutes);
 app.use("/resume",resumeRoutes);
 app.use("/learning",learningRoutes);
 app.use("/insights", insightsRoutes);
-
+app.use("/notifications", notificationsRoutes);
 /*
   SERVER
 */

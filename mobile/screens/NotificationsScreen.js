@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -8,16 +9,8 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from "react-native";
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  doc,
-  updateDoc,
-  writeBatch,
-} from "firebase/firestore";
-import { auth, db } from "../services/firebase";
+import { auth } from "../services/firebase";
+import API from "../services/api";
 import { useI18n } from "../context/I18nContext";
 
 export default function NotificationsScreen({ navigation }) {
@@ -25,50 +18,47 @@ export default function NotificationsScreen({ navigation }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Real-time Firestore Listener
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const notifQuery = query(
-      collection(db, "users", user.uid, "notifications"),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsubscribe = onSnapshot(
-      notifQuery,
-      (snapshot) => {
-        const list = [];
-        snapshot.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() });
-        });
-        setNotifications(list);
+  const fetchNotifications = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
         setLoading(false);
-      },
-      (error) => {
-        if (error?.code === "permission-denied") {
-          console.log("Notifications Load: Local updates synced");
-        } else {
-          console.log("NOTIFICATIONS LOAD ERROR:", error);
-        }
-        setLoading(false);
+        return;
       }
-    );
+      
+      const token = await user.getIdToken();
+      const response = await API.get("/notifications", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setNotifications(response.data);
+    } catch (error) {
+      console.log("NOTIFICATIONS LOAD ERROR:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return () => unsubscribe();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotifications();
+    }, [])
+  );
 
   // Action: Mark single notification as read
   const handleMarkAsRead = async (notif) => {
     try {
       const user = auth.currentUser;
       if (!user || notif.status === "read") return;
-
-      const notifRef = doc(db, "users", user.uid, "notifications", notif.id);
-      await updateDoc(notifRef, { status: "read" });
+      
+      const token = await user.getIdToken();
+      await API.put(`/notifications/${notif.id}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setNotifications(prev => 
+        prev.map(n => n.id === notif.id ? { ...n, status: "read" } : n)
+      );
     } catch (err) {
       console.log("MARK AS READ ERROR:", err);
     }
@@ -83,13 +73,14 @@ export default function NotificationsScreen({ navigation }) {
       const unreadNotifs = notifications.filter((n) => n.status === "unread");
       if (unreadNotifs.length === 0) return;
 
-      const batch = writeBatch(db);
-      unreadNotifs.forEach((notif) => {
-        const ref = doc(db, "users", user.uid, "notifications", notif.id);
-        batch.update(ref, { status: "read" });
+      const token = await user.getIdToken();
+      await API.put(`/notifications/read-all`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      await batch.commit();
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, status: "read" }))
+      );
     } catch (err) {
       console.log("MARK ALL READ ERROR:", err);
     }

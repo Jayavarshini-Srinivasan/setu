@@ -1,340 +1,108 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import API from "../services/api";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function EditJobPage() {
-  const { jobId } =
-    useParams();
+  const { jobId } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving]   = useState(false);
+  const [category, setCategory] = useState("labour");
+  const [formData, setFormData] = useState({
+    title:"", requiredSkills:"", location:"", salary:"",
+    experienceRequired:"", description:""
+  });
 
-  const navigate =
-    useNavigate();
+  const fetchJob = async () => {
+    try {
+      setLoading(true);
+      const { data } = await API.get(`/jobs/${jobId}`);
+      setCategory(data.workerCategory || "labour");
+      setFormData({
+        title: data.title || "",
+        requiredSkills: data.requiredSkills?.join(", ") || "",
+        location: data.location || "",
+        salary: data.salary || "",
+        experienceRequired: data.experienceRequired || "",
+        description: data.description || "",
+      });
+    } catch (error) { alert("Failed to load job"); }
+    finally { setLoading(false); }
+  };
 
-  /*
-    STATES
-  */
-  const [loading,
-    setLoading] =
-    useState(true);
+  useEffect(() => { fetchJob(); }, [jobId]);
 
-  const [saving,
-    setSaving] =
-    useState(false);
+  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const [formData,
-    setFormData] =
-    useState({
-      title: "",
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      const payload = {
+        title: formData.title.trim(),
+        workerCategory: category,
+        requiredSkills: formData.requiredSkills.split(",").map(s => s.trim()).filter(Boolean),
+        location: formData.location.trim(),
+        salary: Number(formData.salary),
+        experienceRequired: Number(formData.experienceRequired),
+        description: formData.description.trim(),
+      };
+      await API.put(`/jobs/${jobId}`, payload);
+      alert("Job updated successfully");
+      navigate("/jobs/my-jobs");
+    } catch (error) { alert("Failed to update job"); }
+    finally { setSaving(false); }
+  };
 
-      workerCategory:
-        "labour",
-
-      requiredSkills:
-        "",
-
-      location: "",
-
-      salary: "",
-
-      experienceRequired:
-        "",
-
-      description: "",
-    });
-
-  /*
-    FETCH JOB
-  */
-  useEffect(() => {
-    fetchJob();
-  }, [jobId]);
-
-  const fetchJob =
-    async () => {
-      try {
-        setLoading(true);
-
-        const { data } =
-          await API.get(
-            `/jobs/${jobId}`
-          );
-
-        setFormData({
-          title:
-            data.title || "",
-
-          workerCategory:
-            data.workerCategory ||
-            "labour",
-
-          requiredSkills:
-            data.requiredSkills
-              ?.join(", ") ||
-            "",
-
-          location:
-            data.location || "",
-
-          salary:
-            data.salary || "",
-
-          experienceRequired:
-            data.experienceRequired || "",
-
-          description:
-            data.description || "",
-        });
-      } catch (error) {
-        console.log(error);
-
-        alert(
-          "Failed to load job"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  /*
-    INPUT CHANGE
-  */
-  const handleChange =
-    (e) => {
-      const {
-        name,
-        value,
-      } = e.target;
-
-      setFormData(
-        (prev) => ({
-          ...prev,
-
-          [name]:
-            value,
-        })
-      );
-    };
-
-  /*
-    UPDATE JOB
-  */
-  const handleSubmit =
-    async (e) => {
-      e.preventDefault();
-
-      try {
-        setSaving(true);
-
-        const payload = {
-          title:
-            formData.title.trim(),
-
-          workerCategory:
-            formData.workerCategory,
-
-          requiredSkills:
-            formData.requiredSkills
-              .split(",")
-
-              .map((skill) =>
-                skill.trim()
-              )
-
-              .filter(
-                Boolean
-              ),
-
-          location:
-            formData.location.trim(),
-
-          salary:
-            Number(
-              formData.salary
-            ),
-
-          experienceRequired:
-            Number(
-              formData
-                .experienceRequired
-            ),
-
-          description:
-            formData.description.trim(),
-        };
-
-        await API.put(
-          `/jobs/${jobId}`,
-          payload
-        );
-
-        alert(
-          "Job updated successfully"
-        );
-
-        navigate(
-          "/jobs/my-jobs"
-        );
-      } catch (error) {
-        console.log(error);
-
-        alert(
-          "Failed to update job"
-        );
-      } finally {
-        setSaving(false);
-      }
-    };
-
-  /*
-    LOADING
-  */
-  if (loading) {
-    return (
-      <div>
-        Loading job...
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner text="Loading job details..." />;
 
   return (
-    <div
-      style={{
-        maxWidth:
-          "600px",
+    <div style={{ width:"100%" }}>
+      <div style={{ marginBottom:20 }}>
+        <h1 style={{ marginBottom:2 }}>Edit Job</h1>
+        <p style={{ color:"#6B7280", fontSize:13, margin:0 }}>Update job details and republish.</p>
+      </div>
 
-        margin:
-          "0 auto",
-      }}
-    >
-      <h2>
-        Edit Job
-      </h2>
-
-      <form
-        onSubmit={
-          handleSubmit
-        }
-        style={{
-          display: "flex",
-
-          flexDirection:
-            "column",
-
-          gap: "15px",
-        }}
-      >
-        <input
-          type="text"
-          name="title"
-          placeholder="Job Title"
-          value={
-            formData.title
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <select
-          name="workerCategory"
-          value={
-            formData.workerCategory
-          }
-          onChange={
-            handleChange
-          }
-        >
-          <option value="labour">
-            Labour
-          </option>
-
-          <option value="professional">
-            Professional
-          </option>
-        </select>
-
-        <input
-          type="text"
-          name="requiredSkills"
-          placeholder="Skills"
-          value={
-            formData.requiredSkills
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          value={
-            formData.location
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <input
-          type="number"
-          name="salary"
-          placeholder="Salary"
-          value={
-            formData.salary
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <input
-          type="number"
-          name="experienceRequired"
-          placeholder="Experience Required"
-          value={
-            formData
-              .experienceRequired
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <textarea
-          name="description"
-          placeholder="Description"
-          rows={5}
-          value={
-            formData.description
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <button
-          type="submit"
-          disabled={saving}
-        >
-          {saving
-            ? "Updating..."
-            : "Update Job"}
-        </button>
+      <form onSubmit={handleSubmit}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 32px" }}>
+          {/* LEFT */}
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            <div><label>Job Title</label>
+              <input name="title" value={formData.title} onChange={handleChange} required /></div>
+            <div><label>Worker Category</label>
+              <div className="toggle-group">
+                <button type="button" className={`toggle-btn${category==="labour"?" active":""}`}
+                  onClick={() => setCategory("labour")}>Labour</button>
+                <button type="button" className={`toggle-btn${category==="professional"?" active":""}`}
+                  onClick={() => setCategory("professional")}>Professional</button>
+              </div></div>
+            <div><label>Location</label>
+              <input name="location" value={formData.location} onChange={handleChange} required /></div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+              <div><label>Salary (₹)</label>
+                <input type="number" name="salary" value={formData.salary} onChange={handleChange} required /></div>
+              <div><label>Experience (yrs)</label>
+                <input type="number" name="experienceRequired" value={formData.experienceRequired} onChange={handleChange} required /></div>
+            </div>
+          </div>
+          {/* RIGHT */}
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            <div><label>Required Skills</label>
+              <input name="requiredSkills" placeholder="Comma separated" value={formData.requiredSkills} onChange={handleChange} /></div>
+            <div style={{ flex:1, display:"flex", flexDirection:"column" }}>
+              <label>Job Description</label>
+              <textarea name="description" value={formData.description} onChange={handleChange} rows={7} style={{ resize:"vertical", flex:1 }} />
+            </div>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:12, marginTop:24 }}>
+          <button type="button" className="secondary" style={{ flex:1, padding:"11px" }}
+            onClick={() => navigate("/jobs/my-jobs")}>Cancel</button>
+          <button type="submit" disabled={saving} className="primary" style={{ flex:1, padding:"11px" }}>
+            {saving ? "Updating..." : "Update Job →"}
+          </button>
+        </div>
       </form>
     </div>
   );
