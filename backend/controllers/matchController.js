@@ -1,7 +1,7 @@
 const { jobs: localJobs }     = require("../data/jobs");
 const { db }                   = require("../config/firebase");
 const { analyzeMatchedJob }    = require("../services/ai/jobAnalysisService");
-const { calculateMatchScore }  = require("../services/matchService");
+const { calculateMatchScore, checkRoleCompatibility }  = require("../services/matchService");
 const matchJobs = async (req, res) => {
   try {
     const body = req.body || {};
@@ -49,11 +49,31 @@ const matchJobs = async (req, res) => {
         isRoleMatch = true; // Fallback if undefined
       } else if (jobTitle.includes(workerRole) || workerRole.includes(jobTitle)) {
         isRoleMatch = true;
+      } else if (checkRoleCompatibility && checkRoleCompatibility(workerRole, jobTitle).compatibility !== "weak") {
+        isRoleMatch = true;
       } else {
-        // Token intersection (e.g. "Software Engineer" vs "Senior Software Developer")
-        const workerTokens = workerRole.split(/\s+/).filter(t => t.length > 3);
-        const jobTokens = jobTitle.split(/\s+/).filter(t => t.length > 3);
+        const stopWords = new Set(["and", "the", "for", "with", "from", "in", "of", "to", "at", "on", "a", "an"]);
+        const workerTokens = workerRole.split(/[\s_-]+/).filter(t => t.length >= 2 && !stopWords.has(t));
+        const jobTokens = jobTitle.split(/[\s_-]+/).filter(t => t.length >= 2 && !stopWords.has(t));
+        
         isRoleMatch = workerTokens.some(wt => jobTokens.some(jt => jt.includes(wt) || wt.includes(jt)));
+        
+        if (!isRoleMatch) {
+          const checkAbbreviation = (w, j) => {
+            const wNorm = w.toLowerCase();
+            const jNorm = j.toLowerCase();
+            if (wNorm === "sde" && (jNorm.includes("software") || jNorm.includes("developer") || jNorm.includes("engineer"))) return true;
+            if (jNorm === "sde" && (wNorm.includes("software") || wNorm.includes("developer") || wNorm.includes("engineer"))) return true;
+            if (wNorm === "qa" && (jNorm.includes("test") || jNorm.includes("quality") || jNorm.includes("assurance"))) return true;
+            if (jNorm === "qa" && (wNorm.includes("test") || wNorm.includes("quality") || wNorm.includes("assurance"))) return true;
+            if (wNorm === "pm" && (jNorm.includes("product") || jNorm.includes("project") || jNorm.includes("manager"))) return true;
+            if (jNorm === "pm" && (wNorm.includes("product") || wNorm.includes("project") || wNorm.includes("manager"))) return true;
+            if (wNorm === "hr" && (jNorm.includes("human") || jNorm.includes("resource") || jNorm.includes("recruiter"))) return true;
+            if (jNorm === "hr" && (wNorm.includes("human") || wNorm.includes("resource") || wNorm.includes("recruiter"))) return true;
+            return false;
+          };
+          isRoleMatch = workerTokens.some(wt => jobTokens.some(jt => checkAbbreviation(wt, jt)));
+        }
       }
 
       return isCorrectCategory && isRoleMatch;

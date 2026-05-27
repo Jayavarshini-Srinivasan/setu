@@ -61,12 +61,12 @@ const generateResume =
 
         skills,
 
-        experience,
+        experience: totalYears,
 
         totalYears,
 
         goals:
-          preferredRoles,
+          preferredRoles.join(", "),
       });
 
     /*
@@ -86,6 +86,12 @@ const generateResume =
       experience,
 
       preferredRoles,
+
+      location:profile.location || "",
+      email : profile.email || "",
+      phoneNumber : profile.phoneNumber || "",
+      fullName : profile.fullName || "",
+
 
       links: {
 

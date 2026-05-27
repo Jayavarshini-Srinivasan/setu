@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../../services/firebase";
 import API from "../../services/api";
 import * as Sharing from "expo-sharing";
+import * as Print from "expo-print";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { useOnboarding } from "../../context/OnboardingContext";
@@ -26,12 +27,12 @@ function getInitials(name) {
   return name.slice(0, 2).toUpperCase();
 }
 
-function getDisplayName(resume) {
-  const email = auth.currentUser?.email || "";
-  const fromSummary = resume?.resumeSummary?.split("|")[0];
-  if (fromSummary) return fromSummary;
-  return email.split("@")[0]?.replace(/[._]/g, " ") || "Candidate";
-}
+// function getDisplayName(resume) {
+//   const email = auth.currentUser?.email || "";
+//   const fromSummary = resume?.resumeSummary?.split("|")[0];
+//   if (fromSummary) return fromSummary;
+//   return email.split("@")[0]?.replace(/[._]/g, " ") || "Candidate";
+// }
 
 export default function ResumePreviewScreen({ navigation }) {
   const { resetOnboarding, refreshOnboarding, onboardingData } = useOnboarding() || {};
@@ -77,13 +78,13 @@ export default function ResumePreviewScreen({ navigation }) {
   const handleDownloadPDF = async () => {
     if (!resume) return;
     try {
-      const name = getDisplayName(resume);
+      const name = resume.fullName || "Candidate";
       const role = resume.role || "Professional";
       const expYears =
         resume.experience?.reduce((sum, e) => sum + (parseInt(e.years, 10) || 0), 0) ||
         resume.experience?.[0]?.years ||
         0;
-      const email = auth.currentUser?.email || "Not provided";
+      const email = resume.email || "Not provided";
       const location = resume.location || "Not specified";
       const competencies = resume.skills || [];
       const phone = resume.phoneNumber || auth.currentUser?.phoneNumber || "Not provided";
@@ -246,14 +247,20 @@ export default function ResumePreviewScreen({ navigation }) {
             </div>
             <div class="content">
               <div class="section-heading">PROFESSIONAL SUMMARY</div>
-              <p class="body-text">${resume.summary || ""}</p>
+              <p class="body-text">
+                ${
+                  typeof resume.summary === "string"
+                    ? resume.summary
+                    : resume.summary?.text || ""
+                }
+              </p>
               
               <div class="section-heading">CORE COMPETENCIES</div>
               <div class="competency-grid">
-                ${competencies.map(skill => `
+                ${competencies.map(professionalSkills => `
                   <div class="competency-item">
                     <span class="bullet">•</span>
-                    <span>${skill}</span>
+                    <span>${professionalSkills}</span>
                   </div>
                 `).join('')}
               </div>
@@ -311,15 +318,15 @@ export default function ResumePreviewScreen({ navigation }) {
     );
   }
 
-  const displayName = getDisplayName(resume);
+  const displayName = resume.fullName || resume.name || "Candidate";
   const roleLabel = resume.role || "Professional";
   const expYears =
     resume.experience?.reduce((sum, e) => sum + (parseInt(e.years, 10) || 0), 0) ||
     resume.experience?.[0]?.years ||
     0;
-  const email = auth.currentUser?.email || "Not provided";
+  const email = resume.email || "Not provided";
   const location = resume.location || "Not specified";
-  const competencies = resume.skills || [];
+  const competencies = resume.skills || resume.professionalSkills || [];
   const phone = resume.phoneNumber || auth.currentUser?.phoneNumber || "Not provided";
   const languages = resume.languages?.join(", ") || "English";
 
@@ -338,7 +345,7 @@ export default function ResumePreviewScreen({ navigation }) {
               <Text style={styles.contactItem}>📍 {location}</Text>
             </View>
             <View style={styles.contactCol}>
-              <Text style={styles.contactItem}>✉️ Email</Text>
+              <Text style={styles.contactItem}>✉️ {email} </Text>
               <Text style={styles.contactItem}>📅 {expYears} years</Text>
             </View>
           </View>
@@ -359,7 +366,11 @@ export default function ResumePreviewScreen({ navigation }) {
           <View style={styles.cvDivider} />
 
           <Text style={styles.sectionHeading}>PROFESSIONAL SUMMARY</Text>
-          <Text style={styles.bodyText}>{resume.summary}</Text>
+          <Text style={styles.bodyText}>
+            {typeof resume.summary === "string"
+              ? resume.summary
+              : resume.summary?.text || ""}
+          </Text>
 
           <Text style={styles.sectionHeading}>CORE COMPETENCIES</Text>
           <View style={styles.competencyGrid}>

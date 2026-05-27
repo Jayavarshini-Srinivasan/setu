@@ -118,7 +118,7 @@ export default function SkillsQuestionScreen({ navigation }) {
             style={[os.chip, os.chipSelectedLabour]}
             onPress={() => toggleSkill(custom)}
           >
-            <Text style={[os.chipText, os.chipTextSelected]}>{custom} ?</Text>
+            <Text style={[os.chipText, os.chipTextSelected]}>{custom}</Text>
           </TouchableOpacity>
         ))}
       </View>
