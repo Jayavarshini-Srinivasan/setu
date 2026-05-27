@@ -125,7 +125,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
                   style={[os.chip, os.chipSelected]}
                   onPress={() => toggleSkill(skill)}
                 >
-                  <Text style={[os.chipText, os.chipTextSelected]}>{skill} ✕</Text>
+                  <Text style={[os.chipText, os.chipTextSelected]}>{skill}</Text>
                 </TouchableOpacity>
               ))}
             </View>

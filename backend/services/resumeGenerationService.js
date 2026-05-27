@@ -87,6 +87,12 @@ const generateResume =
 
       preferredRoles,
 
+      location:profile.location || "",
+      email : profile.email || "",
+      phoneNumber : profile.phoneNumber || "",
+      fullName : profile.fullName || "",
+
+
       links: {
 
         linkedin:
