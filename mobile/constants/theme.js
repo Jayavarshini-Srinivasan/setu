@@ -86,3 +86,6 @@ export const SHADOWS = {
     elevation: 6,
   },
 };
+
+export default COLORS;
+

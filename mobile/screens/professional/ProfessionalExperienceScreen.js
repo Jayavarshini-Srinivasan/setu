@@ -11,6 +11,8 @@ import {
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout from "../../components/OnboardingStepLayout";
+import { COLORS } from "../../constants/theme";
+
 
 export default function ProfessionalExperienceScreen({
   navigation,
