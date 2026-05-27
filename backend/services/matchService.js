@@ -190,9 +190,7 @@ const calculateMatchScore = (workerProfile, jobs) => {
 
       const skillOverlapPercentage = jobSkills.length > 0 ? (matchedSkills.length / jobSkills.length) : 0;
       
-      if (roleMatch.compatibility === "weak" && skillOverlapPercentage === 0) {
-        return null;
-      }
+      // if (roleMatch.compatibility === "weak" && skillOverlapPercentage === 0) return null;
 
       const roleScore = roleMatch.score * 20; // up to 20 points
       const skillOverlap = skillOverlapPercentage * 30; // up to 30 points

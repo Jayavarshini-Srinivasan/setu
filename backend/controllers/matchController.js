@@ -76,7 +76,7 @@ const matchJobs = async (req, res) => {
         }
       }
 
-      return isCorrectCategory && isRoleMatch;
+      return isCorrectCategory;
     });
     const matchedJobs = calculateMatchScore(workerProfile, categoryJobs);
     const MIN_SCORE  = isProfessional ? 5 : 10;

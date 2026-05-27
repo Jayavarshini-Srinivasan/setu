@@ -232,39 +232,7 @@ export default function ResultsScreen({ navigation }) {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterTabsContainer}
-        style={styles.filterTabsScrollView}
-      >
-        <TouchableOpacity
-          style={[styles.filterTab, filterTab === "all" && styles.filterTabActive]}
-          onPress={() => setFilterTab("all")}
-        >
-          <Text style={[styles.filterTabText, filterTab === "all" && styles.filterTabTextActive]}>
-            {t("filterAll") || "All"} ({jobs.length})
-          </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.filterTab, filterTab === "best" && styles.filterTabActive]}
-          onPress={() => setFilterTab("best")}
-        >
-          <Text style={[styles.filterTabText, filterTab === "best" && styles.filterTabTextActive]}>
-            {t("filterBestMatch") || "Best Match"}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.filterTab, filterTab === "near" && styles.filterTabActive]}
-          onPress={() => setFilterTab("near")}
-        >
-          <Text style={[styles.filterTabText, filterTab === "near" && styles.filterTabTextActive]}>
-            {t("filterNearMe") || "Near Me"}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
 
       <FlatList
         data={filteredJobs}
@@ -272,25 +240,6 @@ export default function ResultsScreen({ navigation }) {
         renderItem={renderItem}
         extraData={appliedCount}
         contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={
-          /* ── Career Path CTA (professionals only) ── */
-          isProfessional && jobs.length > 0 ? (
-            <TouchableOpacity
-              style={styles.careerPathButton}
-              onPress={handleGenerateCareerPath}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.careerPathIcon}>🎯</Text>
-              <View>
-                <Text style={styles.careerPathTitle}>{t("generateCareerPath") || "Generate My Career Path"}</Text>
-                <Text style={styles.careerPathSubtitle}>
-                  {t("careerPathSubtitle") || "AI-powered roadmap based on your match gaps"}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ) : null
-        }
       />
     </View>
   );

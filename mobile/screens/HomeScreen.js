@@ -251,6 +251,25 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const handleGenerateCareerPath = () => {
+    const topJob = allJobs[0] || null;
+    const allMissingSkillsSet = new Set();
+    allJobs.forEach((job) => {
+      (job.analysis?.missingSkills || []).forEach((s) => allMissingSkillsSet.add(s));
+    });
+    
+    const isProf = profile?.workerType === "professional";
+    const matchContext = {
+      role: isProf ? profile?.profile?.professionalRole : profile?.profile?.role,
+      experience: isProf ? (profile?.profile?.experienceDetails?.length || 0) : (profile?.profile?.experience || 0),
+      missingSkills: Array.from(allMissingSkillsSet),
+      topJobTitle: topJob ? topJob.title : "Preferred Role",
+      matchScore: topJob ? topJob.matchScore : 0,
+      skills: isProf ? profile?.profile?.professionalSkills : profile?.profile?.skills,
+    };
+    navigation.navigate("LearningPath", { matchContext });
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -404,6 +423,20 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.homeJobCompany}>{t("viewMatchedJobsSub") || "See AI-matched opportunities"}</Text>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity
+            style={styles.secondaryAction}
+            onPress={handleGenerateCareerPath}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.secondaryActionIcon}>🎯</Text>
+            <View>
+              <Text style={styles.secondaryActionTitle}>{t("generateCareerPath") || "Generate My Career Path"}</Text>
+              <Text style={styles.secondaryActionSub}>
+                {t("careerPathSubtitle") || "AI-powered roadmap based on your match gaps"}
+              </Text>
+            </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.secondaryAction}

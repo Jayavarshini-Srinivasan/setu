@@ -422,12 +422,10 @@ export default function ResumePreviewScreen({ navigation }) {
       </ScrollView>
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.approveBtn} onPress={handleApprove} disabled={approving}>
-          {approving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.approveBtnText}>{t("approveFinish") || "Approve & Finish"}</Text>}
+        <TouchableOpacity style={styles.approveBtn} onPress={handleDownloadPDF} disabled={approving}>
+          <Text style={styles.approveBtnText}>Download Resume</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.downloadIconBtn} onPress={handleDownloadPDF} activeOpacity={0.85}>
-          <Ionicons name="download-outline" size={24} color={COLORS.resumeGreen} />
-        </TouchableOpacity>
+        
       </View>
     </View>
   );
