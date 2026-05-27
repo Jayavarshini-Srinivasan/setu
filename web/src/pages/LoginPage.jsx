@@ -28,12 +28,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-shell">
-      {/* Top title */}
-      <div className="auth-top">
-        <h2>Recruiter Login</h2>
-        <p>Auth · Web Dashboard</p>
-      </div>
+    <div className="auth-shell" style = {{paddingTop : "100px"}}>
+      
 
       {/* Split card */}
       <div className="auth-card">
@@ -87,20 +83,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Bottom pagination */}
-      <div className="auth-bottom">
-        <div className="auth-dots">
-          {Array.from({ length: DOTS }).map((_, i) => (
-            <div key={i} className={`auth-dot${i === 1 ? " active" : ""}`} />
-          ))}
-        </div>
-        <div className="auth-nav">
-          <Link to="/signup">
-            <button className="secondary" style={{ padding:"8px 20px" }}>← Prev</button>
-          </Link>
-          <button className="primary" style={{ padding:"8px 20px" }} disabled>Next →</button>
-        </div>
-      </div>
+
     </div>
   );
 }

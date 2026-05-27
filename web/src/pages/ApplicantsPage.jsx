@@ -7,7 +7,7 @@ import { handleError } from "../utils/errorHandler";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorState from "../components/ErrorState";
 import ApplicantCard from "../components/ApplicantCard";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { collection, query, where, orderBy, getDocs, getDoc, doc } from "firebase/firestore";
 import { formatDate } from "../utils/formatters";
 
@@ -42,11 +42,22 @@ export default function ApplicantsPage() {
       // Query Applications
       let appsSnapshot;
       try {
-        const q = query(collection(db, "applications"), where("jobId", "==", jobId), orderBy("matchScore", "desc"));
+        const uid = auth.currentUser?.uid;
+        const q = query(
+          collection(db, "applications"), 
+          where("jobId", "==", jobId), 
+          where("recruiterId", "==", uid),
+          orderBy("matchScore", "desc")
+        );
         appsSnapshot = await getDocs(q);
       } catch (err) {
         console.warn("Query with orderBy failed, falling back to unordered query:", err);
-        const qFallback = query(collection(db, "applications"), where("jobId", "==", jobId));
+        const uid = auth.currentUser?.uid;
+        const qFallback = query(
+          collection(db, "applications"), 
+          where("jobId", "==", jobId),
+          where("recruiterId", "==", uid)
+        );
         appsSnapshot = await getDocs(qFallback);
       }
 
@@ -121,7 +132,7 @@ export default function ApplicantsPage() {
   }, [applicants, activeFilter, skillFilter, sortBy]);
 
   if (loading) return <LoadingSpinner text="Loading applicants..." />;
-  if (error)   return <ErrorState message="Failed to load applicants" />;
+  if (error)   return <ErrorState message="something went wrong and failed to load applicants" />;
 
   const countFor = (tab) => {
     const list = Array.isArray(applicants) ? applicants : [];

@@ -54,7 +54,7 @@ export default function Layout() {
           <div className="sidebar-brand">
             <div className="sidebar-brand-icon">🧱</div>
             <div className="sidebar-brand-text">
-              <h3>Kaam</h3>
+              <h3>Setu</h3>
               <p>Recruiter Portal</p>
             </div>
           </div>

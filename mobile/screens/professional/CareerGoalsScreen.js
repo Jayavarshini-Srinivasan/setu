@@ -67,6 +67,7 @@ export default function CareerGoalsScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Goals (5/6)"
       step={5}
+      totalSteps={6}
       badge="PROFESSIONAL"
       title="Salary & Career Goals"
       subtitle="What are you aiming for?"
@@ -143,8 +144,8 @@ export default function CareerGoalsScreen({ navigation }) {
             <View style={styles.detectedBox}>
               <Text style={styles.detectedText}>{extractedProfile.expectedSalary ? `Salary: ${extractedProfile.expectedSalary.min}` : ""} {extractedProfile.careerGoal ? `| Goal: ${extractedProfile.careerGoal}` : ""}</Text>
               <View style={styles.detectedActions}>
-                <TouchableOpacity onPress={confirmExtraction}><Text style={styles.confirmText}>? Keep</Text></TouchableOpacity>
-                <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>?</Text></TouchableOpacity>
+                <TouchableOpacity onPress={confirmExtraction}><Text style={styles.confirmText}>✓ Keep</Text></TouchableOpacity>
+                <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>✕</Text></TouchableOpacity>
               </View>
             </View>
           ) : null}

@@ -86,6 +86,7 @@ export default function EducationScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Education (3/6)"
       step={3}
+      totalSteps={6}
       badge="PROFESSIONAL"
       title="Education"
       subtitle="Where did you study?"

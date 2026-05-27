@@ -77,6 +77,7 @@ export default function ProfessionalRoleScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Profile (1/6)"
       step={1}
+      totalSteps={6}
       badge="PROFESSIONAL"
       title="Basic Info"
       subtitle="Your professional identity."
@@ -138,10 +139,10 @@ export default function ProfessionalRoleScreen({ navigation }) {
             </Text>
             <View style={styles.detectedActions}>
               <TouchableOpacity onPress={confirmExtraction} style={styles.confirmBtn}>
-                <Text style={styles.confirmText}>? Use</Text>
+                <Text style={styles.confirmText}>✓ Use</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={rejectExtraction}>
-                <Text style={styles.rejectText}>?</Text>
+                <Text style={styles.rejectText}>✕</Text>
               </TouchableOpacity>
             </View>
           </View>

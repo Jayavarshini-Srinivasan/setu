@@ -59,6 +59,7 @@ export default function PreferencesQuestionScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Preferences (5/5)"
       step={5}
+      totalSteps={5}
       title="Work Preferences"
       subtitle="How and when do you want to work?"
       onContinue={handleContinue}
@@ -154,7 +155,7 @@ export default function PreferencesQuestionScreen({ navigation }) {
               <Text style={styles.useText}>? Keep</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={rejectExtraction}>
-              <Text style={styles.rejectText}>?</Text>
+              <Text style={styles.rejectText}>✕</Text>
             </TouchableOpacity>
           </View>
         ) : null}

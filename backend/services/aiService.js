@@ -70,7 +70,7 @@ const generateMatchExplanation = async (workerProfile, job, explanationData, lan
   }
 
   const prompt = `You are an employment advisor helping a worker understand a job match.
-Write exactly 2 sentences in ${language || "en"} explaining why this job is or isn't a good fit for this worker. Be specific — use their actual skills and the job's actual requirements. Do not be generic.
+Write exactly 2 sentences in ${language || "en"} explaining why this job is or isn't a good fit for this worker. Be specific ï¿½ use their actual skills and the job's actual requirements. Do not be generic.
    
 Worker profile:
 - Role: ${workerProfile.canonicalRole || workerProfile.role || ""}
@@ -105,9 +105,36 @@ Focus on impact and clarity.`;
   return safeGenerate(prompt, `${experience} years experienced ${role} specializing in ${skills.slice(0,3).join(", ")}.`);
 };
 
+const generateInsightsRecommendations = async (stats) => {
+  const prompt = `You are a recruitment AI analyzing candidate data.
+Here is the data:
+Total Applicants: ${stats.totalApplicants}
+Top Skills Present: ${JSON.stringify(stats.topSkills)}
+Top Skill Gaps: ${JSON.stringify(stats.topSkillGaps)}
+
+Generate 3 actionable, insightful bullet points (maximum 1 sentence each) for the recruiter on how to adjust their job posts or hiring strategy based on these gaps and present skills. Return a valid JSON array of 3 strings. Do not include markdown formatting like \`\`\`json.`;
+
+  const fallback = '["Consider lowering experience requirements to increase applicant pool.", "Consider providing on-the-job training for commonly missing skills.", "Expand outreach to candidates with adjacent skill sets." ]';
+  
+  try {
+    const raw = await safeGenerate(prompt, fallback);
+    let cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+    if (!cleaned.startsWith("[")) {
+      cleaned = cleaned.substring(cleaned.indexOf("["));
+    }
+    if (!cleaned.endsWith("]")) {
+      cleaned = cleaned.substring(0, cleaned.lastIndexOf("]") + 1);
+    }
+    return JSON.parse(cleaned);
+  } catch (err) {
+    return JSON.parse(fallback);
+  }
+};
+
 module.exports = {
   geminiQueue,
   safeGenerate,
   generateMatchExplanation,
-  generateProfessionalSummary
+  generateProfessionalSummary,
+  generateInsightsRecommendations
 };

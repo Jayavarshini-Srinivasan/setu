@@ -84,6 +84,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
       navigation={navigation}
       screenTitle="Skills (2/6)"
       step={2}
+      totalSteps={6}
       badge="PROFESSIONAL"
       title="Professional Skills"
       subtitle="What tools and skills do you know?"
@@ -124,7 +125,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
                   style={[os.chip, os.chipSelected]}
                   onPress={() => toggleSkill(skill)}
                 >
-                  <Text style={[os.chipText, os.chipTextSelected]}>{skill} ?</Text>
+                  <Text style={[os.chipText, os.chipTextSelected]}>{skill} ✕</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -159,10 +160,10 @@ export default function ProfessionalSkillsScreen({ navigation }) {
               Detected: {(extractedProfile.professionalSkills || extractedProfile.skills || []).join(", ")}
             </Text>
             <TouchableOpacity onPress={confirmExtraction}>
-              <Text style={styles.useText}>? Keep</Text>
+              <Text style={styles.useText}>✓ Keep</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={rejectExtraction}>
-              <Text style={styles.rejectText}>?</Text>
+              <Text style={styles.rejectText}>✕</Text>
             </TouchableOpacity>
           </View>
         ) : null}

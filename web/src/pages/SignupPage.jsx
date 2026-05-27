@@ -32,12 +32,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="auth-shell">
-      {/* Top title */}
-      <div className="auth-top">
-        <h2>Recruiter Signup</h2>
-        <p>Auth · Web Dashboard</p>
-      </div>
+    <div className="auth-shell" style = {{paddingTop : "60px"}}>
+      
 
       {/* Split card */}
       <div className="auth-card">
@@ -114,20 +110,7 @@ export default function SignupPage() {
             </p>
           </form>
 
-          {/* Bottom pagination — inside auth-right, pinned to bottom */}
-          <div className="auth-bottom" style={{ marginTop:"auto", paddingTop:24 }}>
-            <div className="auth-dots">
-              {Array.from({ length: DOTS }).map((_, i) => (
-                <div key={i} className={`auth-dot${i === 0 ? " active" : ""}`} />
-              ))}
-            </div>
-            <div className="auth-nav">
-              <button className="secondary" style={{ padding:"8px 20px" }} disabled>← Prev</button>
-              <Link to="/login">
-                <button className="primary" style={{ padding:"8px 20px" }}>Next →</button>
-              </Link>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
