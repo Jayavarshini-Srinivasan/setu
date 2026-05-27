@@ -75,6 +75,11 @@ const COMPATIBLE_GROUPS = {
     "node_developer",
     "web_developer",
     "software_developer",
+    "sde",
+    "sde_2",
+    "sde_1",
+    "sde_ii",
+    "sde_i",
   ],
 
   // UI/UX Design
@@ -83,6 +88,9 @@ const COMPATIBLE_GROUPS = {
     "uiux_designer",
     "ui_designer",
     "ux_designer",
+    "uiux",
+    "ui",
+    "ux",
   ],
 
   // Data Science and Business Analytics
@@ -97,11 +105,13 @@ const COMPATIBLE_GROUPS = {
   product: [
     "product_manager",
     "business_analyst",
+    "pm",
   ],
 
   // Marketing and Promotion
   marketing: [
     "marketing_specialist",
+    "marketing",
   ],
 };
 
@@ -221,4 +231,5 @@ const calculateMatchScore = (workerProfile, jobs) => {
 
 module.exports = {
   calculateMatchScore,
+  checkRoleCompatibility,
 };
