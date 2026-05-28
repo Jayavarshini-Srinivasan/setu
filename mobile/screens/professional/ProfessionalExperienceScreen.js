@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
-import VoiceButton from "../../components/VoiceButton";
+import useVoiceRecorder from "../../hooks/useVoiceRecorder";
+import VoiceTranscriptionControls from "../../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
@@ -46,9 +46,16 @@ export default function ProfessionalExperienceScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -60,6 +67,7 @@ export default function ProfessionalExperienceScreen({ navigation }) {
         updateField("experienceDetails", merged);
       }
     },
+    contextData: onboardingData,
   });
 
   const canAddExperience = Boolean(company.trim()) && Boolean(role.trim());
@@ -205,12 +213,25 @@ export default function ProfessionalExperienceScreen({ navigation }) {
         </View>
 
         <View style={styles.voiceSection}>
-          <View style={styles.voiceRow}>
-            <VoiceButton isRecording={voiceState === VOICE_STATE.RECORDING} onPressIn={startRecording} onPressOut={stopRecording} />
-            <Text style={styles.voiceHint}>Hold mic and say: "I worked at ABC for 3 years as an accountant, then 2 years at XYZ Ltd."</Text>
-          </View>
+          <VoiceTranscriptionControls
+            voiceState={voiceState}
+            transcript={transcript}
+            extractedProfile={extractedProfile}
+            errorMessage={errorMessage}
+            isPlaying={isPlaying}
+            hint={'Hold mic and say: "I worked at ABC for 3 years as an accountant, then 2 years at XYZ Ltd."'}
+            detectedValue={extractedProfile?.experienceDetails?.length ? `Detected ${extractedProfile.experienceDetails.length} roles` : ""}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+            onPlayRecording={playRecording}
+            onRetakeRecording={retakeRecording}
+            onSubmitRecording={submitRecording}
+            onTranscriptChange={setTranscript}
+            onConfirm={confirmExtraction}
+            onReject={rejectExtraction}
+          />
           
-          {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.experienceDetails?.length > 0) ? (
+          {false && (
             <View style={styles.detectedBox}>
               <Text style={styles.detectedText}>Detected {extractedProfile.experienceDetails.length} roles</Text>
               <View style={styles.detectedActions}>
@@ -218,7 +239,7 @@ export default function ProfessionalExperienceScreen({ navigation }) {
                 <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>✕</Text></TouchableOpacity>
               </View>
             </View>
-          ) : null}
+          )}
         </View>
 
       </ScrollView>

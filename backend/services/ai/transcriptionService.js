@@ -18,6 +18,15 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 const transcribeAudio = async (filePath) => {
 
   try {
+    if (!process.env.GEMINI_API_KEY_TRANSCRIPTION && !process.env.GEMINI_API_KEY) {
+      console.error("[transcriptionService] missing GEMINI_API_KEY_TRANSCRIPTION/GEMINI_API_KEY");
+      return "";
+    }
+
+    if (!filePath || !fs.existsSync(filePath)) {
+      console.error("[transcriptionService] audio file not found:", filePath);
+      return "";
+    }
 
     const audioBuffer = fs.readFileSync(filePath);
     const mimeType    = mime.lookup(filePath) || "audio/m4a";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
-import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
-import VoiceButton from "../components/VoiceButton";
+import useVoiceRecorder from "../hooks/useVoiceRecorder";
+import VoiceTranscriptionControls from "../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../components/OnboardingStepLayout";
@@ -22,9 +22,16 @@ export default function PreferencesQuestionScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -38,6 +45,7 @@ export default function PreferencesQuestionScreen({ navigation }) {
       if (ep?.preferredShift) setShift(ep.preferredShift);
       if (ep?.transportAccess !== undefined) setTransport(Boolean(ep.transportAccess));
     },
+    contextData: onboardingData,
   });
 
   const handleContinue = () => {
@@ -137,16 +145,25 @@ export default function PreferencesQuestionScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
 
-        <View style={styles.voiceRow}>
-          <VoiceButton
-            isRecording={voiceState === VOICE_STATE.RECORDING}
-            onPressIn={startRecording}
-            onPressOut={stopRecording}
-          />
-          <Text style={styles.voiceHint}>Hold mic and say: "I want ?600 per day, I can work mornings, I have a bike."</Text>
-        </View>
+        <VoiceTranscriptionControls
+          voiceState={voiceState}
+          transcript={transcript}
+          extractedProfile={extractedProfile}
+          errorMessage={errorMessage}
+          isPlaying={isPlaying}
+          hint={'Hold mic and say: "I want 600 per day, I can work mornings, I have a bike."'}
+          detectedValue={`${extractedProfile?.expectedWage || ""} ${extractedProfile?.preferredShift ? "| " + extractedProfile.preferredShift : ""}`.trim()}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onPlayRecording={playRecording}
+          onRetakeRecording={retakeRecording}
+          onSubmitRecording={submitRecording}
+          onTranscriptChange={setTranscript}
+          onConfirm={confirmExtraction}
+          onReject={rejectExtraction}
+        />
         
-        {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.expectedWage || extractedProfile?.preferredShift) ? (
+        {false && (
           <View style={styles.detectedBox}>
             <Text style={styles.detectedText}>
               Detected: {extractedProfile.expectedWage} | {extractedProfile.preferredShift} | {extractedProfile.transportAccess ? "Has vehicle" : "No vehicle"}
@@ -158,7 +175,7 @@ export default function PreferencesQuestionScreen({ navigation }) {
               <Text style={styles.rejectText}>✕</Text>
             </TouchableOpacity>
           </View>
-        ) : null}
+        )}
 
       </ScrollView>
     </OnboardingStepLayout>

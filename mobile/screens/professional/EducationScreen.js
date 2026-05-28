@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
-import VoiceButton from "../../components/VoiceButton";
+import useVoiceRecorder from "../../hooks/useVoiceRecorder";
+import VoiceTranscriptionControls from "../../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
@@ -46,9 +46,16 @@ export default function EducationScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -59,6 +66,7 @@ export default function EducationScreen({ navigation }) {
       if (ep?.education?.graduationYear) setGraduationYear(Number(ep.education.graduationYear));
       if (ep?.education?.fieldOfStudy) setFieldOfStudy(ep.education.fieldOfStudy);
     },
+    contextData: onboardingData,
   });
 
   const filteredFields = FIELDS.filter(f => f.toLowerCase().includes(fieldOfStudy.toLowerCase()) && f.toLowerCase() !== fieldOfStudy.toLowerCase());
@@ -152,12 +160,25 @@ export default function EducationScreen({ navigation }) {
         )}
 
         <View style={styles.voiceSection}>
-          <View style={styles.voiceRow}>
-            <VoiceButton isRecording={voiceState === VOICE_STATE.RECORDING} onPressIn={startRecording} onPressOut={stopRecording} />
-            <Text style={styles.voiceHint}>Hold mic and say: "I did BCom from Madras University in 2018."</Text>
-          </View>
+          <VoiceTranscriptionControls
+            voiceState={voiceState}
+            transcript={transcript}
+            extractedProfile={extractedProfile}
+            errorMessage={errorMessage}
+            isPlaying={isPlaying}
+            hint={'Hold mic and say: "I did BCom from Madras University in 2018."'}
+            detectedValue={extractedProfile?.education ? `${extractedProfile.education.degree || ""} - ${extractedProfile.education.institution || ""}` : ""}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+            onPlayRecording={playRecording}
+            onRetakeRecording={retakeRecording}
+            onSubmitRecording={submitRecording}
+            onTranscriptChange={setTranscript}
+            onConfirm={confirmExtraction}
+            onReject={rejectExtraction}
+          />
           
-          {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.education?.degree || extractedProfile?.education?.institution) ? (
+          {false && (
             <View style={styles.detectedBox}>
               <Text style={styles.detectedText}>{extractedProfile.education.degree} - {extractedProfile.education.institution}</Text>
               <View style={styles.detectedActions}>
@@ -165,7 +186,7 @@ export default function EducationScreen({ navigation }) {
                 <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>✕</Text></TouchableOpacity>
               </View>
             </View>
-          ) : null}
+          )}
         </View>
 
       </ScrollView>

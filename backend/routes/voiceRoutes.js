@@ -96,13 +96,19 @@ router.post(
 
     try {
 
-      console.log(
-        "VOICE FILE RECEIVED"
-      );
+      if (!req.file?.path) {
+        console.error("[voiceRoutes] upload-audio missing audio file");
+        return res.status(400).json({
+          success: false,
+          error: "Audio file is required",
+        });
+      }
 
-      console.log(
-        req.file
-      );
+      console.log("[voiceRoutes] audio received:", {
+        filename: req.file.filename,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+      });
 
 
 /*
@@ -120,7 +126,9 @@ let contextData = {};
 if (req.body.context) {
   try {
     contextData = JSON.parse(req.body.context);
-  } catch(e) {}
+  } catch(error) {
+    console.error("[voiceRoutes] invalid context JSON:", error?.message);
+  }
 }
 
 const extractedProfile =
@@ -141,12 +149,21 @@ res.status(200).json({
 });
     } catch (error) {
 
-      console.log(error);
+      console.error("[voiceRoutes] upload-audio failed:", error?.message, error);
 
       res.status(500).json({
+        success: false,
         error:
-          "Failed to upload audio",
+          error?.message || "Failed to upload audio",
       });
+    } finally {
+      if (req.file?.path) {
+        fs.unlink(req.file.path, (error) => {
+          if (error) {
+            console.error("[voiceRoutes] failed to delete uploaded audio:", error?.message);
+          }
+        });
+      }
     }
   }
 );

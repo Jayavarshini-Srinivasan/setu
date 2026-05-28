@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
-import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
-import VoiceButton from "../components/VoiceButton";
+import useVoiceRecorder from "../hooks/useVoiceRecorder";
+import VoiceTranscriptionControls from "../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../components/OnboardingStepLayout";
@@ -20,9 +20,16 @@ export default function LocationQuestionScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -31,6 +38,7 @@ export default function LocationQuestionScreen({ navigation }) {
       if (ep?.location) setCity(ep.location);
       if (ep?.workRadius) setWorkRadius(ep.workRadius);
     },
+    contextData: onboardingData,
   });
 
   const filteredCities = COMMON_CITIES.filter(c => c.toLowerCase().includes(city.toLowerCase()) && c.toLowerCase() !== city.toLowerCase());
@@ -94,16 +102,25 @@ export default function LocationQuestionScreen({ navigation }) {
         ))}
       </View>
 
-      <View style={styles.voiceRow}>
-        <VoiceButton
-          isRecording={voiceState === VOICE_STATE.RECORDING}
-          onPressIn={startRecording}
-          onPressOut={stopRecording}
-        />
-        <Text style={styles.voiceHint}>Hold mic and say: "I live in Chennai, I can travel up to 10 km."</Text>
-      </View>
+      <VoiceTranscriptionControls
+        voiceState={voiceState}
+        transcript={transcript}
+        extractedProfile={extractedProfile}
+        errorMessage={errorMessage}
+        isPlaying={isPlaying}
+        hint={'Hold mic and say: "I live in Chennai, I can travel up to 10 km."'}
+        detectedValue={`${extractedProfile?.location || ""} ${extractedProfile?.workRadius ? "| " + extractedProfile.workRadius : ""}`.trim()}
+        onStartRecording={startRecording}
+        onStopRecording={stopRecording}
+        onPlayRecording={playRecording}
+        onRetakeRecording={retakeRecording}
+        onSubmitRecording={submitRecording}
+        onTranscriptChange={setTranscript}
+        onConfirm={confirmExtraction}
+        onReject={rejectExtraction}
+      />
       
-      {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.location || extractedProfile?.workRadius) ? (
+      {false && (
         <View style={styles.detectedBox}>
           <Text style={styles.detectedText}>
             Detected: {extractedProfile.location ? `${extractedProfile.location}` : ""} {extractedProfile.workRadius ? `| ${extractedProfile.workRadius}` : ""}
@@ -115,7 +132,7 @@ export default function LocationQuestionScreen({ navigation }) {
             <Text style={styles.rejectText}>✕</Text>
           </TouchableOpacity>
         </View>
-      ) : null}
+      )}
     </OnboardingStepLayout>
   );
 }

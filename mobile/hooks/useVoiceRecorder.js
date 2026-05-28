@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Alert } from "react-native";
 import { Audio } from "expo-av";
 import { API_BASE_URL } from "../services/api";
 
+let activeRecorderId = null;
 
 
 export const VOICE_STATE = {
@@ -11,6 +12,7 @@ export const VOICE_STATE = {
   RECORDED:   "recorded",
   PROCESSING: "processing",
   CONFIRMED:  "confirmed",
+  ERROR:      "error",
 };
 
 
@@ -19,20 +21,62 @@ export default function useVoiceRecorder({ onResult, contextData }) {
   const [voiceState,       setVoiceState]       = useState(VOICE_STATE.IDLE);
   const [transcript,       setTranscript]        = useState("");
   const [extractedProfile, setExtractedProfile]  = useState(null);
+  const [errorMessage,     setErrorMessage]      = useState("");
+  const [isPlaying,        setIsPlaying]         = useState(false);
 
   const recordingRef = useRef(null);
   const audioUriRef  = useRef(null);
   const soundRef     = useRef(null);
+  const recorderIdRef = useRef(`${Date.now()}-${Math.random()}`);
+  const voiceStateRef = useRef(VOICE_STATE.IDLE);
+
+  useEffect(() => {
+    voiceStateRef.current = voiceState;
+  }, [voiceState]);
+
+  const cleanupSound = useCallback(async () => {
+    if (soundRef.current) {
+      await soundRef.current.stopAsync().catch(() => {});
+      await soundRef.current.unloadAsync().catch(() => {});
+      soundRef.current = null;
+    }
+    setIsPlaying(false);
+  }, []);
+
+  useEffect(() => () => {
+    cleanupSound();
+    if (recordingRef.current) {
+      recordingRef.current.stopAndUnloadAsync().catch((err) => {
+        console.error("[useVoiceRecorder] cleanup stopAndUnloadAsync failed:", err?.message || err);
+      });
+      recordingRef.current = null;
+    }
+    if (activeRecorderId === recorderIdRef.current) {
+      activeRecorderId = null;
+    }
+  }, [cleanupSound]);
 
   const startRecording = useCallback(async () => {
 
-    if (voiceState !== VOICE_STATE.IDLE) return;
+    if (voiceStateRef.current !== VOICE_STATE.IDLE && voiceStateRef.current !== VOICE_STATE.ERROR) return;
     if (recordingRef.current)            return;
+    if (activeRecorderId && activeRecorderId !== recorderIdRef.current) {
+      const message = "Another voice recording is already active. Stop it before starting a new one.";
+      console.error("[useVoiceRecorder] startRecording blocked:", message);
+      setErrorMessage(message);
+      Alert.alert("Recording Active", message);
+      return;
+    }
 
     try {
+      setErrorMessage("");
+      await cleanupSound();
 
       const perm = await Audio.requestPermissionsAsync();
       if (perm.status !== "granted") {
+        const message = "Microphone permission denied. Enable microphone access to use voice input.";
+        console.error("[useVoiceRecorder] permission denied:", perm);
+        setErrorMessage(message);
         Alert.alert(
           "Permission Required",
           "Microphone access is needed to use voice input."
@@ -45,6 +89,7 @@ export default function useVoiceRecorder({ onResult, contextData }) {
         playsInSilentModeIOS: true,
       });
 
+      activeRecorderId = recorderIdRef.current;
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
@@ -53,15 +98,19 @@ export default function useVoiceRecorder({ onResult, contextData }) {
       setVoiceState(VOICE_STATE.RECORDING);
 
     } catch (err) {
-      console.error("[useVoiceRecorder] startRecording:", err);
+      activeRecorderId = null;
+      const message = err?.message || "Recording could not be started.";
+      console.error("[useVoiceRecorder] startRecording failed:", message, err);
+      setErrorMessage(message);
+      setVoiceState(VOICE_STATE.ERROR);
       Alert.alert("Error", "Could not start recording.");
     }
 
-  }, [voiceState]);
+  }, [cleanupSound]);
 
   const stopRecording = useCallback(async () => {
 
-    if (voiceState !== VOICE_STATE.RECORDING) return;
+    if (voiceStateRef.current !== VOICE_STATE.RECORDING) return;
     if (!recordingRef.current)                return;
 
     try {
@@ -69,6 +118,7 @@ export default function useVoiceRecorder({ onResult, contextData }) {
       await recordingRef.current.stopAndUnloadAsync();
       audioUriRef.current  = recordingRef.current.getURI();
       recordingRef.current = null;
+      activeRecorderId = null;
 
        await Audio.setAudioModeAsync({
         allowsRecordingIOS:   false,
@@ -78,25 +128,24 @@ export default function useVoiceRecorder({ onResult, contextData }) {
       setVoiceState(VOICE_STATE.RECORDED);
 
     } catch (err) {
-      console.error("[useVoiceRecorder] stopRecording:", err);
+      activeRecorderId = null;
+      const message = err?.message || "Recording could not be stopped.";
+      console.error("[useVoiceRecorder] stopRecording failed:", message, err);
       recordingRef.current = null;
-      setVoiceState(VOICE_STATE.IDLE);
+      setErrorMessage(message);
+      setVoiceState(VOICE_STATE.ERROR);
       Alert.alert("Error", "Could not stop recording.");
     }
 
-  }, [voiceState]);
+  }, []);
 
   const playRecording = useCallback(async () => {
 
-    if (voiceState !== VOICE_STATE.RECORDED) return;
+    if (![VOICE_STATE.RECORDED, VOICE_STATE.CONFIRMED].includes(voiceStateRef.current)) return;
     if (!audioUriRef.current)                return;
 
     try {
-
-      if (soundRef.current) {
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
-      }
+      await cleanupSound();
 
       const { sound } = await Audio.Sound.createAsync(
         { uri: audioUriRef.current },
@@ -104,41 +153,45 @@ export default function useVoiceRecorder({ onResult, contextData }) {
       );
 
       soundRef.current = sound;
+      setIsPlaying(true);
 
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.didJustFinish) {
           sound.unloadAsync();
           soundRef.current = null;
+          setIsPlaying(false);
         }
       });
 
     } catch (err) {
-      console.error("[useVoiceRecorder] playRecording:", err);
+      const message = err?.message || "Recording playback failed.";
+      console.error("[useVoiceRecorder] playRecording failed:", message, err);
+      setErrorMessage(message);
       Alert.alert("Error", "Could not play recording.");
     }
 
-  }, [voiceState]);
+  }, [cleanupSound]);
 
   const retakeRecording = useCallback(async () => {
 
-    if (soundRef.current) {
-      await soundRef.current.stopAsync().catch(() => {});
-      await soundRef.current.unloadAsync().catch(() => {});
-      soundRef.current = null;
-    }
+    await cleanupSound();
 
     audioUriRef.current  = null;
     recordingRef.current = null;
+    if (activeRecorderId === recorderIdRef.current) {
+      activeRecorderId = null;
+    }
 
     setTranscript("");
     setExtractedProfile(null);
+    setErrorMessage("");
     setVoiceState(VOICE_STATE.IDLE);
 
-  }, []);
+  }, [cleanupSound]);
 
   const submitRecording = useCallback(async () => {
 
-    if (voiceState !== VOICE_STATE.RECORDED) return;
+    if (voiceStateRef.current !== VOICE_STATE.RECORDED) return;
     if (!audioUriRef.current)                return;
 
     setVoiceState(VOICE_STATE.PROCESSING);
@@ -161,56 +214,70 @@ export default function useVoiceRecorder({ onResult, contextData }) {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (parseError) {
+        console.error("[useVoiceRecorder] submitRecording invalid JSON response:", responseText);
+        throw new Error(`Invalid transcription response: ${parseError?.message || parseError}`);
+      }
 
-      if (!data.success) {
-        throw new Error(data.error || "Upload failed");
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Transcription request failed with status ${response.status}`);
       }
 
       const newTranscript   = data.transcript       || "";
       const newExtracted    = data.extractedProfile  || {};
 
+      if (!newTranscript.trim()) {
+        throw new Error("No speech was detected in the recording.");
+      }
+
       setTranscript(newTranscript);
       setExtractedProfile(newExtracted);
-      audioUriRef.current = null;
+      setErrorMessage("");
 
       setVoiceState(VOICE_STATE.CONFIRMED);
 
     } catch (err) {
-      console.error("[useVoiceRecorder] submitRecording:", err);
+      const message = err?.message || "Recording could not be transcribed.";
+      console.error("[useVoiceRecorder] submitRecording failed:", message, err);
+      setErrorMessage(message);
       setVoiceState(VOICE_STATE.RECORDED);
       Alert.alert("Error", "Could not process your recording. Please try again.");
     }
 
-  }, [voiceState]);
+  }, [contextData]);
 
   const confirmExtraction = useCallback(() => {
 
-    if (voiceState !== VOICE_STATE.CONFIRMED) return;
+    if (voiceStateRef.current !== VOICE_STATE.CONFIRMED) return;
 
     onResult?.({
-      transcript,
+      transcript: transcript.trim(),
       extractedProfile,
     });
 
+    audioUriRef.current = null;
     setTranscript("");
     setExtractedProfile(null);
+    setErrorMessage("");
     setVoiceState(VOICE_STATE.IDLE);
 
-  }, [voiceState, transcript, extractedProfile, onResult]);
+  }, [transcript, extractedProfile, onResult]);
 
   const rejectExtraction = useCallback(() => {
-
-    setTranscript("");
-    setExtractedProfile(null);
-    setVoiceState(VOICE_STATE.IDLE);
-
-  }, []);
+    retakeRecording();
+  }, [retakeRecording]);
 
   return {
     voiceState,
     transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
     playRecording,

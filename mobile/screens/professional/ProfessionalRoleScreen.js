@@ -2,12 +2,12 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import VoiceButton from "../../components/VoiceButton";
+import VoiceTranscriptionControls from "../../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
-import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
+import useVoiceRecorder from "../../hooks/useVoiceRecorder";
 
 const ROLE_OPTIONS = [
   "Accountant",
@@ -34,9 +34,16 @@ export default function ProfessionalRoleScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -50,6 +57,7 @@ export default function ProfessionalRoleScreen({ navigation }) {
         setFullName(ep.fullName);
       }
     },
+    contextData: onboardingData,
   });
 
   const filteredRoles = ROLE_OPTIONS.filter(
@@ -121,17 +129,24 @@ export default function ProfessionalRoleScreen({ navigation }) {
       </View>
 
       <View style={styles.voiceSection}>
-        <Text style={styles.voiceHint}>
-          Hold mic and say: "My name is Priya, I am an HR Executive."
-        </Text>
-        <View style={styles.voiceRow}>
-          <VoiceButton
-            isRecording={voiceState === VOICE_STATE.RECORDING}
-            onPressIn={startRecording}
-            onPressOut={stopRecording}
-          />
-        </View>
-        {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.fullName || extractedProfile?.rawRole || extractedProfile?.canonicalRole) ? (
+        <VoiceTranscriptionControls
+          voiceState={voiceState}
+          transcript={transcript}
+          extractedProfile={extractedProfile}
+          errorMessage={errorMessage}
+          isPlaying={isPlaying}
+          hint={'Hold mic and say: "My name is Priya, I am an HR Executive."'}
+          detectedValue={`${extractedProfile?.fullName ? extractedProfile.fullName + " - " : ""}${extractedProfile?.rawRole || extractedProfile?.canonicalRole || extractedProfile?.professionalRole || ""}`}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onPlayRecording={playRecording}
+          onRetakeRecording={retakeRecording}
+          onSubmitRecording={submitRecording}
+          onTranscriptChange={setTranscript}
+          onConfirm={confirmExtraction}
+          onReject={rejectExtraction}
+        />
+        {false && (
           <View style={styles.detectedBox}>
             <Text style={styles.detectedLabel}>Detected</Text>
             <Text style={styles.detectedValue}>
@@ -146,7 +161,7 @@ export default function ProfessionalRoleScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
-        ) : null}
+        )}
       </View>
     </OnboardingStepLayout>
   );

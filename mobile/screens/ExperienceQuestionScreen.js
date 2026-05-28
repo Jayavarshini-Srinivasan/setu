@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import useVoiceRecorder, { VOICE_STATE } from "../hooks/useVoiceRecorder";
-import VoiceButton from "../components/VoiceButton";
+import useVoiceRecorder from "../hooks/useVoiceRecorder";
+import VoiceTranscriptionControls from "../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../components/OnboardingStepLayout";
@@ -47,9 +47,16 @@ export default function ExperienceQuestionScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -62,6 +69,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
         setAge(Number(ep.age));
       }
     },
+    contextData: onboardingData,
   });
 
   const handleContinue = () => {
@@ -98,16 +106,25 @@ export default function ExperienceQuestionScreen({ navigation }) {
         onChange={setAge}
       />
 
-      <View style={styles.voiceRow}>
-        <VoiceButton
-          isRecording={voiceState === VOICE_STATE.RECORDING}
-          onPressIn={startRecording}
-          onPressOut={stopRecording}
-        />
-        <Text style={styles.voiceHint}>Hold mic and say: "I have been doing this for 8 years, I am 32 years old."</Text>
-      </View>
+      <VoiceTranscriptionControls
+        voiceState={voiceState}
+        transcript={transcript}
+        extractedProfile={extractedProfile}
+        errorMessage={errorMessage}
+        isPlaying={isPlaying}
+        hint={'Hold mic and say: "I have been doing this for 8 years, I am 32 years old."'}
+        detectedValue={`${extractedProfile?.experience !== undefined ? extractedProfile.experience + " years" : ""} ${extractedProfile?.age !== undefined ? "| " + extractedProfile.age + " yrs old" : ""}`.trim()}
+        onStartRecording={startRecording}
+        onStopRecording={stopRecording}
+        onPlayRecording={playRecording}
+        onRetakeRecording={retakeRecording}
+        onSubmitRecording={submitRecording}
+        onTranscriptChange={setTranscript}
+        onConfirm={confirmExtraction}
+        onReject={rejectExtraction}
+      />
       
-      {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.experience !== undefined || extractedProfile?.age !== undefined) ? (
+      {false && (
         <View style={styles.detectedBox}>
           <Text style={styles.detectedText}>
             Detected: {extractedProfile.experience !== undefined ? `${extractedProfile.experience} years` : ""} {extractedProfile.age !== undefined ? `| ${extractedProfile.age} yrs old` : ""}
@@ -119,7 +136,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
             <Text style={styles.rejectText}>✕</Text>
           </TouchableOpacity>
         </View>
-      ) : null}
+      )}
     </OnboardingStepLayout>
   );
 }

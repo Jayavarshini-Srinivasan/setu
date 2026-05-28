@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
-import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
-import VoiceButton from "../../components/VoiceButton";
+import useVoiceRecorder from "../../hooks/useVoiceRecorder";
+import VoiceTranscriptionControls from "../../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
@@ -23,9 +23,16 @@ export default function CareerGoalsScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -38,6 +45,7 @@ export default function CareerGoalsScreen({ navigation }) {
       }
       if (ep?.careerGoal) setCareerGoal(ep.careerGoal);
     },
+    contextData: onboardingData,
   });
 
   const toggleRole = (role) => {
@@ -135,12 +143,25 @@ export default function CareerGoalsScreen({ navigation }) {
         </View>
 
         <View style={styles.voiceSection}>
-          <View style={styles.voiceRow}>
-            <VoiceButton isRecording={voiceState === VOICE_STATE.RECORDING} onPressIn={startRecording} onPressOut={stopRecording} />
-            <Text style={styles.voiceHint}>Hold mic and say: "I want at least ?35,000 per month and my goal is to become a finance manager."</Text>
-          </View>
+          <VoiceTranscriptionControls
+            voiceState={voiceState}
+            transcript={transcript}
+            extractedProfile={extractedProfile}
+            errorMessage={errorMessage}
+            isPlaying={isPlaying}
+            hint={'Hold mic and say: "I want at least 35,000 per month and my goal is to become a finance manager."'}
+            detectedValue={`${extractedProfile?.expectedSalary ? "Salary: " + extractedProfile.expectedSalary.min : ""} ${extractedProfile?.careerGoal ? "| Goal: " + extractedProfile.careerGoal : ""}`.trim()}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+            onPlayRecording={playRecording}
+            onRetakeRecording={retakeRecording}
+            onSubmitRecording={submitRecording}
+            onTranscriptChange={setTranscript}
+            onConfirm={confirmExtraction}
+            onReject={rejectExtraction}
+          />
           
-          {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.expectedSalary || extractedProfile?.careerGoal) ? (
+          {false && (
             <View style={styles.detectedBox}>
               <Text style={styles.detectedText}>{extractedProfile.expectedSalary ? `Salary: ${extractedProfile.expectedSalary.min}` : ""} {extractedProfile.careerGoal ? `| Goal: ${extractedProfile.careerGoal}` : ""}</Text>
               <View style={styles.detectedActions}>
@@ -148,7 +169,7 @@ export default function CareerGoalsScreen({ navigation }) {
                 <TouchableOpacity onPress={rejectExtraction}><Text style={styles.rejectText}>✕</Text></TouchableOpacity>
               </View>
             </View>
-          ) : null}
+          )}
         </View>
 
       </ScrollView>

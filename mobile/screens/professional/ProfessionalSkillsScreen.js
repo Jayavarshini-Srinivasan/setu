@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, ScrollView } from "react-native";
-import useVoiceRecorder, { VOICE_STATE } from "../../hooks/useVoiceRecorder";
-import VoiceButton from "../../components/VoiceButton";
+import useVoiceRecorder from "../../hooks/useVoiceRecorder";
+import VoiceTranscriptionControls from "../../components/VoiceTranscriptionControls";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { useI18n } from "../../context/I18nContext";
 import OnboardingStepLayout, { onboardingStyles as os } from "../../components/OnboardingStepLayout";
@@ -31,9 +31,16 @@ export default function ProfessionalSkillsScreen({ navigation }) {
 
   const {
     voiceState,
+    transcript,
+    setTranscript,
     extractedProfile,
+    errorMessage,
+    isPlaying,
     startRecording,
     stopRecording,
+    playRecording,
+    retakeRecording,
+    submitRecording,
     confirmExtraction,
     rejectExtraction,
   } = useVoiceRecorder({
@@ -46,6 +53,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
         updateField("professionalSkills", merged);
       }
     },
+    contextData: onboardingData,
   });
 
   const toggleSkill = (skill) => {
@@ -145,16 +153,25 @@ export default function ProfessionalSkillsScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.voiceRow}>
-          <VoiceButton
-            isRecording={voiceState === VOICE_STATE.RECORDING}
-            onPressIn={startRecording}
-            onPressOut={stopRecording}
-          />
-          <Text style={styles.voiceHint}>Hold mic and say: "I know Excel, Tally, GST filing, and payroll."</Text>
-        </View>
+        <VoiceTranscriptionControls
+          voiceState={voiceState}
+          transcript={transcript}
+          extractedProfile={extractedProfile}
+          errorMessage={errorMessage}
+          isPlaying={isPlaying}
+          hint={'Hold mic and say: "I know Excel, Tally, GST filing, and payroll."'}
+          detectedValue={(extractedProfile?.professionalSkills || extractedProfile?.skills || []).join(", ")}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onPlayRecording={playRecording}
+          onRetakeRecording={retakeRecording}
+          onSubmitRecording={submitRecording}
+          onTranscriptChange={setTranscript}
+          onConfirm={confirmExtraction}
+          onReject={rejectExtraction}
+        />
         
-        {voiceState === VOICE_STATE.CONFIRMED && (extractedProfile?.professionalSkills || extractedProfile?.skills || []).length > 0 ? (
+        {false && (
           <View style={styles.detectedBox}>
             <Text style={styles.detectedText}>
               Detected: {(extractedProfile.professionalSkills || extractedProfile.skills || []).join(", ")}
@@ -166,7 +183,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
               <Text style={styles.rejectText}>✕</Text>
             </TouchableOpacity>
           </View>
-        ) : null}
+        )}
 
       </ScrollView>
     </OnboardingStepLayout>
