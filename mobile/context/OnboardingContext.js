@@ -5,10 +5,23 @@ import {
   useState,
 } from "react";
 
+import { doc, getDoc } from "firebase/firestore";
+
 import { useAuth } from "./AuthContext";
+import { db } from "../services/firebase";
 
 const OnboardingContext =
   createContext();
+
+const emptyEducation = () => ({
+  degree: "",
+  institution:
+    "",
+  graduationYear:
+    "",
+  fieldOfStudy:
+    "",
+});
 
 const getInitialOnboardingData = () => ({
 
@@ -22,6 +35,8 @@ const getInitialOnboardingData = () => ({
 
   transcriptHistory:
     [],
+
+  fullName: "",
 
   /*
     LABOUR
@@ -53,6 +68,9 @@ const getInitialOnboardingData = () => ({
   preferredShift:
     "",
 
+  transportAccess:
+    false,
+
   /*
     PROFESSIONAL
   */
@@ -65,16 +83,7 @@ const getInitialOnboardingData = () => ({
 
   education: {
 
-    degree: "",
-
-    institution:
-      "",
-
-    graduationYear:
-      "",
-
-    fieldOfStudy:
-      "",
+    ...emptyEducation(),
   },
 
   professionalSkills:
@@ -89,8 +98,11 @@ const getInitialOnboardingData = () => ({
 
   portfolio: "",
 
-  careerGoals:
+  careerGoal:
     "",
+
+  expectedSalary:
+    null,
 
   resumeSummary:
     "",
@@ -101,6 +113,144 @@ const getInitialOnboardingData = () => ({
   preferredRoles:
     [],
 });
+
+export const mapUserDocToOnboardingData = (
+  userData,
+  authUser
+) => {
+  const profileData =
+    userData?.profile || {};
+
+  const fullName =
+    profileData.fullName ||
+    profileData.name ||
+    userData?.fullName ||
+    "";
+
+  const resumeSummary =
+    profileData.resumeSummary ||
+    (fullName && profileData.professionalRole
+      ? `${fullName}|${profileData.professionalRole}`
+      : fullName);
+
+  const professionalSkills =
+    profileData.professionalSkills ||
+    profileData.skills ||
+    [];
+
+  return {
+    ...getInitialOnboardingData(),
+
+    workerType:
+      userData?.workerType || "",
+
+    language:
+      userData?.language || "",
+
+    transcriptHistory:
+      profileData.transcriptHistory || [],
+
+    fullName,
+
+    role:
+      profileData.role || "",
+
+    canonicalRole:
+      profileData.canonicalRole ||
+      profileData.role ||
+      "",
+
+    skills:
+      profileData.skills || [],
+
+    experience:
+      profileData.experience ?? "",
+
+    age:
+      profileData.age != null
+        ? String(profileData.age)
+        : "",
+
+    phoneNumber:
+      profileData.phoneNumber ||
+      authUser?.phoneNumber ||
+      "",
+
+    workRadius:
+      profileData.workRadius || "",
+
+    expectedWage:
+      profileData.expectedWage || "",
+
+    previousWorkType:
+      profileData.previousWorkType || "",
+
+    location:
+      profileData.location || "",
+
+    availability:
+      profileData.labourData?.availability ||
+      profileData.availability ||
+      "",
+
+    preferredShift:
+      profileData.labourData?.preferredShift ||
+      profileData.preferredShift ||
+      "",
+
+    transportAccess:
+      profileData.labourData?.transportAccess ??
+      profileData.transportAccess ??
+      false,
+
+    professionalRole:
+      profileData.professionalRole ||
+      profileData.canonicalRole ||
+      "",
+
+    email:
+      profileData.email ||
+      userData?.email ||
+      authUser?.email ||
+      "",
+
+    experienceBand:
+      profileData.experienceBand || "",
+
+    education: {
+      ...emptyEducation(),
+      ...(profileData.education || {}),
+    },
+
+    professionalSkills,
+
+    experienceDetails:
+      profileData.experienceDetails || [],
+
+    linkedin:
+      profileData.linkedin || "",
+
+    github:
+      profileData.github || "",
+
+    portfolio:
+      profileData.portfolio || "",
+
+    careerGoal:
+      profileData.careerGoal || "",
+
+    expectedSalary:
+      profileData.expectedSalary || null,
+
+    resumeSummary,
+
+    certifications:
+      profileData.certifications || [],
+
+    preferredRoles:
+      profileData.preferredRoles || [],
+  };
+};
 
 export function OnboardingProvider({
   children,
@@ -116,6 +266,11 @@ export function OnboardingProvider({
     onboardingData,
     setOnboardingData,
   ] = useState(getInitialOnboardingData);
+
+  const [
+    onboardingLoading,
+    setOnboardingLoading,
+  ] = useState(false);
 
   /*
     UPDATE FIELD
@@ -179,8 +334,55 @@ export function OnboardingProvider({
     };
 
   useEffect(() => {
-    resetOnboarding();
-  }, [user?.uid]);
+    let cancelled = false;
+
+    const hydrateOnboarding = async () => {
+      if (!user?.uid) {
+        resetOnboarding();
+        setOnboardingLoading(false);
+        return;
+      }
+
+      setOnboardingLoading(true);
+
+      try {
+        const snap = await getDoc(
+          doc(db, "users", user.uid)
+        );
+
+        if (cancelled) return;
+
+        if (snap.exists()) {
+          setOnboardingData(
+            mapUserDocToOnboardingData(
+              snap.data(),
+              user
+            )
+          );
+        } else {
+          resetOnboarding();
+        }
+      } catch (error) {
+        console.log(
+          "[OnboardingContext] hydrate:",
+          error
+        );
+      } finally {
+        if (!cancelled) {
+          setOnboardingLoading(false);
+        }
+      }
+    };
+
+    hydrateOnboarding();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    user?.uid,
+    onboardingRefresh,
+  ]);
 
   return (
 
@@ -188,6 +390,8 @@ export function OnboardingProvider({
       value={{
 
         onboardingData,
+
+        onboardingLoading,
 
         onboardingRefresh,
 

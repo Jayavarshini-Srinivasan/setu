@@ -12,7 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
-import { useOnboarding } from "../context/OnboardingContext";
+import { mapUserDocToOnboardingData, useOnboarding } from "../context/OnboardingContext";
 import { useI18n } from "../context/I18nContext";
 import API from "../services/api";
 import { COLORS, BORDER_RADIUS, SPACING, SHADOWS } from "../constants/theme";
@@ -175,48 +175,6 @@ export default function ProfileScreen() {
     return "PS";
   };
 
-  const mapUserDocToOnboardingData = (userData) => {
-    const profileData = userData?.profile || {};
-    const workerType = userData?.workerType || "labour";
-    const nameValue = profileData.fullName || profileData.name || profileData.resumeSummary || "";
-
-    return {
-      workerType,
-      language: userData?.language || "english",
-      transcriptHistory: profileData.transcriptHistory || [],
-      role: profileData.role || "",
-      canonicalRole: profileData.canonicalRole || "",
-      skills: profileData.skills || [],
-      experience: profileData.experience || "",
-      age: profileData.age?.toString() || "",
-      phoneNumber: profileData.phoneNumber || "",
-      workRadius: profileData.workRadius || "",
-      expectedWage: profileData.expectedWage || "",
-      previousWorkType: profileData.previousWorkType || "",
-      location: profileData.location || "",
-      availability: profileData.labourData?.availability || profileData.availability || "",
-      preferredShift: profileData.labourData?.preferredShift || profileData.preferredShift || "",
-      professionalRole: profileData.professionalRole || "",
-      email: profileData.email || userData?.email || auth.currentUser?.email || "",
-      experienceBand: profileData.experienceBand || "",
-      education: profileData.education || {
-        degree: "",
-        institution: "",
-        graduationYear: "",
-        fieldOfStudy: "",
-      },
-      professionalSkills: profileData.professionalSkills || [],
-      experienceDetails: profileData.experienceDetails || [],
-      linkedin: profileData.linkedin || "",
-      github: profileData.github || "",
-      portfolio: profileData.portfolio || "",
-      careerGoals: profileData.careerGoal || "",
-      preferredRoles: profileData.preferredRoles || [],
-      resumeSummary: nameValue,
-      certifications: profileData.certifications || [],
-    };
-  };
-
   const handleEditProfile = async () => {
     try {
       setLoading(true);
@@ -227,7 +185,7 @@ export default function ProfileScreen() {
       const snap = await getDoc(userRef);
       if (snap.exists()) {
         const userData = snap.data();
-        setFullOnboardingData(mapUserDocToOnboardingData(userData));
+        setFullOnboardingData(mapUserDocToOnboardingData(userData, user));
       }
       await updateDoc(userRef, { onboardingCompleted: false });
       refreshOnboarding();

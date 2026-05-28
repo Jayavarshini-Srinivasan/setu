@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import API from "../../services/api";
@@ -32,6 +33,7 @@ function getPriorityStyle(priority, index) {
 
 export default function LearningPathScreen({ route }) {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { matchContext } = route?.params || {};
   const { t, language } = useI18n();
 
@@ -83,18 +85,28 @@ export default function LearningPathScreen({ route }) {
     role,
     targetRole,
     currentAssessment,
-    skillGaps,
-    roadmap,
     totalWeeks,
     currentMatchScore,
     projectedMatchScore,
     matchImprovementDelta,
-    salary,
     topJob,
   } = plan;
 
-  const boostPerGap = skillGaps?.length
-    ? Math.round(matchImprovementDelta / skillGaps.length)
+  const skillGaps = Array.isArray(plan.skillGaps) ? plan.skillGaps : [];
+  const roadmap = Array.isArray(plan.roadmap) ? plan.roadmap : [];
+  const scoreDelta = Number(matchImprovementDelta || 0);
+  const weeksTotal = Number(
+    totalWeeks ||
+      roadmap.reduce(
+        (sum, item) => sum + Number(item.estimatedWeeks || 1),
+        0
+      )
+  );
+  const currentScore = Number(currentMatchScore || 0);
+  const projectedScore = Number(projectedMatchScore || currentScore + scoreDelta);
+
+  const boostPerGap = skillGaps.length
+    ? Math.round(scoreDelta / skillGaps.length)
     : 5;
 
   const getRoadmapStatus = (index) => {
@@ -106,13 +118,13 @@ export default function LearningPathScreen({ route }) {
   const formatCourseMeta = (item) => {
     const weeks = item.estimatedWeeks || 1;
     const hours = weeks * 4;
-    if (hours >= 4) return `Course · ${hours} hrs`;
-    return `Video · ${weeks * 45} min`;
+    if (hours >= 4) return `Course - ${hours} hrs`;
+    return `Video - ${weeks * 45} min`;
   };
 
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
           <Ionicons name="arrow-back-outline" size={20} color={COLORS.text} />
         </TouchableOpacity>
@@ -121,25 +133,38 @@ export default function LearningPathScreen({ route }) {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: insets.bottom + 48 },
+        ]}
+        contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.roadmapBanner}>
-          <Text style={styles.roadmapBannerIcon}>🤖</Text>
+          <View style={styles.roadmapBannerIcon}>
+            <Ionicons name="sparkles-outline" size={20} color={COLORS.primary} />
+          </View>
           <View style={styles.roadmapBannerText}>
             <Text style={styles.roadmapBannerTitle}>Personalised roadmap</Text>
             <Text style={styles.roadmapBannerSub}>
-              Complete these to boost your match score by +{matchImprovementDelta}%
+              Complete these to boost your match score by +{scoreDelta}%
             </Text>
           </View>
         </View>
 
         <View style={styles.assessmentCard}>
-          <Text style={styles.assessmentRole}>{t(`roles.${role}`) || role}</Text>
-          <Text style={styles.assessmentTarget}>↗ Target: {t(`roles.${targetRole}`) || targetRole}</Text>
+          <Text style={styles.assessmentRole} numberOfLines={2}>
+            {t(`roles.${role}`) || role || "Current role"}
+          </Text>
+          <View style={styles.targetRow}>
+            <Ionicons name="trending-up-outline" size={15} color={COLORS.textSecondary} />
+            <Text style={styles.assessmentTarget} numberOfLines={2}>
+              Target: {t(`roles.${targetRole}`) || targetRole || "Next role"}
+            </Text>
+          </View>
           <View style={styles.assessmentRow}>
             <View style={styles.assessmentItem}>
-              <Text style={styles.assessmentValue}>{currentMatchScore}%</Text>
+              <Text style={styles.assessmentValue}>{currentScore}%</Text>
               <Text style={styles.assessmentLabel}>Best Match</Text>
             </View>
             <View style={styles.assessmentItem}>
@@ -147,13 +172,13 @@ export default function LearningPathScreen({ route }) {
               <Text style={styles.assessmentLabel}>Skills</Text>
             </View>
             <View style={styles.assessmentItem}>
-              <Text style={styles.assessmentValue}>{skillGaps?.length || 0}</Text>
+              <Text style={styles.assessmentValue}>{skillGaps.length}</Text>
               <Text style={styles.assessmentLabel}>Skill Gaps</Text>
             </View>
           </View>
           {topJob && (
-            <Text style={styles.topJobMeta}>
-              🏆 {topJob.title} · {topJob.matchScore}% match
+            <Text style={styles.topJobMeta} numberOfLines={2}>
+              Top match: {topJob.title} - {topJob.matchScore}% match
             </Text>
           )}
         </View>
@@ -161,19 +186,26 @@ export default function LearningPathScreen({ route }) {
         <View style={styles.projectionCard}>
           <Text style={styles.projectionTitle}>After completing this path</Text>
           <View style={styles.projectionRow}>
-            <Text style={styles.projectionValue}>+{matchImprovementDelta}%</Text>
-            <Text style={styles.projectionDivider}>·</Text>
-            <Text style={styles.projectionValue}>~{totalWeeks}w</Text>
-            <Text style={styles.projectionDivider}>·</Text>
-            <Text style={styles.projectionValue}>{projectedMatchScore}%</Text>
+            <View style={styles.projectionMetric}>
+              <Text style={styles.projectionValue}>+{scoreDelta}%</Text>
+              <Text style={styles.projectionMetricLabel}>Boost</Text>
+            </View>
+            <View style={styles.projectionMetric}>
+              <Text style={styles.projectionValue}>~{weeksTotal}w</Text>
+              <Text style={styles.projectionMetricLabel}>Timeline</Text>
+            </View>
+            <View style={styles.projectionMetric}>
+              <Text style={styles.projectionValue}>{projectedScore}%</Text>
+              <Text style={styles.projectionMetricLabel}>Projected</Text>
+            </View>
           </View>
           <Text style={styles.projectionSub}>
-            Projected match · {currentMatchScore}% → {projectedMatchScore}%
+            Projected match: {currentScore}% to {projectedScore}%
           </Text>
         </View>
 
         <Text style={styles.sectionTitle}>Skill Gaps</Text>
-        {(skillGaps || []).map((skill, i) => {
+        {skillGaps.map((skill, i) => {
           const pStyle = getPriorityStyle(
             roadmap?.[i]?.priority,
             i
@@ -182,7 +214,7 @@ export default function LearningPathScreen({ route }) {
           return (
             <View key={i} style={styles.gapCard}>
               <View style={styles.gapCardLeft}>
-                <Text style={styles.gapSkillName}>{t(`skills.${skill}`) || skill}</Text>
+                <Text style={styles.gapSkillName} numberOfLines={2}>{t(`skills.${skill}`) || skill}</Text>
                 <View style={[styles.priorityPill, { backgroundColor: pStyle.bg }]}>
                   <Text style={[styles.priorityPillText, { color: pStyle.text }]}>
                     {pStyle.label}
@@ -194,12 +226,13 @@ export default function LearningPathScreen({ route }) {
           );
         })}
 
-        <Text style={styles.sectionTitle}>🗺️ Your Learning Roadmap</Text>
+        <Text style={styles.sectionTitle}>Your Learning Roadmap</Text>
 
         <View style={styles.timeline}>
-          {(roadmap || []).map((item, i) => {
+          {roadmap.map((item, i) => {
             const status = getRoadmapStatus(i);
             const isLast = i === roadmap.length - 1;
+            const stepNumber = item.step || i + 1;
 
             return (
               <View key={i} style={styles.timelineRow}>
@@ -211,12 +244,12 @@ export default function LearningPathScreen({ route }) {
                   )}
                   {status === "current" && (
                     <View style={[styles.timelineNode, styles.nodeCurrent]}>
-                      <Text style={styles.nodeNumber}>{item.step}</Text>
+                      <Text style={styles.nodeNumber}>{stepNumber}</Text>
                     </View>
                   )}
                   {status === "upcoming" && (
                     <View style={[styles.timelineNode, styles.nodeUpcoming]}>
-                      <Text style={styles.nodeNumberUpcoming}>{item.step}</Text>
+                      <Text style={styles.nodeNumberUpcoming}>{stepNumber}</Text>
                     </View>
                   )}
                   {!isLast && (
@@ -245,7 +278,7 @@ export default function LearningPathScreen({ route }) {
                   </Text>
                   <Text style={styles.roadmapItemMeta}>{formatCourseMeta(item)}</Text>
                   <Text style={styles.roadmapItemDesc} numberOfLines={2}>
-                    {item.description}
+                    {item.description || "Focused practice to close this skill gap and improve job readiness."}
                   </Text>
                 </View>
               </View>
@@ -254,18 +287,18 @@ export default function LearningPathScreen({ route }) {
         </View>
 
         <View style={styles.salaryCard}>
-          <Text style={styles.salaryTitle}>💰  Salary Projection (INR)</Text>
+          <Text style={styles.salaryTitle}>Salary Projection (INR)</Text>
           <View style={styles.salaryRow}>
             <View style={styles.salaryItem}>
               <Text style={styles.salaryValue}>
-                ₹{Math.round((plan.salary?.currentEstimate || 0) / 100000)}L
+                INR {Math.round((plan.salary?.currentEstimate || 0) / 100000)}L
               </Text>
               <Text style={styles.salaryLabel}>Current Est.</Text>
             </View>
-            <Text style={styles.salaryArrow}>→</Text>
+            <Ionicons name="arrow-forward-outline" size={22} color={COLORS.textLight} />
             <View style={styles.salaryItem}>
               <Text style={[styles.salaryValue, { color: COLORS.success }]}>
-                ₹{Math.round((plan.salary?.projectedEstimate || 0) / 100000)}L
+                INR {Math.round((plan.salary?.projectedEstimate || 0) / 100000)}L
               </Text>
               <Text style={styles.salaryLabel}>After Path</Text>
             </View>
@@ -285,7 +318,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 12,
     paddingBottom: 12,
     backgroundColor: COLORS.surface,
     borderBottomWidth: 1,
@@ -302,6 +334,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
+    minWidth: 0,
     textAlign: "center",
     fontSize: 18,
     fontWeight: "700",
@@ -310,7 +343,6 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 40 },
   container: {
     padding: 20,
-    paddingBottom: 48,
   },
   center: {
     flex: 1,
@@ -339,8 +371,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     gap: 12,
   },
-  roadmapBannerIcon: { fontSize: 20 },
-  roadmapBannerText: { flex: 1 },
+  roadmapBannerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.surface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  roadmapBannerText: { flex: 1, minWidth: 0 },
   roadmapBannerTitle: {
     fontSize: 15,
     fontWeight: "700",
@@ -359,17 +398,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   assessmentRole: {
     fontSize: 18,
     fontWeight: "700",
     color: COLORS.text,
     marginBottom: 4,
+    lineHeight: 24,
+  },
+  targetRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    marginBottom: 14,
   },
   assessmentTarget: {
+    flex: 1,
+    minWidth: 0,
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginBottom: 14,
+    lineHeight: 19,
   },
   assessmentRow: {
     flexDirection: "row",
@@ -377,10 +426,12 @@ const styles = StyleSheet.create({
   },
   assessmentItem: {
     flex: 1,
+    minWidth: 0,
     alignItems: "center",
     backgroundColor: COLORS.background,
     borderRadius: 12,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
   assessmentValue: {
     fontSize: 20,
@@ -391,6 +442,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textSecondary,
     marginTop: 4,
+    textAlign: "center",
   },
   topJobMeta: {
     fontSize: 13,
@@ -402,6 +454,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     padding: 16,
     marginBottom: 24,
+    ...SHADOWS.card,
   },
   projectionTitle: {
     fontSize: 12,
@@ -414,15 +467,30 @@ const styles = StyleSheet.create({
   projectionRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
     gap: 10,
   },
+  projectionMetric: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+  },
   projectionValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
     color: "#FFFFFF",
   },
+  projectionMetricLabel: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.58)",
+    marginTop: 4,
+  },
   projectionDivider: {
+    display: "none",
     color: "rgba(255,255,255,0.4)",
     fontSize: 18,
   },
@@ -450,7 +518,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     ...SHADOWS.sm,
   },
-  gapCardLeft: { flex: 1 },
+  gapCardLeft: { flex: 1, minWidth: 0, paddingRight: 12 },
   gapSkillName: {
     fontSize: 16,
     fontWeight: "700",
@@ -472,16 +540,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: COLORS.success,
+    flexShrink: 0,
   },
   timeline: { marginBottom: 24 },
   timelineRow: {
     flexDirection: "row",
+    alignItems: "stretch",
     marginBottom: 4,
   },
   timelineLeft: {
     width: 36,
     alignItems: "center",
     marginRight: 12,
+    flexShrink: 0,
   },
   timelineNode: {
     width: 28,
@@ -514,6 +585,7 @@ const styles = StyleSheet.create({
   lineDefault: { backgroundColor: "#E5E7EB" },
   roadmapItemCard: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: 14,
@@ -521,6 +593,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     position: "relative",
+    ...SHADOWS.sm,
   },
   roadmapItemCardActive: {
     borderColor: COLORS.primaryDark,
@@ -546,6 +619,7 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 4,
     paddingRight: 48,
+    lineHeight: 20,
   },
   roadmapItemMeta: {
     fontSize: 13,
@@ -574,14 +648,24 @@ const styles = StyleSheet.create({
   salaryRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
+    gap: 10,
   },
-  salaryItem: { alignItems: "center" },
+  salaryItem: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+  },
   salaryValue: {
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: "700",
     color: COLORS.text,
     marginBottom: 4,
+    textAlign: "center",
   },
   salaryLabel: {
     fontSize: 12,

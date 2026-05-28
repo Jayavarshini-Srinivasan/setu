@@ -75,6 +75,13 @@ export default function ResumePreviewScreen({ navigation }) {
     }
   };
 
+  const handleBackHome = async () => {
+    await handleApprove();
+    if (navigation.getState()?.routeNames?.includes("ProfessionalTabs")) {
+      navigation.navigate("ProfessionalTabs", { screen: "Home" });
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!resume) return;
     try {
@@ -422,10 +429,21 @@ export default function ResumePreviewScreen({ navigation }) {
       </ScrollView>
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.approveBtn} onPress={handleDownloadPDF} disabled={approving}>
-          <Text style={styles.approveBtnText}>Download Resume</Text>
+        <TouchableOpacity style={styles.downloadBtn} onPress={handleDownloadPDF} disabled={approving}>
+          <Ionicons name="download-outline" size={20} color="#FFFFFF" />
+          <Text style={styles.downloadBtnText}>Download Resume</Text>
         </TouchableOpacity>
-        
+
+        <TouchableOpacity style={styles.homeBtn} onPress={handleBackHome} disabled={approving}>
+          {approving ? (
+            <ActivityIndicator color={COLORS.resumeGreen} />
+          ) : (
+            <>
+              <Ionicons name="home-outline" size={20} color={COLORS.resumeGreen} />
+              <Text style={styles.homeBtnText}>Back Home</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -591,22 +609,39 @@ const styles = StyleSheet.create({
     bottom: 24,
     left: 20,
     right: 20,
-    flexDirection: "row",
-    alignItems: "center",
+    backgroundColor: COLORS.background,
+    paddingTop: 12,
     gap: 12,
   },
-  approveBtn: {
-    flex: 1,
+  downloadBtn: {
+    flexDirection: "row",
     backgroundColor: COLORS.resumeGreen,
-    paddingVertical: 18,
+    paddingVertical: 17,
     borderRadius: BORDER_RADIUS.lg,
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
     ...SHADOWS.lg,
   },
-  approveBtnText: {
+  downloadBtnText: {
     color: "#FFFFFF",
     fontSize: 17,
+    fontWeight: "700",
+  },
+  homeBtn: {
+    flexDirection: "row",
+    backgroundColor: COLORS.surface,
+    paddingVertical: 16,
+    borderRadius: BORDER_RADIUS.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: COLORS.resumeGreen,
+  },
+  homeBtnText: {
+    color: COLORS.resumeGreen,
+    fontSize: 16,
     fontWeight: "700",
   },
   downloadIconBtn: {

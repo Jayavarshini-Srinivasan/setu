@@ -98,7 +98,7 @@ export default function ProfessionalReviewScreen({ navigation }) {
 
       <SummaryCard 
         title="Basic Info" 
-        value={`${onboardingData.fullName || "No name"} � ${onboardingData.professionalRole || "No role"}`} 
+        value={`${onboardingData.fullName || "No name"} || ${onboardingData.professionalRole || "No role"}`} 
         route="ProfessionalRole" 
       />
       <SummaryCard 

@@ -110,6 +110,7 @@ export default function HomeScreen({ navigation }) {
   const [matchCount, setMatchCount] = useState(0);
   const [appliedCount, setAppliedCount] = useState(0);
   const [shortlistedCount, setShortlistedCount] = useState(0);
+  const [careerPathOpening, setCareerPathOpening] = useState(false);
   const { t, language } = useI18n();
   const { user } = useAuth();
   const { onboardingRefresh } = useOnboarding();
@@ -252,22 +253,46 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleGenerateCareerPath = () => {
+    if (careerPathOpening) return;
+
     const topJob = allJobs[0] || null;
     const allMissingSkillsSet = new Set();
     allJobs.forEach((job) => {
-      (job.analysis?.missingSkills || []).forEach((s) => allMissingSkillsSet.add(s));
+      const missingSkills = job.missingSkills || job.analysis?.missingSkills || [];
+      missingSkills.forEach((s) => allMissingSkillsSet.add(s));
     });
     
     const isProf = profile?.workerType === "professional";
+    const profileData = profile?.profile || {};
+    const skills = isProf
+      ? (profileData.professionalSkills || profileData.skills || [])
+      : (profileData.skills || []);
+
     const matchContext = {
-      role: isProf ? profile?.profile?.professionalRole : profile?.profile?.role,
-      experience: isProf ? (profile?.profile?.experienceDetails?.length || 0) : (profile?.profile?.experience || 0),
-      missingSkills: Array.from(allMissingSkillsSet),
-      topJobTitle: topJob ? topJob.title : "Preferred Role",
-      matchScore: topJob ? topJob.matchScore : 0,
-      skills: isProf ? profile?.profile?.professionalSkills : profile?.profile?.skills,
+      topJob,
+      allMissingSkills: Array.from(allMissingSkillsSet),
+      currentMatchScore: topJob?.matchScore || 0,
+      role: isProf
+        ? (profileData.professionalRole || profileData.canonicalRole || "")
+        : (profileData.canonicalRole || profileData.role || ""),
+      skills,
+      experience: isProf
+        ? (profileData.experienceDetails || [])
+        : (profileData.experience || 0),
     };
-    navigation.navigate("LearningPath", { matchContext });
+
+    setCareerPathOpening(true);
+
+    const parentNavigation = navigation.getParent?.();
+    const parentRoutes = parentNavigation?.getState?.()?.routeNames || [];
+
+    if (parentNavigation && parentRoutes.includes("LearningPath")) {
+      parentNavigation.navigate("LearningPath", { matchContext });
+    } else {
+      navigation.navigate("LearningPath", { matchContext });
+    }
+
+    setTimeout(() => setCareerPathOpening(false), 500);
   };
 
   if (loading) {
@@ -427,6 +452,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.secondaryAction}
             onPress={handleGenerateCareerPath}
+            disabled={careerPathOpening}
             activeOpacity={0.85}
           >
             <Text style={styles.secondaryActionIcon}>🎯</Text>

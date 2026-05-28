@@ -295,6 +295,8 @@ function AppNavigator() {
   } = useAuth();
 
   const {
+    onboardingData,
+    onboardingLoading,
     onboardingRefresh,
   } = useOnboarding();
 
@@ -400,7 +402,7 @@ function AppNavigator() {
   /*
     LOADING — wait for BOTH auth AND profile check
   */
-  if (authLoading || loading) {
+  if (authLoading || loading || onboardingLoading) {
     return <SplashScreen />;
   }
 
@@ -439,10 +441,16 @@ function AppNavigator() {
   if (
     !onboardingCompleted
   ) {
+    const initialOnboardingRoute =
+      onboardingData.workerType === "professional"
+        ? "ProfessionalRole"
+        : onboardingData.workerType === "labour"
+          ? "RoleQuestion"
+          : "UserTypeSelection";
 
     return (
 
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName={initialOnboardingRoute}>
 
         <Stack.Screen
           name="UserTypeSelection"

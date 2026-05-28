@@ -79,12 +79,16 @@ export default function ProfessionalExperienceScreen({ navigation }) {
       achievements: achievements.trim(),
     };
 
-    updateField("experienceDetails", [...existingExperience, newExperience]);
+    const updatedExperience = [...existingExperience, newExperience];
+
+    updateField("experienceDetails", updatedExperience);
 
     setCompany("");
     setRole("");
     setAchievements("");
     setIsPresent(false);
+
+    return updatedExperience;
   };
 
   const removeExperience = (index) => {
@@ -94,15 +98,17 @@ export default function ProfessionalExperienceScreen({ navigation }) {
   };
 
   const handleContinue = () => {
+    let experienceForSave = existingExperience;
+
     if (canAddExperience) {
-      handleAddExperience();
+      experienceForSave = handleAddExperience() || existingExperience;
     } else if (existingExperience.length === 0) {
       Alert.alert(t("required") || "Required", "Please add at least one work experience.");
       return;
     }
     
     // Calculate total years
-    const totalYears = existingExperience.reduce((sum, item) => {
+    const totalYears = experienceForSave.reduce((sum, item) => {
       if (item.startYear) {
         const end = item.endYear === "Present" ? new Date().getFullYear() : Number(item.endYear);
         return sum + Math.max(1, end - Number(item.startYear));
