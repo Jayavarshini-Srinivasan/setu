@@ -92,11 +92,11 @@ export default function ReviewOnboardingScreen({ navigation }) {
         </View>
       )}
 
-      <SummaryCard title="Basic Info" value={`${onboardingData.fullName || onboardingData.resumeSummary?.split("|")[0] || "No name"} � ${onboardingData.role || "No role"}`} route="RoleQuestion" />
+      <SummaryCard title="Basic Info" value={`${onboardingData.fullName || onboardingData.resumeSummary?.split("|")[0] || "No name"} || ${onboardingData.role || "No role"}`} route="RoleQuestion" />
       <SummaryCard title="Skills" value={(onboardingData.skills || []).join(", ") || "None selected"} route="SkillsQuestion" />
-      <SummaryCard title="Experience & Age" value={`${onboardingData.experience !== undefined ? onboardingData.experience + " years" : "No experience"} ${onboardingData.age ? "� " + onboardingData.age + " yrs old" : ""}`} route="ExperienceQuestion" />
-      <SummaryCard title="Location" value={`${onboardingData.location || "No city"} � ${onboardingData.workRadius || "No radius"}`} route="LocationQuestion" />
-      <SummaryCard title="Preferences" value={`Wage: ${onboardingData.expectedWage || "�"}\nAvailability: ${onboardingData.availability || "�"} � ${onboardingData.preferredShift || "�"}\nVehicle: ${onboardingData.transportAccess ? "Yes" : "No"}`} route="PreferencesQuestion" />
+      <SummaryCard title="Experience & Age" value={`${onboardingData.experience !== undefined ? onboardingData.experience + " years" : "No experience"} ${onboardingData.age ? "|| " + onboardingData.age + " yrs old" : ""}`} route="ExperienceQuestion" />
+      <SummaryCard title="Location" value={`${onboardingData.location || "No city"} || ${onboardingData.workRadius || "No radius"}`} route="LocationQuestion" />
+      <SummaryCard title="Preferences" value={`Wage: ${onboardingData.expectedWage || "�"}\nAvailability: ${onboardingData.availability || "�"} || ${onboardingData.preferredShift || "�"}\nVehicle: ${onboardingData.transportAccess ? "Yes" : "No"}`} route="PreferencesQuestion" />
 
       <TouchableOpacity
         style={[styles.completeButton, (missingFields.length > 0 || loading) && styles.completeButtonDisabled]}

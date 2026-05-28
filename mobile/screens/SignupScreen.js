@@ -166,10 +166,6 @@ export default function SignupScreen({ navigation }) {
         <View style={styles.dividerLine} />
       </View>
 
-      <TouchableOpacity style={styles.googleBtn} activeOpacity={0.85}>
-        <Text style={styles.googleIcon}>G</Text>
-        <Text style={styles.googleText}>{t("continueGoogle") || "Continue with Google"}</Text>
-      </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Login")} style={styles.footerLink}>
         <Text style={styles.footerText}>
