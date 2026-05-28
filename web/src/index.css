@@ -534,6 +534,98 @@ label {
   flex-shrink: 0;
 }
 
+/* ─── APPLICANT CARD HOVER ───────────────────── */
+.applicant-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.applicant-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.10) !important;
+}
+
+/* ─── CANDIDATE DETAIL PAGE ──────────────────── */
+.candidate-stat-box {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 110px;
+  text-align: center;
+}
+.candidate-stat-label {
+  font-size: 10px;
+  color: var(--text);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.candidate-stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-h);
+}
+
+.action-btn-primary {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--success);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.18s;
+}
+.action-btn-primary:hover:not(:disabled) { background: #059669; }
+.action-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.action-btn-secondary {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: #EEF2FF;
+  color: #3730A3;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.18s;
+}
+.action-btn-secondary:hover:not(:disabled) { background: #E0E7FF; }
+.action-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.action-btn-danger {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #FCA5A5;
+  background: #fff;
+  color: #DC2626;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.18s;
+}
+.action-btn-danger:hover:not(:disabled) { background: #FEF2F2; }
+.action-btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ─── JOB ROW CARD ───────────────────────────── */
 .job-row {
   background: #fff;
@@ -625,4 +717,66 @@ label {
   .sidebar-nav { gap: 0; }
   .sidebar-link { padding: 6px 8px; }
 }
+
+/* ─── PREMIUM REDESIGN STYLES ────────────────── */
+.glass-card {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  padding: 24px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  border-color: rgba(232, 93, 4, 0.25);
+}
+
+/* Skeleton Loading Animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-loading {
+  background: linear-gradient(90deg, #F9FAFB 25%, #E5E7EB 50%, #F9FAFB 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite linear;
+  border-radius: 8px;
+}
+
+.skeleton-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+
+.skeleton-title {
+  width: 140px;
+  height: 20px;
+  margin-bottom: 8px;
+}
+
+.skeleton-text {
+  width: 240px;
+  height: 14px;
+  margin-bottom: 6px;
+}
+
+.skeleton-chip {
+  width: 70px;
+  height: 24px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-right: 6px;
+}
+
 
