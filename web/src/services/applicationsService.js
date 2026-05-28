@@ -54,3 +54,13 @@ export async function getApplicationById(applicationId) {
     throw error;
   }
 }
+
+export async function getGeneratedResume(userId) {
+  try {
+    const response = await API.post("/resume/generate", { userId });
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

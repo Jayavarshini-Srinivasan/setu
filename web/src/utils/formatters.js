@@ -92,11 +92,20 @@ export function formatStatus(
   GET DISPLAY NAME
 */
 export function getDisplayName(profile = {}, authUser = {}) {
+  if (profile.name && profile.name.trim()) {
+    return profile.name.trim();
+  }
   if (profile.fullName && profile.fullName.trim()) {
     return profile.fullName.trim();
   }
   if (profile.resumeSummary && profile.resumeSummary.includes("|")) {
     return profile.resumeSummary.split("|")[0].trim();
+  }
+  if (authUser && authUser.name && authUser.name.trim()) {
+    return authUser.name.trim();
+  }
+  if (authUser && authUser.fullName && authUser.fullName.trim()) {
+    return authUser.fullName.trim();
   }
   if (authUser && authUser.email) {
     return authUser.email.split("@")[0].trim();
