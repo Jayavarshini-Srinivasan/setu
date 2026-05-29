@@ -195,6 +195,7 @@ export default function useVoiceRecorder({ onResult, contextData, screenType }) 
     if (!audioUriRef.current)                return;
 
     setVoiceState(VOICE_STATE.PROCESSING);
+    setExtractedProfile(null); // clear any stale extraction before new API call
 
     try {
 

@@ -63,11 +63,24 @@ export default function ProfessionalExperienceScreen({ navigation }) {
       if (tx) addTranscript(tx);
       const extractedEntries = ep?.experienceDetails || [];
       if (extractedEntries.length > 0) {
-        const merged = [...existingExperience, ...extractedEntries];
+        // Read fresh experienceDetails at call-time to avoid stale closure
+        const currentEntries = onboardingData.experienceDetails || [];
+        const merged = [...currentEntries];
+        for (const entry of extractedEntries) {
+          if (!entry.company && !entry.role) continue;
+          const isDuplicate = merged.some(
+            (e) =>
+              String(e.company || "").toLowerCase().trim() ===
+                String(entry.company || "").toLowerCase().trim() &&
+              String(e.role || "").toLowerCase().trim() ===
+                String(entry.role || "").toLowerCase().trim()
+          );
+          if (!isDuplicate) merged.push(entry);
+        }
         updateField("experienceDetails", merged);
       }
     },
-    contextData: onboardingData,
+    screenType: "experience",
   });
 
   const canAddExperience = Boolean(company.trim()) && Boolean(role.trim());

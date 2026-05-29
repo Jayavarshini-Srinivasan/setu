@@ -44,8 +44,14 @@ export default function CareerGoalsScreen({ navigation }) {
         if (ep.expectedSalary.currency) setCurrency(ep.expectedSalary.currency);
       }
       if (ep?.careerGoal) setCareerGoal(ep.careerGoal);
+      if (Array.isArray(ep?.preferredRoles) && ep.preferredRoles.length > 0) {
+        // Merge newly detected roles with already-selected ones (deduped)
+        setPreferredRoles((prev) => [
+          ...new Set([...prev, ...ep.preferredRoles]),
+        ]);
+      }
     },
-    contextData: onboardingData,
+    screenType: "goals",
   });
 
   const toggleRole = (role) => {
