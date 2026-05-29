@@ -57,7 +57,7 @@ export default function ProfessionalRoleScreen({ navigation }) {
         setFullName(ep.fullName);
       }
     },
-    contextData: onboardingData,
+    screenType: "profile",
   });
 
   const filteredRoles = ROLE_OPTIONS.filter(

@@ -238,7 +238,7 @@ export default function ResultsScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterTabsContainer}
         >
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.filterTab, filterTab === "all" && styles.filterTabActive]}
             onPress={() => setFilterTab("all")}
           >
@@ -261,7 +261,7 @@ export default function ResultsScreen({ navigation }) {
             <Text style={[styles.filterTabText, filterTab === "near" && styles.filterTabTextActive]}>
               Near Me
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ScrollView>
       </View>
 

@@ -53,7 +53,7 @@ export default function ProfessionalSkillsScreen({ navigation }) {
         updateField("professionalSkills", merged);
       }
     },
-    contextData: onboardingData,
+    screenType: "skills",
   });
 
   const toggleSkill = (skill) => {

@@ -19,6 +19,7 @@ const router =
 );
 const {
   extractProfileData,
+  extractScreenData,
 } = require(
   "../services/ai/profileExtractionService"
 );
@@ -114,28 +115,45 @@ router.post(
 /*
   TRANSCRIBE
 */
-const transcript =
-  await transcribeAudio(
-    req.file.path
-  );
+let transcript="";
+
+try{
+
+transcript =
+await transcribeAudio(
+req.file.path
+);
+
+}catch(err){
+
+return res.status(500).json({
+success:false,
+error:"transcription_failed"
+});
+
+}
 
 /*
   EXTRACT PROFILE
 */
-let contextData = {};
-if (req.body.context) {
-  try {
-    contextData = JSON.parse(req.body.context);
-  } catch(error) {
-    console.error("[voiceRoutes] invalid context JSON:", error?.message);
-  }
-}
+const screenType = req.body.screenType || "";
+let extractedProfile;
 
-const extractedProfile =
-  await extractProfileData(
-    transcript,
-    contextData
-  );
+if (screenType) {
+  // Screen-specific lightweight extraction (no context-merging)
+  extractedProfile = await extractScreenData(transcript, screenType);
+} else {
+  // Legacy full extraction with context merge
+  let contextData = {};
+  if (req.body.context) {
+    try {
+      contextData = JSON.parse(req.body.context);
+    } catch(error) {
+      console.error("[voiceRoutes] invalid context JSON:", error?.message);
+    }
+  }
+  extractedProfile = await extractProfileData(transcript, contextData);
+}
 
 res.status(200).json({
   success: true,

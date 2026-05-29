@@ -66,7 +66,7 @@ export default function EducationScreen({ navigation }) {
       if (ep?.education?.graduationYear) setGraduationYear(Number(ep.education.graduationYear));
       if (ep?.education?.fieldOfStudy) setFieldOfStudy(ep.education.fieldOfStudy);
     },
-    contextData: onboardingData,
+    screenType: "education",
   });
 
   const filteredFields = FIELDS.filter(f => f.toLowerCase().includes(fieldOfStudy.toLowerCase()) && f.toLowerCase() !== fieldOfStudy.toLowerCase());

@@ -16,7 +16,7 @@ export const VOICE_STATE = {
 };
 
 
-export default function useVoiceRecorder({ onResult, contextData }) {
+export default function useVoiceRecorder({ onResult, contextData, screenType }) {
 
   const [voiceState,       setVoiceState]       = useState(VOICE_STATE.IDLE);
   const [transcript,       setTranscript]        = useState("");
@@ -204,7 +204,9 @@ export default function useVoiceRecorder({ onResult, contextData }) {
         name: "voice-recording.m4a",
         type: "audio/m4a",
       });
-      if (contextData) {
+      if (screenType) {
+        formData.append("screenType", screenType);
+      } else if (contextData) {
         formData.append("context", JSON.stringify(contextData));
       }
 
@@ -248,7 +250,7 @@ export default function useVoiceRecorder({ onResult, contextData }) {
       Alert.alert("Error", "Could not process your recording. Please try again.");
     }
 
-  }, [contextData]);
+  }, [screenType, contextData]);
 
   const confirmExtraction = useCallback(() => {
 

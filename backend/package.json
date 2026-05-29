@@ -12,11 +12,14 @@
   "description": "",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "axios": "^1.16.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "firebase": "^12.12.1",
     "firebase-admin": "^13.8.0",
+    "form-data": "^4.0.5",
+    "groq-sdk": "^1.2.1",
     "mime-types": "^3.0.2",
     "multer": "^2.1.1"
   },
