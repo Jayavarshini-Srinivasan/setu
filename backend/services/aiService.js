@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_RECOMMENDATION || process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 class GeminiQueue {
   constructor() {
@@ -58,7 +58,7 @@ const safeGenerate = async (prompt, fallback = "") => {
 const generateMatchExplanation = async (workerProfile, job, explanationData, language) => {
   const jobSkills = (job.skills || job.requiredSkills || []);
   const workerSkills = (workerProfile.skills || workerProfile.professionalSkills || []);
-  const { matchScore, growthScore, missingSkills } = explanationData;
+  const { matchScore, growthScore, missingSkills, matchedSkills } = explanationData;
   const jobMin = job.salary?.min || 0;
   const jobMax = job.salary?.max || 0;
   const currency = job.salary?.currency || "INR";
@@ -69,31 +69,38 @@ const generateMatchExplanation = async (workerProfile, job, explanationData, lan
     ukSpecific = "Also note if the worker needs to check visa eligibility for working in the UK.";
   }
 
-  const prompt = `You are an employment advisor helping a worker understand a job match.
-Write exactly 2 sentences in ${language || "en"} explaining why this job is or isn't a good fit for this worker. Be specific � use their actual skills and the job's actual requirements. Do not be generic.
-   
+  const matchedStr = (matchedSkills || []).slice(0, 3).join(", ") || "none listed";
+  const missingStr = (missingSkills || []).slice(0, 3).join(", ") || "none";
+
+  const prompt = `You are a concise employment advisor. Write exactly 2 sentences in ${language || "en"} explaining why this specific job is or isn't a good fit for this specific worker.
+
+CRITICAL RULES:
+- Use ONLY the actual skills and job details provided below. Do NOT invent skills or facts.
+- Be specific: mention actual skill names, the job title, and the company.
+- Do NOT write generic statements like "This is a great opportunity" or "You should apply".
+- The worker has these matching skills: ${matchedStr}
+- The worker is MISSING these required skills: ${missingStr}
+
 Worker profile:
-- Role: ${workerProfile.canonicalRole || workerProfile.role || ""}
-- Skills: ${workerSkills.join(", ")}
+- Role: ${workerProfile.canonicalRole || workerProfile.role || workerProfile.professionalRole || ""}
+- Skills: ${workerSkills.join(", ") || "not specified"}
 - Experience: ${workerProfile.experience || 0} years
-- Location: ${workerProfile.location || ""}
-- Expected wage: ${workerProfile.expectedWage || workerProfile.expectedSalary?.min || ""}
+- Location: ${workerProfile.location || "not specified"}
    
 Job:
 - Title: ${job.title}
-- Required skills: ${jobSkills.join(", ")}
-- Location: ${job.location || ""}
-- Salary: ${jobMin}-${jobMax} ${currency}/${period}
+- Company: ${job.company || ""}
+- Required skills: ${jobSkills.join(", ") || "not specified"}
+- Location: ${job.location || "not specified"}
+- Salary: ${jobMin > 0 ? `${jobMin}-${jobMax} ${currency}/${period}` : "not specified"}
 - Minimum experience: ${job.minimumExperience || job.experienceRequired || 0} years
-   
-Match scores: ${matchScore}% skill match, ${growthScore}% growth potential
-Missing skills: ${missingSkills.join(", ")}
-   
+
+Match score: ${matchScore}%
 ${ukSpecific}
 
-Write in ${language || "en"}. 2 sentences maximum.`;
+Write 2 sentences maximum in ${language || "en"}.`;
 
-  const fallback = `${matchScore}% skill alignment for ${job.title || "this role"}${missingSkills.length > 0 ? `. Missing: ${missingSkills.slice(0, 2).join(", ")}.` : "."}`;
+  const fallback = `${matchScore}% skill alignment for ${job.title || "this role"}${missingSkills.length > 0 ? `. Missing: ${missingStr}.` : "."}${matchedSkills?.length > 0 ? ` Matched: ${matchedStr}.` : ""}`;
   return safeGenerate(prompt, fallback);
 };
 

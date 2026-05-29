@@ -79,7 +79,7 @@ const matchJobs = async (req, res) => {
       return isCorrectCategory;
     });
     const matchedJobs = calculateMatchScore(workerProfile, categoryJobs);
-    const MIN_SCORE  = isProfessional ? 5 : 10;
+    const MIN_SCORE  = 40; // Only show jobs with >= 40% match score
     const filteredJobs = matchedJobs.filter((j) => j.matchScore >= MIN_SCORE);
     const language = body.language || "en";
     // Explicitly ensure the jobs are sorted in descending order of matchScore

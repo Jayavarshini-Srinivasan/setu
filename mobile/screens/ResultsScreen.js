@@ -166,11 +166,11 @@ export default function ResultsScreen({ navigation }) {
       return jobs.filter(j => j.matchScore >= 80);
     }
     if (filterTab === "near") {
-      // Sort jobs by proximity or mock distance
+      // Sort by real location/proximity score from backend (higher = closer/better match)
       return [...jobs].sort((a, b) => {
-        const distA = a.distance || (((a.title || "").charCodeAt(0) || 5) % 10) + 2.5;
-        const distB = b.distance || (((b.title || "").charCodeAt(0) || 5) % 10) + 2.5;
-        return distA - distB;
+        const proxA = a.metrics?.proximity ?? a.analysis?.locationScore ?? 0;
+        const proxB = b.metrics?.proximity ?? b.analysis?.locationScore ?? 0;
+        return proxB - proxA;
       });
     }
     return jobs;
@@ -232,7 +232,38 @@ export default function ResultsScreen({ navigation }) {
         <View style={styles.headerSpacer} />
       </View>
 
-
+      <View style={styles.filterTabsScrollView}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterTabsContainer}
+        >
+          <TouchableOpacity
+            style={[styles.filterTab, filterTab === "all" && styles.filterTabActive]}
+            onPress={() => setFilterTab("all")}
+          >
+            <Text style={[styles.filterTabText, filterTab === "all" && styles.filterTabTextActive]}>
+              All ({jobs.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterTab, filterTab === "best" && styles.filterTabActive]}
+            onPress={() => setFilterTab("best")}
+          >
+            <Text style={[styles.filterTabText, filterTab === "best" && styles.filterTabTextActive]}>
+              Best Match
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterTab, filterTab === "near" && styles.filterTabActive]}
+            onPress={() => setFilterTab("near")}
+          >
+            <Text style={[styles.filterTabText, filterTab === "near" && styles.filterTabTextActive]}>
+              Near Me
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
 
       <FlatList
         data={filteredJobs}
@@ -240,6 +271,25 @@ export default function ResultsScreen({ navigation }) {
         renderItem={renderItem}
         extraData={appliedCount}
         contentContainerStyle={styles.list}
+        ListFooterComponent={
+          isProfessional && jobs.length > 0 ? (
+            <TouchableOpacity
+              style={styles.careerPathButton}
+              onPress={handleGenerateCareerPath}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.careerPathIcon}>🎯</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.careerPathTitle}>
+                  {t("generateCareerPath") || "Generate My Career Path"}
+                </Text>
+                <Text style={styles.careerPathSubtitle}>
+                  {t("careerPathSubtitle") || "AI-powered roadmap based on your match gaps"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ) : null
+        }
       />
     </View>
   );

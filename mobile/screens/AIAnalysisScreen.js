@@ -39,142 +39,55 @@ export default function AIAnalysisScreen({ route, navigation }) {
     return `₹${numericSalary}/yr`;
   };
 
-  // Distance helper
-  const getDistanceText = (job) => {
-    const jobKey = job.title || job.jobId || "";
-    const distanceVal = job.distance || (((jobKey.charCodeAt(0) || 5) % 10) + 2.5).toFixed(1);
-    return `${distanceVal} km`;
-  };
-
-  // Dimensions calculators
-  const getPayScore = (job) => {
-    const sal = parseInt(job.salary || 0, 10);
-    if (!sal) return 75;
-    if (sal >= 450000) return 92;
-    if (sal >= 400000) return 88;
-    if (sal >= 350000) return 80;
-    if (sal >= 300000) return 72;
-    return 65;
-  };
-
-  const getProximityScore = (job) => {
-    if (job.analysis?.locationScore) return job.analysis.locationScore;
-    const jobKey = job.title || job.jobId || "";
-    const dist = parseFloat(job.distance || (((jobKey.charCodeAt(0) || 5) % 10) + 2.5));
-    if (dist <= 3) return 98;
-    if (dist <= 5) return 95;
-    if (dist <= 10) return 85;
-    return 70;
-  };
-
-  const getSkillScore = (job) => {
-    if (typeof job.analysis?.skillMatch === "number") return job.analysis.skillMatch;
-    return job.matchScore || 70;
-  };
-
-  const getGrowthScore = (job) => {
-    const t = (job.title || "").toLowerCase();
-    if (t.includes("developer") || t.includes("analyst") || t.includes("software") || t.includes("ai")) return 88;
-    if (t.includes("account") || t.includes("finance")) return 72;
-    if (t.includes("delivery") || t.includes("driver")) return 58;
-    return 65;
-  };
-
-  const getStabilityScore = (job) => {
-    if (job.analysis?.experienceScore) return job.analysis.experienceScore;
-    const jobKey = job.title || job.jobId || "";
-    const rand = (jobKey.charCodeAt(0) || 4) % 3;
-    if (rand === 0) return 95;
-    if (rand === 1) return 85;
-    return 75;
-  };
-
-  // AI Summary Card generator based on active tabs
+  // Get AI Summary from backend or build a fallback from job data
   const getAiSummaryText = () => {
     if (jobs.length === 0) return "No matches available for analysis.";
 
     if (activeTab === "all") {
       const topJob = jobs[0];
-      let summary = `${topJob.title} at ${topJob.company} is your strongest all-round pick — best match (${topJob.matchScore}%), closest location, and highest pay.`;
-      
-      if (jobs.length > 1) {
+      let summary = topJob.aiSummary ||
+        `${topJob.title} at ${topJob.company} is your strongest match at ${topJob.matchScore}% compatibility.`;
+      if (jobs.length > 1 && !topJob.aiSummary) {
         const secondJob = jobs[1];
-        summary += ` ${secondJob.title} suits you if work-life balance matters.`;
-      }
-      if (jobs.length > 2) {
-        const thirdJob = jobs[2];
-        summary += ` ${thirdJob.title} is a growth bet if you're willing to upskill.`;
+        summary += ` ${secondJob.title} is also a strong option.`;
       }
       return summary;
     } else {
       const job = jobs.find((j) => (j.jobId || j.id) === activeTab);
       if (!job) return "No matches available for analysis.";
-
-      const score = job.matchScore;
-      const skillsMatch = getSkillScore(job);
-      const dist = getDistanceText(job);
-
-      if (score >= 85) {
-        return `${job.title} at ${job.company} represents a stellar match (${score}% compatibility). You possess ${skillsMatch}% of required skills and are located just ${dist} away.`;
-      } else if (score >= 70) {
-        return `${job.title} at ${job.company} is a solid fit (${score}% compatibility). The commute is reasonable (${dist}) and skill matching is good (${skillsMatch}%).`;
-      } else {
-        return `${job.title} is a viable match (${score}% compatibility). Upskilling could improve your suitability and unlock higher matching roles.`;
-      }
+      return (
+        job.aiSummary ||
+        `${job.title} at ${job.company} has a ${job.matchScore}% compatibility score with your profile.`
+      );
     }
   };
 
-  // Pros & Cons generator
+  // Get pros from backend or build simple fallbacks
   const getJobPros = (job) => {
-    const pros = [];
-    const pay = getPayScore(job);
-    const dist = getDistanceText(job);
-    const skill = getSkillScore(job);
-    const isTopPay = jobs.length > 0 && jobs.every((j) => parseInt(j.salary || 0, 10) <= parseInt(job.salary || 0, 10));
-
-    if (isTopPay) {
-      pros.push(`Highest pay among all matches at ${formatSalaryText(job.salary)}`);
-    } else {
-      pros.push(`Competitive compensation package at ${formatSalaryText(job.salary)}`);
-    }
-
-    const distVal = parseFloat(dist);
-    if (distVal <= 5) {
-      pros.push(`Closest to you — just ${dist} away`);
-    } else {
-      pros.push(`Located at a manageable ${dist} distance`);
-    }
-
-    pros.push(`${skill}% skill match, high compatibility`);
-    pros.push(`${job.company} brand boosts your future resume`);
-    
-    const openings = ((job.title || "").charCodeAt(0) % 3) + 2;
-    pros.push(`${openings} openings — higher chance of getting in`);
-
-    return pros;
+    const backendPros = job.pros || [];
+    if (backendPros.length > 0) return backendPros;
+    // Minimal fallback using only real data
+    const fallback = [];
+    const skill = typeof job.analysis?.skillMatch === "number" ? job.analysis.skillMatch : job.matchScore;
+    fallback.push(`${skill}% skill match with job requirements`);
+    if (job.salary) fallback.push(`Competitive compensation: ${formatSalaryText(job.salary)}`);
+    fallback.push(`${job.company} is a recognized employer`);
+    return fallback;
   };
 
+  // Get cons from backend or build simple fallbacks
   const getJobCons = (job) => {
-    const cons = [];
-    const missing = job.analysis?.missingSkills || [];
-
+    const backendCons = job.cons || [];
+    if (backendCons.length > 0) return backendCons;
+    // Minimal fallback using only real data
+    const fallback = [];
+    const missing = job.analysis?.missingSkills || job.missingSkills || [];
     if (missing.length > 0) {
-      cons.push(`Requires ${missing[0]} — a skill you don't yet have`);
+      fallback.push(`Requires ${missing[0]} — a skill gap to address`);
     } else {
-      cons.push("Minor skill gaps to bridge for maximum effectiveness");
+      fallback.push("Review job requirements carefully before applying");
     }
-
-    const appCount = ((job.title || "").charCodeAt(0) % 40) + 15;
-    cons.push(`High competition: ${appCount} other applicants`);
-
-    const industry = (job.company || "").toLowerCase();
-    if (industry.includes("flipkart") || industry.includes("amazon") || industry.includes("delhivery")) {
-      cons.push("E-commerce/logistics industry can be high-pressure");
-    } else {
-      cons.push("Active coordination and adherence to schedules required");
-    }
-
-    return cons;
+    return fallback;
   };
 
   // Job Badge helper
@@ -325,11 +238,6 @@ export default function AIAnalysisScreen({ route, navigation }) {
         {visibleJobs.map((job, idx) => {
           const jId = getJobId(job);
           const badge = getJobBadge(job.matchScore);
-          const payScore = getPayScore(job);
-          const proximityScore = getProximityScore(job);
-          const skillScore = getSkillScore(job);
-          const growthScore = getGrowthScore(job);
-          const stabilityScore = getStabilityScore(job);
           const hasApplied = isApplied(job);
           const isApplying = applyingJobId === jId;
 
@@ -340,7 +248,7 @@ export default function AIAnalysisScreen({ route, navigation }) {
                 <View style={styles.jobTitleBlock}>
                   <Text style={styles.jobTitle}>{job.title}</Text>
                   <Text style={styles.jobSub}>
-                    {job.company} • {formatSalaryText(job.salary)} • {getDistanceText(job)} away
+                    {job.company} • {formatSalaryText(job.salary)}
                   </Text>
                 </View>
                 <View style={[styles.badge, { backgroundColor: badge.bg }]}>
@@ -350,52 +258,65 @@ export default function AIAnalysisScreen({ route, navigation }) {
                 </View>
               </View>
 
-              {/* Progress Bars */}
+              {/* Progress Bars — use real backend metrics */}
               <View style={styles.progressContainer}>
                 {/* Pay */}
-                <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>{t("aiAnalysis.payScore") || "Pay"}</Text>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${payScore}%`, backgroundColor: "#C2410C" }]} />
-                  </View>
-                  <Text style={[styles.progressVal, { color: "#C2410C" }]}>{payScore}%</Text>
-                </View>
-
-                {/* Proximity */}
-                <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>{t("aiAnalysis.proximityScore") || "Proximity"}</Text>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${proximityScore}%`, backgroundColor: "#2563EB" }]} />
-                  </View>
-                  <Text style={[styles.progressVal, { color: "#2563EB" }]}>{proximityScore}%</Text>
-                </View>
-
-                {/* Skill Match */}
-                <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>{t("aiAnalysis.skillScore") || "Skill match"}</Text>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${skillScore}%`, backgroundColor: "#059669" }]} />
-                  </View>
-                  <Text style={[styles.progressVal, { color: "#059669" }]}>{skillScore}%</Text>
-                </View>
-
-                {/* Growth */}
-                <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>{t("aiAnalysis.growthScore") || "Growth"}</Text>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${growthScore}%`, backgroundColor: "#7C3AED" }]} />
-                  </View>
-                  <Text style={[styles.progressVal, { color: "#7C3AED" }]}>{growthScore}%</Text>
-                </View>
-
-                {/* Stability */}
-                <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>{t("aiAnalysis.stabilityScore") || "Stability"}</Text>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${stabilityScore}%`, backgroundColor: "#0D9488" }]} />
-                  </View>
-                  <Text style={[styles.progressVal, { color: "#0D9488" }]}>{stabilityScore}%</Text>
-                </View>
+                {(() => {
+                  const payScore = job.metrics?.salary ?? 0;
+                  const proximityScore = job.metrics?.proximity ?? job.analysis?.locationScore ?? 0;
+                  const skillScore = job.metrics?.skillMatch ?? job.analysis?.skillMatch ?? job.matchScore ?? 0;
+                  const growthScore = job.metrics?.growth ?? 0;
+                  const stabilityScore = job.metrics?.stability ?? 0;
+                  return (
+                    <>
+                      {payScore > 0 && (
+                        <View style={styles.progressRow}>
+                          <Text style={styles.progressLabel}>{t("aiAnalysis.payScore") || "Pay"}</Text>
+                          <View style={styles.progressTrack}>
+                            <View style={[styles.progressFill, { width: `${payScore}%`, backgroundColor: "#C2410C" }]} />
+                          </View>
+                          <Text style={[styles.progressVal, { color: "#C2410C" }]}>{payScore}%</Text>
+                        </View>
+                      )}
+                      {proximityScore > 0 && (
+                        <View style={styles.progressRow}>
+                          <Text style={styles.progressLabel}>{t("aiAnalysis.proximityScore") || "Proximity"}</Text>
+                          <View style={styles.progressTrack}>
+                            <View style={[styles.progressFill, { width: `${proximityScore}%`, backgroundColor: "#2563EB" }]} />
+                          </View>
+                          <Text style={[styles.progressVal, { color: "#2563EB" }]}>{proximityScore}%</Text>
+                        </View>
+                      )}
+                      {skillScore > 0 && (
+                        <View style={styles.progressRow}>
+                          <Text style={styles.progressLabel}>{t("aiAnalysis.skillScore") || "Skill match"}</Text>
+                          <View style={styles.progressTrack}>
+                            <View style={[styles.progressFill, { width: `${skillScore}%`, backgroundColor: "#059669" }]} />
+                          </View>
+                          <Text style={[styles.progressVal, { color: "#059669" }]}>{skillScore}%</Text>
+                        </View>
+                      )}
+                      {growthScore > 0 && (
+                        <View style={styles.progressRow}>
+                          <Text style={styles.progressLabel}>{t("aiAnalysis.growthScore") || "Growth"}</Text>
+                          <View style={styles.progressTrack}>
+                            <View style={[styles.progressFill, { width: `${growthScore}%`, backgroundColor: "#7C3AED" }]} />
+                          </View>
+                          <Text style={[styles.progressVal, { color: "#7C3AED" }]}>{growthScore}%</Text>
+                        </View>
+                      )}
+                      {stabilityScore > 0 && (
+                        <View style={styles.progressRow}>
+                          <Text style={styles.progressLabel}>{t("aiAnalysis.stabilityScore") || "Stability"}</Text>
+                          <View style={styles.progressTrack}>
+                            <View style={[styles.progressFill, { width: `${stabilityScore}%`, backgroundColor: "#0D9488" }]} />
+                          </View>
+                          <Text style={[styles.progressVal, { color: "#0D9488" }]}>{stabilityScore}%</Text>
+                        </View>
+                      )}
+                    </>
+                  );
+                })()}
               </View>
 
               {/* PROS Section */}

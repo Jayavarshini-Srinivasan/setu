@@ -6,14 +6,22 @@ const { db } = require("../../config/firebase");
  * This guarantees that if the profile or selected language changes, a new explanation is generated.
  */
 const getProfileHash = (workerProfile, language = "en") => {
-  const role = (workerProfile.canonicalRole || workerProfile.role || "").trim().toLowerCase();
+  const role = (
+    workerProfile.canonicalRole ||
+    workerProfile.role ||
+    workerProfile.professionalRole ||
+    ""
+  ).trim().toLowerCase();
   
-  const skills = Array.isArray(workerProfile.skills)
-    ? [...workerProfile.skills]
-        .map((s) => (s || "").toString().toLowerCase().trim())
-        .sort()
-        .join(",")
-    : "";
+  // Merge both skills arrays so professionals are hashed correctly
+  const allSkills = [
+    ...(Array.isArray(workerProfile.skills) ? workerProfile.skills : []),
+    ...(Array.isArray(workerProfile.professionalSkills) ? workerProfile.professionalSkills : []),
+  ];
+  const skills = allSkills
+    .map((s) => (s || "").toString().toLowerCase().trim())
+    .sort()
+    .join(",");
     
   const experience = parseInt(workerProfile.experience || 0, 10);
   const location = (workerProfile.location || "").trim().toLowerCase();

@@ -38,11 +38,7 @@ export default function JobCard({ job, onAnalyze, isApplied = false }) {
     return `₹${numericSalary}/yr`;
   };
 
-  const getDistanceText = () => {
-    const jobKey = job.title || job.jobId || "";
-    const distanceVal = job.distance || (((jobKey.charCodeAt(0) || 5) % 10) + 2.5).toFixed(1);
-    return t("kmAway", { distance: distanceVal }) || `${distanceVal} km away`;
-  };
+
 
   return (
     <View style={[styles.card, isApplied && styles.cardApplied]}>
@@ -110,11 +106,6 @@ export default function JobCard({ job, onAnalyze, isApplied = false }) {
       )}
 
       <View style={styles.bottomRow}>
-        <View style={styles.distanceContainer}>
-          <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-          <Text style={styles.distanceText}>{getDistanceText()}</Text>
-        </View>
-
         <TouchableOpacity
           style={styles.analyzeButton}
           onPress={() => onAnalyze && onAnalyze(job)}
@@ -250,21 +241,12 @@ const styles = StyleSheet.create({
   },
   bottomRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     paddingTop: 12,
     marginTop: 4,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-  },
-  distanceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  distanceText: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    fontWeight: "500",
   },
   analyzeButton: {
     flexDirection: "row",
