@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(
 );
 
 // Use gemini-2.5-flash as default since it is highly available, extremely fast, and highly accurate on this environment
-const modelName = process.env.GEMINI_MODEL_PROFILE_EXTRACTION || "Gemini 2.5 Flash";
+const modelName = process.env.GEMINI_MODEL_PROFILE_EXTRACTION || "gemini-2.5-flash";
 const model = genAI.getGenerativeModel({ model: modelName });
 
 const emptyProfile = () => ({
