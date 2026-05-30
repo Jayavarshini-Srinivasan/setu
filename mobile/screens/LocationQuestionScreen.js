@@ -38,7 +38,7 @@ export default function LocationQuestionScreen({ navigation }) {
       if (ep?.location) setCity(ep.location);
       if (ep?.workRadius) setWorkRadius(ep.workRadius);
     },
-    contextData: onboardingData,
+    screenType: "labour_location",
   });
 
   const filteredCities = COMMON_CITIES.filter(c => c.toLowerCase().includes(city.toLowerCase()) && c.toLowerCase() !== city.toLowerCase());

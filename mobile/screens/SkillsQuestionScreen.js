@@ -49,12 +49,14 @@ export default function SkillsQuestionScreen({ navigation }) {
       if (tx) addTranscript(tx);
       const extracted = ep?.skills || [];
       if (extracted.length > 0) {
-        const merged = [...new Set([...selectedSkills, ...extracted])];
-        setSelectedSkills(merged);
-        updateField("skills", merged);
+        setSelectedSkills((prev) => {
+          const merged = [...new Set([...prev, ...extracted])];
+          updateField("skills", merged);
+          return merged;
+        });
       }
     },
-    contextData: onboardingData,
+    screenType: "labour_skills",
   });
 
   const toggleSkill = (skill) => {

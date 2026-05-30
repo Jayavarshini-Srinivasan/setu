@@ -69,7 +69,7 @@ export default function ExperienceQuestionScreen({ navigation }) {
         setAge(Number(ep.age));
       }
     },
-    contextData: onboardingData,
+    screenType: "labour_experience",
   });
 
   const handleContinue = () => {

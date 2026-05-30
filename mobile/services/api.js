@@ -5,7 +5,7 @@ import {
 } from "@env";
 
 // Forced Metro re-compilation to break dotenv cache and load new IP
-let API_BASE_URL = envBaseUrl;
+let API_BASE_URL = envBaseUrl || "http://10.63.181.177:5000";
 
 
 

@@ -1,43 +1,43 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { normalizeRole }      = require("../normalization/roleOntologyNormalizer");
-const { roleSkillMap }       = require("../../data/roleSkillMap");
-const { normalizeLocation }  = require("../normalization/locationNormalizer");
-const { geminiQueue }        = require("../aiService");
+const { normalizeRole } = require("../normalization/roleOntologyNormalizer");
+const { roleSkillMap } = require("../../data/roleSkillMap");
+const { normalizeLocation } = require("../normalization/locationNormalizer");
+const { geminiQueue } = require("../aiService");
 
 const genAI = new GoogleGenerativeAI(
   process.env.GEMINI_API_KEY_PROFILE_EXTRACTION || process.env.GEMINI_API_KEY
 );
 
 // Use gemini-2.5-flash as default since it is highly available, extremely fast, and highly accurate on this environment
-const modelName = process.env.GEMINI_MODEL_PROFILE_EXTRACTION || "gemini-2.5-flash";
+const modelName = process.env.GEMINI_MODEL_PROFILE_EXTRACTION || "Gemini 2.5 Flash";
 const model = genAI.getGenerativeModel({ model: modelName });
 
 const emptyProfile = () => ({
-  fullName:           "",
-  rawRole:            "",
-  skills:             [],
+  fullName: "",
+  rawRole: "",
+  skills: [],
   professionalSkills: [],
-  experience:         0,
-  location:           "",
-  availability:       "",
-  preferredShift:     "",
-  canonicalRole:      "",
-  category:           "",
-  education:          {
-    degree:           "",
-    institution:      "",
-    graduationYear:   "",
-    fieldOfStudy:     ""
+  experience: 0,
+  location: "",
+  availability: "",
+  preferredShift: "",
+  canonicalRole: "",
+  category: "",
+  education: {
+    degree: "",
+    institution: "",
+    graduationYear: "",
+    fieldOfStudy: ""
   },
-  experienceDetails:  [],
-  languages:          [],
-  age:                "",
-  phoneNumber:        "",
-  workRadius:         "",
-  expectedWage:       "",
-  expectedSalary:     null,
-  careerGoal:         "",
-  transportAccess:    false
+  experienceDetails: [],
+  languages: [],
+  age: "",
+  phoneNumber: "",
+  workRadius: "",
+  expectedWage: "",
+  expectedSalary: null,
+  careerGoal: "",
+  transportAccess: false
 });
 
 // Helper for checking if an explicit override is requested in the transcript
@@ -66,17 +66,17 @@ const cleanArrayOfStrings = (arr) => {
 const safeJSONParse = (text, fallback) => {
   if (!text) return fallback;
   let cleaned = text.trim();
-  
+
   // Clean markdown json block ticks if any
   cleaned = cleaned.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-  
+
   // Isolate first curly block
   const jsonStart = cleaned.indexOf("{");
-  const jsonEnd   = cleaned.lastIndexOf("}");
+  const jsonEnd = cleaned.lastIndexOf("}");
   if (jsonStart >= 0 && jsonEnd >= 0) {
     cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
   }
-  
+
   try {
     return JSON.parse(cleaned);
   } catch (err) {
@@ -110,25 +110,25 @@ const safeJSONParse = (text, fallback) => {
     // Restore top-level properties
     const fullName = extractString("fullName");
     if (fullName !== null) recovered.fullName = fullName;
-    
+
     const rawRole = extractString("rawRole");
     if (rawRole !== null) recovered.rawRole = rawRole;
-    
+
     const location = extractString("location");
     if (location !== null) recovered.location = location;
-    
+
     const availability = extractString("availability");
     if (availability !== null) recovered.availability = availability;
-    
+
     const preferredShift = extractString("preferredShift");
     if (preferredShift !== null) recovered.preferredShift = preferredShift;
-    
+
     const age = extractString("age") || extractNumber("age");
     if (age !== null) recovered.age = String(age);
-    
+
     const expectedWage = extractString("expectedWage");
     if (expectedWage !== null) recovered.expectedWage = expectedWage;
-    
+
     const careerGoal = extractString("careerGoal");
     if (careerGoal !== null) recovered.careerGoal = careerGoal;
 
@@ -251,7 +251,7 @@ JSON Schema:
 
   let parsed = emptyProfile();
   try {
-    const result   = await geminiQueue.add(() => model.generateContent(prompt));
+    const result = await geminiQueue.add(() => model.generateContent(prompt));
     const response = result.response.text();
     parsed = safeJSONParse(response, emptyProfile());
   } catch (err) {
@@ -309,7 +309,7 @@ JSON Schema:
     const merged = [...list1];
     for (const p of list2) {
       if (!p.company && !p.role) continue;
-      const isDuplicate = list1.some(c => 
+      const isDuplicate = list1.some(c =>
         String(c.company || "").toLowerCase().trim() === String(p.company || "").toLowerCase().trim() &&
         String(c.role || "").toLowerCase().trim() === String(p.role || "").toLowerCase().trim()
       );
@@ -322,35 +322,35 @@ JSON Schema:
 
   // Perform safe merges across all fields
   const mergedProfile = {
-    fullName:           mergeStringNumber("fullName", parsed.fullName, context.fullName),
-    rawRole:            mergeStringNumber("rawRole", parsed.rawRole, context.rawRole || context.role),
-    skills:             mergeArray(parsed.skills, context.skills),
+    fullName: mergeStringNumber("fullName", parsed.fullName, context.fullName),
+    rawRole: mergeStringNumber("rawRole", parsed.rawRole, context.rawRole || context.role),
+    skills: mergeArray(parsed.skills, context.skills),
     professionalSkills: mergeArray(parsed.professionalSkills, context.professionalSkills),
-    experience:         mergeStringNumber("experience", parsed.experience, context.experience),
-    location:           mergeStringNumber("location", parsed.location, context.location),
-    availability:       mergeStringNumber("availability", parsed.availability, context.availability),
-    preferredShift:     mergeStringNumber("preferredShift", parsed.preferredShift, context.preferredShift),
-    languages:          mergeArray(parsed.languages, context.languages),
-    age:                mergeStringNumber("age", parsed.age, context.age),
-    phoneNumber:        mergeStringNumber("phoneNumber", parsed.phoneNumber, context.phoneNumber),
-    workRadius:         mergeStringNumber("workRadius", parsed.workRadius, context.workRadius),
-    expectedWage:       mergeStringNumber("expectedWage", parsed.expectedWage, context.expectedWage),
-    expectedSalary:     context.expectedSalary || parsed.expectedSalary,
-    careerGoal:         mergeStringNumber("careerGoal", parsed.careerGoal, context.careerGoal),
-    transportAccess:    mergeBoolean("transportAccess", parsed.transportAccess, context.transportAccess),
-    education:          mergeEducation(parsed.education, context.education),
-    experienceDetails:  mergeExperienceDetails(parsed.experienceDetails, context.experienceDetails)
+    experience: mergeStringNumber("experience", parsed.experience, context.experience),
+    location: mergeStringNumber("location", parsed.location, context.location),
+    availability: mergeStringNumber("availability", parsed.availability, context.availability),
+    preferredShift: mergeStringNumber("preferredShift", parsed.preferredShift, context.preferredShift),
+    languages: mergeArray(parsed.languages, context.languages),
+    age: mergeStringNumber("age", parsed.age, context.age),
+    phoneNumber: mergeStringNumber("phoneNumber", parsed.phoneNumber, context.phoneNumber),
+    workRadius: mergeStringNumber("workRadius", parsed.workRadius, context.workRadius),
+    expectedWage: mergeStringNumber("expectedWage", parsed.expectedWage, context.expectedWage),
+    expectedSalary: context.expectedSalary || parsed.expectedSalary,
+    careerGoal: mergeStringNumber("careerGoal", parsed.careerGoal, context.careerGoal),
+    transportAccess: mergeBoolean("transportAccess", parsed.transportAccess, context.transportAccess),
+    education: mergeEducation(parsed.education, context.education),
+    experienceDetails: mergeExperienceDetails(parsed.experienceDetails, context.experienceDetails)
   };
 
   // Normalize Role & Location using existing logic
   const roleData = normalizeRole(mergedProfile.rawRole);
   const inferredSkills = roleSkillMap[roleData.canonicalRole] || [];
-  
+
   // Combine extracted skills with inferred role skills, removing duplicates
   mergedProfile.skills = cleanArrayOfStrings([...mergedProfile.skills, ...inferredSkills]);
   mergedProfile.category = roleData.category;
   mergedProfile.canonicalRole = roleData.canonicalRole;
-  
+
   if (mergedProfile.location) {
     mergedProfile.location = normalizeLocation(mergedProfile.location);
   }
@@ -391,6 +391,54 @@ startYear/endYear as numbers or "Present". No markdown, no explanation. Empty ar
 Return ONLY a compact JSON: {"careerGoal":"","expectedSalary":{"min":null,"max":null,"currency":"INR"},"preferredRoles":[]}
 Salary values as numbers. No markdown, no explanation. Null/empty if not found.`,
     fallback: () => ({ careerGoal: "", expectedSalary: null, preferredRoles: [] }),
+  },
+
+  // ── Blue-collar / Labour screens ──
+
+  labour_role: {
+    instruction: `Extract ONLY the person's full name and their trade/job role from the transcript.
+Return ONLY a compact JSON: {"fullName":"","role":"","canonicalRole":""}
+role = spoken trade/job title (e.g. Electrician, Plumber, Welder, Driver, Cook).
+canonicalRole = same as role if it matches a known trade, else empty string.
+No markdown, no explanation. Empty string if not found.`,
+    fallback: () => ({ fullName: "", role: "", canonicalRole: "" }),
+  },
+
+  labour_skills: {
+    instruction: `Extract ONLY trade skills, tools, and machines mentioned in the transcript.
+Return ONLY a compact JSON: {"skills":[]}
+skills = array of trade/labour skill strings (e.g. "Welding", "Pipe fitting", "Gas cutting").
+No markdown, no explanation. Empty array if none found.`,
+    fallback: () => ({ skills: [] }),
+  },
+
+  labour_experience: {
+    instruction: `Extract ONLY years of work experience and age from the transcript.
+Return ONLY a compact JSON: {"experience":null,"age":null}
+experience = total years of work experience as a number (null if not mentioned).
+age = person's age as a number (null if not mentioned).
+No markdown, no explanation. Null if not found.`,
+    fallback: () => ({ experience: null, age: null }),
+  },
+
+  labour_location: {
+    instruction: `Extract ONLY the city/area and work travel radius from the transcript.
+Return ONLY a compact JSON: {"location":"","workRadius":""}
+location = city or area name.
+workRadius = travel willingness (e.g. "Within 5km", "Within 10km", "Open to relocation").
+No markdown, no explanation. Empty string if not found.`,
+    fallback: () => ({ location: "", workRadius: "" }),
+  },
+
+  labour_preferences: {
+    instruction: `Extract ONLY wage expectation, availability, preferred shift, and vehicle ownership from the transcript.
+Return ONLY a compact JSON: {"expectedWage":"","availability":"","preferredShift":"","transportAccess":null}
+expectedWage = wage amount with period (e.g. "600/day", "15000/month"). Empty if not mentioned.
+availability = one of: "full-time", "part-time", "flexible". Empty if not mentioned.
+preferredShift = one of: "morning", "afternoon", "night". Empty if not mentioned.
+transportAccess = true if they mention having a bike/vehicle, false if they say no, null if not mentioned.
+No markdown, no explanation.`,
+    fallback: () => ({ expectedWage: "", availability: "", preferredShift: "", transportAccess: null }),
   },
 };
 

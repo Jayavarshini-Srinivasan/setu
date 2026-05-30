@@ -64,7 +64,7 @@ export default function RoleQuestionScreen({ navigation }) {
         setFullName(profile.fullName);
       }
     },
-    contextData: onboardingData,
+    screenType: "labour_role",
   });
 
   const detectedDisplay = extractedProfile?.fullName || extractedProfile?.canonicalRole || extractedProfile?.role

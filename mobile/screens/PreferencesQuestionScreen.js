@@ -45,7 +45,7 @@ export default function PreferencesQuestionScreen({ navigation }) {
       if (ep?.preferredShift) setShift(ep.preferredShift);
       if (ep?.transportAccess !== undefined) setTransport(Boolean(ep.transportAccess));
     },
-    contextData: onboardingData,
+    screenType: "labour_preferences",
   });
 
   const handleContinue = () => {
